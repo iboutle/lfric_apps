@@ -15,7 +15,8 @@ module conv_comorph_alg_mod
        imr_s
 
   use timestepping_config_mod,     only: outer_iterations
-  use sci_geometric_constants_mod, only: get_height_fv, get_delta_at_wtheta
+  use sci_geometric_constants_mod, only: get_height_fv, get_delta_at_wtheta, &
+                                         get_da_at_w2
   use fs_continuity_mod,           only: W3, Wtheta
 
   use io_config_mod,        only: subroutine_timers
@@ -27,6 +28,7 @@ module conv_comorph_alg_mod
   use log_mod,              only: log_event, LOG_LEVEL_DEBUG
   use mesh_mod,             only: mesh_type
   use um_sizes_init_mod,    only: um_sizes_init
+  use map_fd_to_prognostics_alg_mod, only: set_wind
 
   implicit none
 
@@ -38,6 +40,7 @@ contains
   !>@brief Run the Comorph convection scheme
   !>@details The Comorph convection scheme does:
   !>             vertical mixing of heat, momentum and moisture,
+  !>@param[in,out] du_conv_w2          Wind increment in w2
   !>@param[in,out] mr                  Mixing ratios
   !>@param[in]     rho                 Dry density in its native (w3) space
   !>@param[in]     exner               Exner Pressure in the w3 space
@@ -50,7 +53,8 @@ contains
   !>@param[in]     aerosol_fields      Fields for aerosol scheme
   !>@param[in]     microphysics_fields Fields for microphysics scheme
   !>@param[in]     outer             Outer loop counter
-  subroutine conv_comorph_alg(mr, mr_n, rho, exner, theta, derived_fields,&
+  subroutine conv_comorph_alg(du_conv_w2, mr, mr_n, rho, exner, theta,    &
+                         derived_fields,                                  &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
@@ -59,7 +63,7 @@ contains
 
     implicit none
 
-    type( field_type ), intent( inout )     :: mr(nummr)
+    type( field_type ), intent( inout )     :: mr(nummr), du_conv_w2
     type( field_type ), intent( in )        :: mr_n(nummr)
     type( field_type ), intent( in )        :: rho, exner, theta
 
@@ -77,6 +81,7 @@ contains
     ! Temporary fields unpacked fields from collections
     type( field_type ), pointer :: exner_in_wth
     type( field_type ), pointer :: delta
+    type( field_type ), pointer :: dA
     type( field_type ), pointer :: rho_in_wth
     type( field_type ), pointer :: wetrho_in_wth
     type( field_type ), pointer :: wetrho_in_w3
@@ -262,7 +267,7 @@ contains
     type( field_type ) :: detrain_up,detrain_down
     type( field_type ) :: pres_cv_base,pres_cv_top
     type( field_type ) :: pres_lowest_cv_base,pres_lowest_cv_top, lowest_cca_2d
-    type( field_type ) :: massflux_up_half
+    type( field_type ) :: massflux_up_half, dw_conv
 
     type( mesh_type ), pointer  :: mesh
     integer(i_def) :: ncells
@@ -629,6 +634,16 @@ contains
                                            ) ! end of invoke
 
     call um_sizes_init(1_i_def)
+
+    ! Map the wind increments back to w2 space
+    call w_in_wth%copy_field_properties(dw_conv)
+    call invoke(setval_c(dw_conv, 0.0_r_def) )
+    call set_wind(du_conv_w2, du_conv, dv_conv, dw_conv)
+    call dw_conv%field_final()
+    ! Set wind provides output in dynamics quantites, need to remove
+    ! dA scaling for physics
+    dA         => get_da_at_w2(mesh%get_id())
+    call invoke(inc_X_divideby_Y(du_conv_w2, dA) )
 
     if ( subroutine_timers ) call timer("conv_comorph_alg")
 

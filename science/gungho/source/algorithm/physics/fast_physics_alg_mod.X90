@@ -160,7 +160,7 @@ contains
 
     ! Local fields...
     ! ...for boundary layer
-    type( field_type ) :: dtheta_bl, du_bl
+    type( field_type ) :: dtheta_bl, du_bl, du_conv_w2
     ! ...for evaporation condensation
     type( field_type ) :: dtheta_cld
     type( field_type ) :: dmr_cld(nummr)
@@ -247,19 +247,24 @@ contains
     !--------------------------------------------------------------------
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_fast) then
+
+      call du%copy_field_properties(du_conv_w2)
+      call invoke(setval_c(du_conv_w2, 0.0_r_def))
+
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
         ! Call the UM Lambert-Lewis convection scheme
         call conv_ll_alg(mr, exner, derived_fields, convection_fields,    &
                          outer)
       else if ( cv_scheme == cv_scheme_gregory_rowntree ) then
         ! Call the UM Gregory Rowntree convection scheme
-        call conv_gr_alg(mr, rho, exner, derived_fields,                  &
+        call conv_gr_alg(du_conv_w2, mr, rho, exner, derived_fields,      &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
       else if ( cv_scheme == cv_scheme_comorph ) then
         ! Call the Comorph convection scheme
-        call conv_comorph_alg(mr, mr_n, rho, exner, theta, derived_fields,&
+        call conv_comorph_alg(du_conv_w2, mr, mr_n, rho, exner, theta,    &
+                         derived_fields,                                  &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
@@ -286,7 +291,7 @@ contains
       call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
                       surf_heat_flux, canopy_evap, water_extraction,      &
                       lake_evap, theta_star_surf, qv_star_surf,           &
-                      theta, exner, mr_n, rho,                            &
+                      theta, exner, mr_n, rho, du_conv_w2,                &
                       derived_fields, radiation_fields, orography_fields, &
                       turbulence_fields, convection_fields, cloud_fields, &
                       surface_fields, soil_fields, snow_fields,           &
