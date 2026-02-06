@@ -930,12 +930,11 @@ contains
     !--------------------------------------------------------------------
     ! UM convection scheme
     !--------------------------------------------------------------------
+    call du%copy_field_properties(du_conv_w2)
+    call invoke(setval_c(du_conv_w2, 0.0_r_def))
+
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_slow) then
-
-      call du%copy_field_properties(du_conv_w2)
-      call invoke(setval_c(du_conv_w2, 0.0_r_def))
-
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
         ! Call the UM Lambert-Lewis convection scheme
         call conv_ll_alg(mr, exner, derived_fields, convection_fields,    &
