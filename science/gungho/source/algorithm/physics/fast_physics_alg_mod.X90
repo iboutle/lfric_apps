@@ -29,6 +29,7 @@ module fast_physics_alg_mod
   use timer_mod,            only: timer
 
   use physics_config_mod,   only: blayer_placement, blayer_placement_fast, &
+                                  blayer_placement_b4conv,                 &
                                   convection_placement,                    &
                                   convection_placement_fast,               &
                                   stochastic_physics_placement,            &
@@ -160,12 +161,15 @@ contains
 
     ! Local fields...
     ! ...for boundary layer
-    type( field_type ) :: dtheta_bl, du_bl, du_conv_w2
+    type( field_type ) :: dtheta_bl, du_bl
     ! ...for evaporation condensation
     type( field_type ) :: dtheta_cld
     type( field_type ) :: dmr_cld(nummr)
 
 #ifdef UM_PHYSICS
+    ! ...for convection
+     type( field_type ) :: du_conv_w2, dtheta_conv
+
     ! ...for boundary layer stochastic perturbation
     type( field_type ) :: dtheta_blpert
     type( field_type ) :: dmv_blpert
@@ -181,6 +185,7 @@ contains
     type( field_type ) :: qv_star_surf
 
     ! Temporary field to unpack from field collection
+    type( field_type ), pointer :: dt_conv
     type( field_type ), pointer :: dmv_conv => null()
     type( field_type ), pointer :: du_stph => null()
     type( field_type ), pointer :: dtheta_stph => null()
@@ -222,6 +227,29 @@ contains
     evap_condense_done = .false.
 
 #ifdef UM_PHYSICS
+    !--------------------------------------------------------------------
+    ! UM implicit boundary layer and Jules surface schemes
+    !--------------------------------------------------------------------
+    call du%copy_field_properties(du_conv_w2)
+    call convection_fields%get_field('dt_conv', dt_conv)
+    call invoke(setval_c(du_conv_w2, 0.0_r_def), &
+                setval_c(dt_conv,    0.0_r_def) )
+
+    if (boundary_layer == boundary_layer_um) then
+      if(blayer_placement == blayer_placement_b4conv) then
+        call du%copy_field_properties(du_bl)
+        call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
+                        surf_heat_flux, canopy_evap, water_extraction,      &
+                        lake_evap, theta_star_surf, qv_star_surf,           &
+                        theta, exner, mr_n, rho, du_conv_w2,                &
+                        derived_fields, radiation_fields, orography_fields, &
+                        turbulence_fields, convection_fields, cloud_fields, &
+                        surface_fields, soil_fields, snow_fields,           &
+                        microphysics_fields, aerosol_fields, outer, clock)
+        boundary_layer_done=.true. ! Collect this increment later on
+      end if
+    end if
+
     ! Balance cloud before the rest of fast physics
     if (cloud_call_b4_conv) then
       call derived_fields%get_field('theta_star', theta_star)
@@ -245,8 +273,6 @@ contains
     !--------------------------------------------------------------------
     ! UM convection scheme
     !--------------------------------------------------------------------
-    call du%copy_field_properties(du_conv_w2)
-    call invoke(setval_c(du_conv_w2, 0.0_r_def))
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_fast) then
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
@@ -283,23 +309,33 @@ contains
     !--------------------------------------------------------------------
     ! UM implicit boundary layer and Jules surface schemes
     !--------------------------------------------------------------------
-    if (boundary_layer == boundary_layer_um .and. &
-        blayer_placement == blayer_placement_fast) then
-      call du%copy_field_properties(du_bl)
-      call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
-                      surf_heat_flux, canopy_evap, water_extraction,      &
-                      lake_evap, theta_star_surf, qv_star_surf,           &
-                      theta, exner, mr_n, rho, du_conv_w2,                &
-                      derived_fields, radiation_fields, orography_fields, &
-                      turbulence_fields, convection_fields, cloud_fields, &
-                      surface_fields, soil_fields, snow_fields,           &
-                      microphysics_fields, aerosol_fields, outer, clock)
-      boundary_layer_done=.true. ! Collect this increment later on
-
+    if (boundary_layer == boundary_layer_um) then
+      if(blayer_placement == blayer_placement_fast) then
+        call du%copy_field_properties(du_bl)
+        call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
+                        surf_heat_flux, canopy_evap, water_extraction,      &
+                        lake_evap, theta_star_surf, qv_star_surf,           &
+                        theta, exner, mr_n, rho, du_conv_w2,                &
+                        derived_fields, radiation_fields, orography_fields, &
+                        turbulence_fields, convection_fields, cloud_fields, &
+                        surface_fields, soil_fields, snow_fields,           &
+                        microphysics_fields, aerosol_fields, outer, clock)
+        boundary_layer_done=.true. ! Collect this increment later on
+      else
+        ! need to add convection increments to main increments here
+        call convection_fields%get_field('dt_conv', dt_conv)
+        call derived_fields%get_field('exner_in_wth', exner_in_wth)
+        call dt_conv%copy_field_properties(dtheta_conv)
+        call invoke(inc_X_plus_Y(du, du_conv_w2), &
+                    X_divideby_Y(dtheta_conv, dt_conv, exner_in_wth), &
+                    inc_X_plus_Y(dtheta, dtheta_conv) )
+      end if
     !--------------------------------------------------------------------
     ! Jules surface and sub-surface (snow and hydrology)
     !--------------------------------------------------------------------
       if ( surface == surface_jules .and. &
+           (blayer_placement == blayer_placement_fast .or. &
+            blayer_placement == blayer_placement_b4conv) .and. &
            outer == outer_iterations ) then
         call jules_extra_alg(microphysics_fields, convection_fields,        &
                              surface_fields, soil_fields, snow_fields,      &
