@@ -304,6 +304,16 @@ contains
         call invoke( inc_X_plus_Y(mr(imr_v), dmv_conv) )
       end if
 
+      ! Update fields and increments
+      call derived_fields%get_field('theta_star', theta_star)
+      call convection_fields%get_field('dt_conv', dt_conv)
+      call derived_fields%get_field('exner_in_wth', exner_in_wth)
+      call dt_conv%copy_field_properties(dtheta_conv)
+      call invoke(X_divideby_Y(dtheta_conv, dt_conv, exner_in_wth), &
+                  inc_X_plus_Y(theta_star, dtheta_conv) )
+      call invoke(inc_X_plus_Y(du, du_conv_w2))
+      call invoke(inc_X_plus_Y(dtheta, dtheta_conv))
+
     end if
 
     !--------------------------------------------------------------------

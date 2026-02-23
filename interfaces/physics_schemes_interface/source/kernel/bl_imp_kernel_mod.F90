@@ -321,8 +321,7 @@ contains
     do i = 1, seg_len
       do k = 1, nlayers
         t_latest(i,1,k) = theta_star(map_wth(1,i) + k) * &
-                          exner_in_wth(map_wth(1,i) + k) + &
-                          dt_conv(map_wth(1,i) + k)
+                          exner_in_wth(map_wth(1,i) + k)
         q_latest(i,1,k)   = m_v(map_wth(1,i) + k)
         qcl_latest(i,1,k) = m_cl(map_wth(1,i) + k)
       end do

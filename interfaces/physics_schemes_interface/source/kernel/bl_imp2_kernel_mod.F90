@@ -495,8 +495,7 @@ contains
       do i = 1, seg_len
         do k = 1, nlayers
           t_earliest(i,1,k) = theta_star(map_wth(1,i) + k)   &
-                            * exner_in_wth(map_wth(1,i) + k) &
-                            + dt_conv(map_wth(1,i) + k)
+                            * exner_in_wth(map_wth(1,i) + k)
           q_earliest(i,1,k) = m_v(map_wth(1,i) + k)
         end do
       end do
@@ -673,7 +672,6 @@ contains
         do k = bl_levels+1, nlayers
           t_latest(i,1,k) = theta_star(map_wth(1,i) + k)   &
                             * exner_in_wth(map_wth(1,i) + k) &
-                            + dt_conv(map_wth(1,i) + k)      &
                             - (lc * m_cl(map_wth(1,i) + k)) / cp
           q_latest(i,1,k) = m_v(map_wth(1,i) + k) + m_cl(map_wth(1,i) + k)
         end do

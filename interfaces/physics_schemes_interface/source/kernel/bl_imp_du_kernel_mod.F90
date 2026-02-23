@@ -228,8 +228,7 @@ contains
 
         do k = 0, bl_levels-1
           du_nt(k) = u_physics_star(map_w2(df) + k) -                          &
-                     u_physics(map_w2(df) + k) +                               &
-                     du_conv(map_w2(df) + k)
+                     u_physics(map_w2(df) + k)
           dtr_rhodz(k) = dtrdz(map_w2(df) + k) / wetrho(map_w2(df) + k)
           rhokm_sp(k) = rhokm(map_w2(df) + k)
           du_bl_sp(k) = du_bl(map_w2(df) + k)
@@ -389,7 +388,7 @@ contains
 
         ! Above BL levels it's just the convection increment
         do k = bl_levels, nlayers-1
-          du_bl(map_w2(df) + k) = du_conv(map_w2(df) + k)
+          du_bl(map_w2(df) + k) = 0.0_r_def
         end do
 
       end if ! this face needs calculating
