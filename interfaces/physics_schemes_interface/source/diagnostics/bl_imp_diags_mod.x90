@@ -182,7 +182,6 @@ contains
   !> @param[in]     cf_fro                   Frozen cloud fraction
   !> @param[in]     dtheta_bl                potential temperature increment from bl scheme
   !> @param[in]     exner_in_wth             Exner Pressure in the wth space
-  !> @param[in]     dt_conv                  temperature increment from convection scheme
   !> @param[in]     t1p5m                    1.5m temperature
   !> @param[in]     q1p5m                    1.5m specific humidity
   !> @param[in]     qcl1p5m                  1.5m specific cloud water
@@ -219,7 +218,7 @@ contains
                                      mv, mcl, mci, mr,                         &
                                      nr_mphys, ns_mphys, murk,                 &
                                      cf_bulk, cf_area, cf_liq, cf_fro,         &
-                                     dtheta_bl, exner_in_wth, dt_conv,         &
+                                     dtheta_bl, exner_in_wth,                  &
                                      t1p5m, q1p5m, qcl1p5m,                    &
                                      t1p5m_ssi, q1p5m_ssi, qcl1p5m_ssi,        &
                                      t1p5m_land, q1p5m_land, qcl1p5m_land,     &
@@ -245,7 +244,7 @@ contains
     ! Prognostic fields to output
     type( field_type ), intent(in)    :: zh, wspd10m, taux_ssi,                &
                                          tauy_ssi, du_bl_w2, dtheta_bl,        &
-                                         heat_flux_bl, moist_flux_bl, dt_conv
+                                         heat_flux_bl, moist_flux_bl
 
     ! Diagnostics computed within the kernels
     type( field_type ), intent(in)    :: t1p5m, q1p5m, qcl1p5m
@@ -288,7 +287,7 @@ contains
     ! Output prognostic fields
     if (samp_diag('aerosol__murk')) call murk%write_field('aerosol__murk')
 
-    call dtheta_bl%write_field('turbulence__dtheta_blcnv')
+    call dtheta_bl%write_field('turbulence__dtheta_bl')
     call zh%write_field('turbulence__zh')
     call heat_flux_bl%write_field('turbulence__heat_flux_bl')
     call moist_flux_bl%write_field('turbulence__moist_flux_bl')
@@ -310,8 +309,7 @@ contains
 
     dt_bl_flag = init_diag(dt_bl, 'turbulence__dt_bl')
     if (dt_bl_flag) then
-      call invoke(    X_times_Y(dt_bl,dtheta_bl,exner_in_wth), &
-                  inc_X_minus_Y(dt_bl,dt_conv) )
+      call invoke(X_times_Y(dt_bl,dtheta_bl,exner_in_wth))
       call dt_bl%write_field()
     end if
     if (dmv_bl_flag) then

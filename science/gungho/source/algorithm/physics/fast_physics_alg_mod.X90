@@ -230,18 +230,13 @@ contains
     !--------------------------------------------------------------------
     ! UM implicit boundary layer and Jules surface schemes
     !--------------------------------------------------------------------
-    call du%copy_field_properties(du_conv_w2)
-    call convection_fields%get_field('dt_conv', dt_conv)
-    call invoke(setval_c(du_conv_w2, 0.0_r_def), &
-                setval_c(dt_conv,    0.0_r_def) )
-
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_b4conv) then
         call du%copy_field_properties(du_bl)
         call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
-                        theta, exner, mr_n, rho, du_conv_w2,                &
+                        theta, exner, mr_n, rho,                            &
                         derived_fields, radiation_fields, orography_fields, &
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
@@ -275,10 +270,13 @@ contains
     !--------------------------------------------------------------------
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_fast) then
+
+      call du%copy_field_properties(du_conv_w2)
+
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
         ! Call the UM Lambert-Lewis convection scheme
-        call conv_ll_alg(mr, exner, derived_fields, convection_fields,    &
-                         outer)
+        call conv_ll_alg(du_conv_w2, mr, exner, derived_fields, &
+                         convection_fields, outer)
       else if ( cv_scheme == cv_scheme_gregory_rowntree ) then
         ! Call the UM Gregory Rowntree convection scheme
         call conv_gr_alg(du_conv_w2, mr, rho, exner, derived_fields,      &
@@ -305,14 +303,16 @@ contains
       end if
 
       ! Update fields and increments
+      call derived_fields%get_field('u_star', u_star)
       call derived_fields%get_field('theta_star', theta_star)
       call convection_fields%get_field('dt_conv', dt_conv)
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
       call dt_conv%copy_field_properties(dtheta_conv)
       call invoke(X_divideby_Y(dtheta_conv, dt_conv, exner_in_wth), &
-                  inc_X_plus_Y(theta_star, dtheta_conv) )
-      call invoke(inc_X_plus_Y(du, du_conv_w2))
-      call invoke(inc_X_plus_Y(dtheta, dtheta_conv))
+                  inc_X_plus_Y(theta_star, dtheta_conv), &
+                  inc_X_plus_Y(dtheta, dtheta_conv), &
+                  inc_X_plus_Y(u_star, du_conv_w2), &
+                  inc_X_plus_Y(du, du_conv_w2) )
 
     end if
 
@@ -325,20 +325,12 @@ contains
         call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
-                        theta, exner, mr_n, rho, du_conv_w2,                &
+                        theta, exner, mr_n, rho,                            &
                         derived_fields, radiation_fields, orography_fields, &
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
                         microphysics_fields, aerosol_fields, outer, clock)
         boundary_layer_done=.true. ! Collect this increment later on
-      else
-        ! need to add convection increments to main increments here
-        call convection_fields%get_field('dt_conv', dt_conv)
-        call derived_fields%get_field('exner_in_wth', exner_in_wth)
-        call dt_conv%copy_field_properties(dtheta_conv)
-        call invoke(inc_X_plus_Y(du, du_conv_w2), &
-                    X_divideby_Y(dtheta_conv, dt_conv, exner_in_wth), &
-                    inc_X_plus_Y(dtheta, dtheta_conv) )
       end if
     !--------------------------------------------------------------------
     ! Jules surface and sub-surface (snow and hydrology)

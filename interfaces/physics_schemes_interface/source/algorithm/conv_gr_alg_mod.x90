@@ -715,8 +715,6 @@ contains
     call invoke(setval_c(dw_conv, 0.0_r_def) )
     call set_wind(du_conv_w2, du_conv, dv_conv, dw_conv)
     call dw_conv%field_final()
-    ! Update wind field
-    call invoke(inc_X_plus_Y(u_star, du_conv_w2) )
 
     if ( subroutine_timers ) call timer("conv_gr_alg")
 

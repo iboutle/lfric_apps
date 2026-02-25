@@ -41,7 +41,7 @@ module bl_imp2_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_imp2_kernel_type
     private
-    type(arg_type) :: meta_args(57) = (/                                         &
+    type(arg_type) :: meta_args(56) = (/                                         &
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                                &! outer
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                                &! loop
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      WTHETA),                   &! wetrho_in_wth
@@ -55,7 +55,6 @@ module bl_imp2_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     WTHETA),                   &! dtheta_bl
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      W3),                       &! diss_u
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      W3),                       &! diss_v
-         arg_type(GH_FIELD,  GH_REAL,    GH_READ,      WTHETA),                   &! dt_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! m_v
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! m_cl
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! m_ci
@@ -127,7 +126,6 @@ contains
   !> @param[in,out] dtheta_bl            BL theta increment
   !> @param[in]     diss_u               Zonal Molecular dissipation rate
   !> @param[in]     diss_v               Meridional Molecular dissipation rate
-  !> @param[in]     dt_conv              Convection temperature increment
   !> @param[in,out] m_v                  Vapour mixing ration after advection
   !> @param[in,out] m_cl                 Cloud liq mixing ratio after advection
   !> @param[in]     m_ci                 Cloud ice mixing ratio after advection
@@ -212,7 +210,6 @@ contains
                           dtheta_bl,                          &
                           diss_u,                             &
                           diss_v,                             &
-                          dt_conv,                            &
                           m_v,                                &
                           m_cl,                               &
                           m_ci,                               &
@@ -329,13 +326,12 @@ contains
                                                          dqw_nt_wth,           &
                                                          dtl_nt_wth,           &
                                                          ct_ctq_wth,           &
-                                                         dt_conv,              &
                                                          rh_crit_wth,          &
                                                          bq_bl, bt_bl,         &
                                                          dtrdz_tq_bl,          &
                                                          dsldzm,               &
                                                          mix_len_bm,           &
-                                                         wvar, m_ci,            &
+                                                         wvar, m_ci,           &
                                                          gradrinr,             &
                                                          tau_dec_bm,           &
                                                          tau_hom_bm,           &

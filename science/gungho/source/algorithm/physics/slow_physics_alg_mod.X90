@@ -932,13 +932,12 @@ contains
     ! UM convection scheme
     !--------------------------------------------------------------------
     call du%copy_field_properties(du_conv_w2)
-    call invoke(setval_c(du_conv_w2, 0.0_r_def))
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_slow) then
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
         ! Call the UM Lambert-Lewis convection scheme
-        call conv_ll_alg(mr, exner, derived_fields, convection_fields,    &
-                         outer_iterations)
+        call conv_ll_alg(du_conv_w2, mr, exner, derived_fields, &
+                         convection_fields, outer_iterations)
       else if ( cv_scheme == cv_scheme_gregory_rowntree ) then
         ! Call the UM Gregory Rowntree convection scheme
         call conv_gr_alg(du_conv_w2, mr, rho, exner, derived_fields,      &
@@ -968,7 +967,7 @@ contains
         call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
-                        theta, exner, mr_n, rho, du_conv_w2,                &
+                        theta, exner, mr_n, rho,                            &
                         derived_fields, radiation_fields, orography_fields, &
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &

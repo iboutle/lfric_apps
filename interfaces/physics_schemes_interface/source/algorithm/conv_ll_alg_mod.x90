@@ -34,14 +34,14 @@ contains
   !> @param[in]     derived_fields Group of derived fields
   !> @param[in,out] convection_fields Fields for convection scheme
   !> @param[in]     outer          Outer loop counter
-  subroutine conv_ll_alg(mr, exner, derived_fields, convection_fields,    &
-                         outer)
+  subroutine conv_ll_alg(du_conv_w2, mr, exner, derived_fields, &
+                         convection_fields, outer)
 
     use conv_ll_kernel_mod, only: conv_ll_kernel_type
 
     implicit none
 
-    type( field_type ), intent( inout )          :: mr(nummr)
+    type( field_type ), intent( inout )          :: mr(nummr), du_conv_w2
     type( field_type ), intent( in )             :: exner
 
     type( field_collection_type ), intent(in)    :: derived_fields
@@ -81,7 +81,9 @@ contains
                                     exner_in_wth, exner, conv_rain),          &
 
                 ! bulk fraction change is just the liquid change
-                setval_X(dbcf_conv,dcfl_conv) )
+                setval_X(dbcf_conv,dcfl_conv), &
+                ! No wind increment from LLCS
+                setval_c(du_conv_w2, 0.0_r_def) )
 
     if (write_diag .and. use_xios_io .and. outer == outer_iterations) then
       call dt_conv%write_field('convection__dt_conv')

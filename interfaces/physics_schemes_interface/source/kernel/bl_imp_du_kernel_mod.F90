@@ -32,7 +32,7 @@ module bl_imp_du_kernel_mod
   !> Kernel metadata type.
   type, public, extends(kernel_type) :: bl_imp_du_kernel_type
     private
-    type(arg_type) :: meta_args(21) = (/                     &
+    type(arg_type) :: meta_args(20) = (/                     &
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),           &! outer
          arg_type(GH_FIELD, GH_REAL, GH_WRITE, W2),          &! du_bl
          arg_type(GH_FIELD, GH_REAL, GH_WRITE, W2),          &! dissip
@@ -49,7 +49,6 @@ module bl_imp_du_kernel_mod
          arg_type(GH_FIELD, GH_REAL, GH_READ,  W2),          &! u_physics
          arg_type(GH_FIELD, GH_REAL, GH_READ,  W2),          &! u_physics_star
          arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_SPACE_2), &! surf_interp
-         arg_type(GH_FIELD, GH_REAL, GH_READ,  W2),          &! du_conv
          arg_type(GH_FIELD, GH_REAL, GH_READ,  WTheta),      &! dw_bl
          arg_type(GH_FIELD, GH_REAL, GH_READ,  W2),          &! dA
          arg_type(GH_FIELD, GH_REAL, GH_READ,  W1),          &! height_w1
@@ -86,7 +85,6 @@ contains
   !> @param[in]     u_physics      Wind in native space at time n
   !> @param[in]     u_physics_star Wind in native space after advection
   !> @param[in]     surf_interp    Surface variables which need interpolating
-  !> @param[in]     du_conv        Wind increment from convection
   !> @param[in]     dw_bl          Vertical wind increment from explicit BL
   !> @param[in]     dA             Area of faces
   !> @param[in]     height_w1      Height of cell top/bottom above surface
@@ -123,7 +121,6 @@ contains
                             u_physics,     &
                             u_physics_star,&
                             surf_interp,   &
-                            du_conv,       &
                             dw_bl,         &
                             dA,            &
                             height_w1,     &
@@ -170,7 +167,7 @@ contains
          wind10m_neut, tau_ssi, pseudotau
 
     real(kind=r_def), dimension(undf_w2),  intent(in) :: rhokm, dtrdz,         &
-         u_physics, u_physics_star, du_conv, dA, height_w2, wetrho
+         u_physics, u_physics_star, dA, height_w2, wetrho
     real(kind=r_def), dimension(undf_w2_2d), intent(in) :: tau_land
     real(kind=r_def), dimension(undf_w2_surf), intent(in) :: surf_interp
     real(kind=r_def), dimension(undf_w1),   intent(in) :: height_w1, rdz
