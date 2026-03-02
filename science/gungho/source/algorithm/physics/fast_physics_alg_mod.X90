@@ -160,16 +160,14 @@ contains
     real(kind=r_def),        intent(in) :: dt
 
     ! Local fields...
-    ! ...for boundary layer
-    type( field_type ) :: dtheta_bl, du_bl
+    type( field_type ) :: theta_latest, u_latest
+    ! ...for reuse in schemes
+    type( field_type ) :: dtheta_tmp, du_tmp
     ! ...for evaporation condensation
     type( field_type ) :: dtheta_cld
     type( field_type ) :: dmr_cld(nummr)
 
 #ifdef UM_PHYSICS
-    ! ...for convection
-     type( field_type ) :: du_conv_w2, dtheta_conv
-
     ! ...for boundary layer stochastic perturbation
     type( field_type ) :: dtheta_blpert
     type( field_type ) :: dmv_blpert
@@ -198,8 +196,7 @@ contains
     type( field_type), pointer :: exner_in_wth => null()
 
     ! Flags to indicate whether scheme has run and increments need adding
-    logical(kind=l_def) :: boundary_layer_done, stph_done, blpert_done, &
-                           evap_condense_done
+    logical(kind=l_def) :: stph_done, blpert_done, evap_condense_done
 
     ! Flag to indicate that moisture mixing ratio fields are being used
     logical(kind=l_def) :: use_moisture
@@ -221,19 +218,30 @@ contains
     !--------------------------------------------------------------------
     call invoke( setval_c(dtheta, 0.0_r_def), &
                  setval_c(du, 0.0_r_def) )
-    boundary_layer_done = .false.
+    
     stph_done= .false.
     blpert_done= .false.
     evap_condense_done = .false.
 
 #ifdef UM_PHYSICS
+    if (boundary_layer == boundary_layer_um .or. &
+         convection == convection_um ) then
+      call derived_fields%get_field('u_star', u_star)
+      call derived_fields%get_field('theta_star', theta_star)
+      call u_star%copy_field_properties(u_latest)
+      call theta_star%copy_field_properties(theta_latest)
+      call u_star%copy_field_properties(du_tmp)
+      call theta_star%copy_field_properties(dtheta_tmp)
+      call invoke(setval_X(theta_latest, theta_star), &
+                  setval_X(u_latest, u_star) )
+    end if
+
     !--------------------------------------------------------------------
     ! UM implicit boundary layer and Jules surface schemes
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_b4conv) then
-        call du%copy_field_properties(du_bl)
-        call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
+        call bl_imp_alg(dtheta_tmp, du_tmp, theta_latest, u_latest, mr,     &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
                         theta, exner, mr_n, rho,                            &
@@ -241,23 +249,26 @@ contains
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
                         microphysics_fields, aerosol_fields, outer, clock)
-        boundary_layer_done=.true. ! Collect this increment later on
+        call invoke(inc_X_plus_Y(dtheta, dtheta_tmp), &
+                    inc_X_plus_Y(theta_latest, dtheta_tmp), &
+                    inc_X_plus_Y(du, du_tmp), &
+                    inc_X_plus_Y(u_latest, du_tmp) )
       end if
     end if
 
     ! Balance cloud before the rest of fast physics
     if (cloud_call_b4_conv) then
-      call derived_fields%get_field('theta_star', theta_star)
-      call cld_alg( dtheta, mr,                                              &
-                    theta_star, exner, rho,                                  &
+      call cld_alg( dtheta_tmp, mr,                                          &
+                    theta_latest, exner, rho,                                &
                     derived_fields, turbulence_fields,                       &
                     cloud_fields, convection_fields,                         &
                     theta, mr_n,                                             &
                     clock%get_step(), dt, .true. )
-      ! Add the cloud balancing increment to theta_star so that BL and conv
+      ! Add the cloud balancing increment to theta_latest so that BL and conv
       ! are seeing balanced state. This increment is retained for use by
       ! the dynamics in dtheta.
-      call invoke(inc_X_plus_Y(theta_star, dtheta))
+      call invoke(inc_X_plus_Y(theta_latest, dtheta_tmp), &
+                  inc_X_plus_Y(dtheta, dtheta_tmp) )
       ! Reset departure_exner to the arrival point value so that later
       ! call to pc2_pressure_forcing is not double-counting
       call cloud_fields%get_field('departure_exner_wth', departure_exner_wth)
@@ -271,22 +282,21 @@ contains
     if (convection == convection_um .and.                       &
         convection_placement == convection_placement_fast) then
 
-      call du%copy_field_properties(du_conv_w2)
-
       if ( cv_scheme == cv_scheme_lambert_lewis ) then
         ! Call the UM Lambert-Lewis convection scheme
-        call conv_ll_alg(du_conv_w2, mr, exner, derived_fields, &
+        call conv_ll_alg(du_tmp, theta_latest, mr, exner, derived_fields, &
                          convection_fields, outer)
       else if ( cv_scheme == cv_scheme_gregory_rowntree ) then
         ! Call the UM Gregory Rowntree convection scheme
-        call conv_gr_alg(du_conv_w2, mr, rho, exner, derived_fields,      &
+        call conv_gr_alg(du_tmp, theta_latest, u_latest, mr, rho, exner,  &
+                         derived_fields,                                  &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
       else if ( cv_scheme == cv_scheme_comorph ) then
         ! Call the Comorph convection scheme
-        call conv_comorph_alg(du_conv_w2, mr, mr_n, rho, exner, theta,    &
-                         derived_fields,                                  &
+        call conv_comorph_alg(du_tmp, theta_latest, u_latest, mr, mr_n,   &
+                         rho, exner, theta, derived_fields,               &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
@@ -294,7 +304,7 @@ contains
 
       if ( cloud == cloud_um .and. scheme == scheme_pc2 ) then
         ! Update the cloud fields if using PC2
-        call pc2_conv_coupling_alg( mr, derived_fields,                  &
+        call pc2_conv_coupling_alg( theta_latest, mr, derived_fields,     &
                                     convection_fields, cloud_fields, dt )
       else
         ! Without PC2, just update vapour field
@@ -303,16 +313,13 @@ contains
       end if
 
       ! Update fields and increments
-      call derived_fields%get_field('u_star', u_star)
-      call derived_fields%get_field('theta_star', theta_star)
       call convection_fields%get_field('dt_conv', dt_conv)
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
-      call dt_conv%copy_field_properties(dtheta_conv)
-      call invoke(X_divideby_Y(dtheta_conv, dt_conv, exner_in_wth), &
-                  inc_X_plus_Y(theta_star, dtheta_conv), &
-                  inc_X_plus_Y(dtheta, dtheta_conv), &
-                  inc_X_plus_Y(u_star, du_conv_w2), &
-                  inc_X_plus_Y(du, du_conv_w2) )
+      call invoke(X_divideby_Y(dtheta_tmp, dt_conv, exner_in_wth), &
+                  inc_X_plus_Y(theta_latest, dtheta_tmp), &
+                  inc_X_plus_Y(dtheta, dtheta_tmp), &
+                  inc_X_plus_Y(u_latest, du_tmp), &
+                  inc_X_plus_Y(du, du_tmp) )
 
     end if
 
@@ -321,8 +328,7 @@ contains
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_fast) then
-        call du%copy_field_properties(du_bl)
-        call bl_imp_alg(dtheta_bl, du_bl, mr,                               &
+        call bl_imp_alg(dtheta_tmp, du_tmp, theta_latest, u_latest, mr,     &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
                         theta, exner, mr_n, rho,                            &
@@ -330,7 +336,10 @@ contains
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
                         microphysics_fields, aerosol_fields, outer, clock)
-        boundary_layer_done=.true. ! Collect this increment later on
+        call invoke(inc_X_plus_Y(dtheta, dtheta_tmp), &
+                    inc_X_plus_Y(theta_latest, dtheta_tmp), &
+                    inc_X_plus_Y(du, du_tmp), &
+                    inc_X_plus_Y(u_latest, du_tmp) )
       end if
     !--------------------------------------------------------------------
     ! Jules surface and sub-surface (snow and hydrology)
@@ -360,7 +369,7 @@ contains
       ! The increments are stored in module scope for subsequent iterations
       if ( outer == 1_i_def )then
         call stph_main_alg( du_stph, dtheta_stph, dmv_stph,                  &
-                          dtheta_bl, mr(imr_v), rho, u_n, convection_fields, &
+                          theta_latest, mr(imr_v), rho, u_n, convection_fields,&
                           microphysics_fields, radiation_fields,             &
                           derived_fields, orography_fields, clock)
       end if
@@ -405,13 +414,6 @@ contains
     !=====================================================================
     ! Update the main fields and increments to pass out
     !=====================================================================
-    if (boundary_layer_done) then
-      ! N.B. as currently coded, the convection increments are added in the
-      ! boundary layer as part of the implicit solution
-      call invoke(inc_X_plus_Y(du, du_bl), &
-                  inc_X_plus_Y(dtheta, dtheta_bl) )
-    end if
-
 #ifdef UM_PHYSICS
     if (stph_done) then
       ! Adding stochastic physics theta, mv and winds
@@ -430,8 +432,6 @@ contains
 #endif
 
     if (smagorinsky .and. smagorinsky_placement == smagorinsky_placement_fast) then
-      call derived_fields%get_field('theta_star', theta_star)
-      call derived_fields%get_field('u_star', u_star)
       call smagorinsky_alg(dtheta, du, mr, theta_star, u_star, &
                            derived_fields, rho, dt)
     end if

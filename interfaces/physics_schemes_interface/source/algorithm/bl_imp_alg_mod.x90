@@ -55,6 +55,8 @@ contains
   !>         NB This version uses winds in w3 space (i.e. A-grid)
   !>@param[in,out] dtheta_bl         Theta increment
   !>@param[in,out] du_bl             3D wind increment
+  !>@param[in,out] theta_latest      Current estimate of theta
+  !>@param[in,out] u_latest          Current estimate of wind
   !>@param[in,out] mr                Mixing ratios
   !>@param[out]    surf_heat_flux    Net surface heat flux
   !>@param[out]    canopy_evap       Canopy evaporation from land tiles
@@ -78,7 +80,7 @@ contains
   !>@param[in]     microphysics_fields Fields for microphysics scheme
   !>@param[in]     outer             Outer loop counter
   !>@param[in]     clock             The clock object
-  subroutine bl_imp_alg(dtheta_bl, du_bl, mr,                            &
+  subroutine bl_imp_alg(dtheta_bl, du_bl, theta_latest, u_latest, mr,    &
                         surf_heat_flux, canopy_evap, water_extraction,   &
                         lake_evap, theta_star_surf, qv_star_surf,        &
                         theta, exner, mr_n, rho,                         &
@@ -100,7 +102,8 @@ contains
     type( field_type ), intent( out )       :: surf_heat_flux, canopy_evap,   &
                                                water_extraction, lake_evap,   &
                                                theta_star_surf, qv_star_surf
-    type( field_type ), intent( in )        :: theta, exner, rho, mr_n(nummr)
+    type( field_type ), intent( in )        :: theta, exner, rho, mr_n(nummr),&
+                                               theta_latest, u_latest
 
     type( field_collection_type ), intent(in)    :: derived_fields
     type( field_collection_type ), intent(in)    :: radiation_fields
@@ -121,9 +124,7 @@ contains
     type( field_type ), pointer :: wetrho_in_wth  => null()
     type( field_type ), pointer :: wetrho_in_w3   => null()
     type( field_type ), pointer :: wetrho_in_w2   => null()
-    type( field_type ), pointer :: theta_star     => null()
     type( field_type ), pointer :: u_physics      => null()
-    type( field_type ), pointer :: u_star
 
     type( field_type ), pointer :: zh             => null()
     type( field_type ), pointer :: zhsc           => null()
@@ -223,9 +224,7 @@ contains
     call derived_fields%get_field('wetrho_in_wth', wetrho_in_wth)
     call derived_fields%get_field('wetrho_in_w3', wetrho_in_w3)
     call derived_fields%get_field('wetrho_in_w2', wetrho_in_w2)
-    call derived_fields%get_field('theta_star', theta_star)
     call derived_fields%get_field('u_physics', u_physics)
-    call derived_fields%get_field('u_star', u_star)
 
     ! Unpack turbulence fields
     call turbulence_fields%get_field('zh', zh)
@@ -302,9 +301,6 @@ contains
 
     mesh       => zh%get_mesh()
 
-    ! Set up the BL increments
-    call theta%copy_field_properties(dtheta_bl)
-
     ! Initialise the BL diagnostics
     call initialise_diags_for_bl_imp(mr(imr_v), mr(imr_cl), mr(imr_s),         &
                                      cf_bulk, cf_area, cf_liq, cf_fro,         &
@@ -324,14 +320,14 @@ contains
     call tau_ssi_w2%copy_field_properties(wind10m_w2)
     call tau_ssi_w2%copy_field_properties(wind10m_neut_w2)
     call tau_ssi_w2%copy_field_properties(pseudotau_w2)
-    call u_star%copy_field_properties(u_physics_star)
+    call u_latest%copy_field_properties(u_physics_star)
 
     call invoke(setval_c(du_bl, 0.0_r_def),                                    &
                 setval_c(dissip, 0.0_r_def),                                   &
                 setval_c(wind10m_w2, 0.0_r_def),                               &
                 setval_c(wind10m_neut_w2, 0.0_r_def),                          &
                 setval_c(pseudotau_w2, 0.0_r_def),                             &
-                X_divideby_Y(u_physics_star, u_star, dA),                      &
+                X_divideby_Y(u_physics_star, u_latest, dA),                    &
 
                 ! LFRic calculation of du on cell faces
                 bl_imp_du_kernel_type(outer, du_bl, dissip, tau_w2,            &
@@ -390,7 +386,7 @@ contains
     do loop = 1,2
       ! Call the implicit scheme for scalars
       call invoke(bl_imp_kernel_type( loop, theta, exner_in_wth, mr_n(imr_v),  &
-                                      mr_n(imr_cl), mrn_ice, theta_star,       &
+                                      mr_n(imr_cl), mrn_ice, theta_latest,     &
                                       height_w3, height_wth,                   &
                                       mr(imr_v), mr(imr_cl), mr_ice,           &
                                       dtrdz_tq_bl, rdz_w3, blend_height_tq,    &
@@ -406,7 +402,7 @@ contains
                           t1p5m_ssi, q1p5m_ssi, qcl1p5m_ssi, t1p5m_land,       &
                           q1p5m_land, qcl1p5m_land)
       call invoke(bl_imp2_kernel_type( outer, loop, wetrho_in_wth, exner,      &
-                                       exner_in_wth, theta_star, height_w3,    &
+                                       exner_in_wth, theta_latest, height_w3,  &
                                        height_wth, ntml, cumulus, dtheta_bl,   &
                                        diss_u, diss_v, mr(imr_v),              &
                                        mr(imr_cl), mr(imr_ci), mr(imr_s),      &

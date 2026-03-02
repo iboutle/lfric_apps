@@ -41,6 +41,8 @@ contains
   !>             vertical mixing of heat, momentum and moisture,
   !>             as documented in UMDP27
   !>@param[in,out] du_conv_w2          Wind increment in w2
+  !>@param[in,out] theta_latest        Current estimate of theta
+  !>@param[in,out] u_latest            Current esitmate of wind
   !>@param[in,out] mr                  Mixing ratios
   !>@param[in]     rho                 Dry density in its native (w3) space
   !>@param[in]     exner               Exner Pressure in the w3 space
@@ -53,7 +55,8 @@ contains
   !>@param[in]     aerosol_fields      Fields for aerosol scheme
   !>@param[in]     microphysics_fields Fields for microphysics scheme
   !>@param[in]     outer             Outer loop counter
-  subroutine conv_gr_alg(du_conv_w2, mr, rho, exner, derived_fields,      &
+  subroutine conv_gr_alg(du_conv_w2, theta_latest, u_latest, mr, rho,     &
+                         exner, derived_fields,                           &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
@@ -63,7 +66,7 @@ contains
     implicit none
 
     type( field_type ), intent( inout )     :: mr(nummr), du_conv_w2
-    type( field_type ), intent( in )        :: rho, exner
+    type( field_type ), intent( in )        :: rho, exner, theta_latest, u_latest
 
     type( field_collection_type ), intent(in) :: derived_fields
     type( field_collection_type ), intent(in) :: turbulence_fields
@@ -82,8 +85,6 @@ contains
     type( field_type ), pointer :: wetrho_in_wth => null()
     type( field_type ), pointer :: wetrho_in_w3 => null()
     type( field_type ), pointer :: w_in_wth => null()
-    type( field_type ), pointer :: theta_star => null()
-    type( field_type ), pointer :: u_star
 
     type( field_type ), pointer :: zh => null()
     type( integer_field_type ), pointer :: ntml => null()
@@ -283,8 +284,6 @@ contains
     call derived_fields%get_field('wetrho_in_w3', wetrho_in_w3)
     call derived_fields%get_field('rho_in_wth', rho_in_wth)
     call derived_fields%get_field('w_in_wth', w_in_wth)
-    call derived_fields%get_field('theta_star', theta_star)
-    call derived_fields%get_field('u_star', u_star)
 
     ! Unpack turbulence fields
     call turbulence_fields%get_field('zh', zh)
@@ -458,8 +457,7 @@ contains
     delta      => get_delta_at_wtheta(mesh%get_id())
 
     ! Initialise the convection diagnostics
-    call initialise_diags_for_conv(theta_star,           &
-                                   rho,                  &
+    call initialise_diags_for_conv(rho,                  &
                                    zh,                   &
                                    deep_in_col,          & ! 2-D local variables
                                    shallow_in_col,       &
@@ -515,7 +513,7 @@ contains
     call rho%copy_field_properties(v_in_w3_star)
     call rho%copy_field_properties(w_in_w3_star)
     call map_physics_winds(u_in_w3_star, v_in_w3_star, w_in_w3_star, &
-                           u_star)
+                           u_latest)
     call w_in_w3_star%field_final()
 
     ! set increments to zero
@@ -541,7 +539,7 @@ contains
                  ! call the scheme
                  conv_gr_kernel_type( outer, rho, rho_in_wth, wetrho_in_w3,   &
                           wetrho_in_wth, exner, exner_in_wth, w_in_wth,       &
-                          theta_star, u_in_w3_star, v_in_w3_star,             &
+                          theta_latest, u_in_w3_star, v_in_w3_star,           &
                           height_w3, height_wth, delta,                       &
                           ntml, cumulus, tile_fraction,                       &
                           dt_conv, dmv_conv, dmcl_conv,                       &
