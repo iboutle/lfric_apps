@@ -160,14 +160,12 @@ contains
     real(kind=r_def),        intent(in) :: dt
 
     ! Local fields...
+    type( field_type ) :: theta_latest, u_latest
     ! ...for evaporation condensation
     type( field_type ) :: dtheta_cld
     type( field_type ) :: dmr_cld(nummr)
 
 #ifdef UM_PHYSICS
-    type( field_type ) :: theta_latest, u_latest
-    ! ...for reuse in schemes
-    type( field_type ) :: dtheta_tmp, du_tmp
     ! ...for boundary layer stochastic perturbation
     type( field_type ) :: dtheta_blpert
     type( field_type ) :: dmv_blpert
@@ -213,28 +211,20 @@ contains
     !--------------------------------------------------------------------
     ! Initialisation of fields
     !--------------------------------------------------------------------
-    call invoke( setval_c(dtheta, 0.0_r_def), &
-                 setval_c(du, 0.0_r_def) )
-
-#ifdef UM_PHYSICS
-    if (boundary_layer == boundary_layer_um .or. &
-         convection == convection_um ) then
-      call derived_fields%get_field('u_star', u_star)
-      call derived_fields%get_field('theta_star', theta_star)
-      call u_star%copy_field_properties(u_latest)
-      call theta_star%copy_field_properties(theta_latest)
-      call u_star%copy_field_properties(du_tmp)
-      call theta_star%copy_field_properties(dtheta_tmp)
+    call derived_fields%get_field('u_star', u_star)
+    call derived_fields%get_field('theta_star', theta_star)
+    call u_star%copy_field_properties(u_latest)
+    call theta_star%copy_field_properties(theta_latest)
       call invoke(setval_X(theta_latest, theta_star), &
                   setval_X(u_latest, u_star) )
-    end if
 
+#ifdef UM_PHYSICS
     !--------------------------------------------------------------------
     ! UM implicit boundary layer
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_b4conv) then
-        call bl_imp_alg(dtheta_tmp, du_tmp, theta_latest, u_latest, mr,     &
+        call bl_imp_alg(dtheta, du, theta_latest, u_latest, mr,             &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
                         theta, exner, mr_n, rho,                            &
@@ -242,16 +232,14 @@ contains
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
                         microphysics_fields, aerosol_fields, outer, clock)
-        call invoke(inc_X_plus_Y(dtheta, dtheta_tmp), &
-                    inc_X_plus_Y(theta_latest, dtheta_tmp), &
-                    inc_X_plus_Y(du, du_tmp), &
-                    inc_X_plus_Y(u_latest, du_tmp) )
+        call invoke(inc_X_plus_Y(theta_latest, dtheta), &
+                    inc_X_plus_Y(u_latest, du) )
       end if
     end if
 
     ! Balance cloud before the rest of fast physics
     if (cloud_call_b4_conv) then
-      call cld_alg( dtheta_tmp, mr,                                          &
+      call cld_alg( dtheta, mr,                                              &
                     theta_latest, exner, rho,                                &
                     derived_fields, turbulence_fields,                       &
                     cloud_fields, convection_fields,                         &
@@ -260,8 +248,7 @@ contains
       ! Add the cloud balancing increment to theta_latest so that BL and conv
       ! are seeing balanced state. This increment is retained for use by
       ! the dynamics in dtheta.
-      call invoke(inc_X_plus_Y(theta_latest, dtheta_tmp), &
-                  inc_X_plus_Y(dtheta, dtheta_tmp) )
+      call invoke(inc_X_plus_Y(theta_latest, dtheta) )
       ! Reset departure_exner to the arrival point value so that later
       ! call to pc2_pressure_forcing is not double-counting
       call cloud_fields%get_field('departure_exner_wth', departure_exner_wth)
@@ -278,18 +265,18 @@ contains
       if ( cv_scheme == cv_scheme_lambert_lewis .or. &
            (llcs_first_outer .and. outer==1) ) then
         ! Call the UM Lambert-Lewis convection scheme
-        call conv_ll_alg(du_tmp, theta_latest, mr, exner, derived_fields, &
+        call conv_ll_alg(du, theta_latest, mr, exner, derived_fields, &
                          convection_fields, outer)
       else if ( cv_scheme == cv_scheme_gregory_rowntree ) then
         ! Call the UM Gregory Rowntree convection scheme
-        call conv_gr_alg(du_tmp, theta_latest, u_latest, mr, rho, exner,  &
+        call conv_gr_alg(du, theta_latest, u_latest, mr, rho, exner,      &
                          derived_fields,                                  &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
                          aerosol_fields, microphysics_fields, outer)
       else if ( cv_scheme == cv_scheme_comorph ) then
         ! Call the Comorph convection scheme
-        call conv_comorph_alg(du_tmp, theta_latest, u_latest, mr, mr_n,   &
+        call conv_comorph_alg(du, theta_latest, u_latest, mr, mr_n,       &
                          rho, exner, theta, derived_fields,               &
                          turbulence_fields, convection_fields,            &
                          cloud_fields, surface_fields, chemistry_fields,  &
@@ -309,11 +296,9 @@ contains
       ! Update fields and increments
       call convection_fields%get_field('dt_conv', dt_conv)
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
-      call invoke(X_divideby_Y(dtheta_tmp, dt_conv, exner_in_wth), &
-                  inc_X_plus_Y(theta_latest, dtheta_tmp), &
-                  inc_X_plus_Y(dtheta, dtheta_tmp), &
-                  inc_X_plus_Y(u_latest, du_tmp), &
-                  inc_X_plus_Y(du, du_tmp) )
+      call invoke(X_divideby_Y(dtheta, dt_conv, exner_in_wth), &
+                  inc_X_plus_Y(theta_latest, dtheta), &
+                  inc_X_plus_Y(u_latest, du))
 
     end if
 
@@ -322,7 +307,7 @@ contains
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_fast) then
-        call bl_imp_alg(dtheta_tmp, du_tmp, theta_latest, u_latest, mr,     &
+        call bl_imp_alg(dtheta, du, theta_latest, u_latest, mr,             &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
                         theta, exner, mr_n, rho,                            &
@@ -330,10 +315,8 @@ contains
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
                         microphysics_fields, aerosol_fields, outer, clock)
-        call invoke(inc_X_plus_Y(dtheta, dtheta_tmp), &
-                    inc_X_plus_Y(theta_latest, dtheta_tmp), &
-                    inc_X_plus_Y(du, du_tmp) )
-                    ! u_latest not updated as not used again
+        call invoke(inc_X_plus_Y(theta_latest, dtheta), &
+                    inc_X_plus_Y(u_latest, du) )
       end if
     !--------------------------------------------------------------------
     ! Jules surface and sub-surface (snow and hydrology)
@@ -370,9 +353,9 @@ contains
       ! as part of the implicit solution
       ! Note that these are stored from the first outer loop call
       ! and then applied on subsequent outer loops
-      call invoke(inc_X_plus_Y(dtheta, dtheta_stph), &
+      call invoke(inc_X_plus_Y(theta_latest, dtheta_stph), &
                   inc_X_plus_Y(mr(imr_v), dmv_stph), &
-                  inc_X_plus_Y(du, du_stph) )
+                  inc_X_plus_Y(u_latest, du_stph) )
 
       if (blpert_type /= blpert_type_off) then
         call dtheta_stph%copy_field_properties(dtheta_blpert)
@@ -380,7 +363,7 @@ contains
         call blpert_main_alg(dtheta_blpert, dmv_blpert, mr(imr_v),           &
                              theta_star_surf, qv_star_surf,                  &
                              turbulence_fields, stph_fields, outer, clock)
-        call invoke(inc_X_plus_Y(dtheta, dtheta_blpert), &
+        call invoke(inc_X_plus_Y(theta_latest, dtheta_blpert), &
                     inc_X_plus_Y(mr(imr_v), dmv_blpert) )
 
       end if
@@ -412,10 +395,14 @@ contains
                                              exner_in_wth,                     &
                                              Rd, Rv, cp, cpv, cl, p_zero) )
 
-      call invoke(inc_X_plus_Y(dtheta,      dtheta_cld),     &
+      call invoke(inc_X_plus_Y(theta_latest, dtheta_cld),     &
                   inc_X_plus_Y(mr(imr_v),   dmr_cld(imr_v)), &
                   inc_X_plus_Y(mr(imr_cl),  dmr_cld(imr_cl)))
     end if
+
+    ! Calculate total physics increment
+    call invoke(X_minus_Y(dtheta, theta_latest, theta_star), &
+                X_minus_Y(du, u_latest, u_star) )
 
     !--------------------------------------------------------------------
     ! Smagorinsky horizontal mixing

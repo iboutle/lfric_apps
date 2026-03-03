@@ -170,13 +170,7 @@ contains
     call processor%apply(make_spec('wetrho_in_wth', main%derived, Wtheta))
     call processor%apply(make_spec('exner_in_wth', main%derived, Wtheta))
     call processor%apply(make_spec('exner_wth_n', main%derived, Wtheta))
-
-    if ( boundary_layer == boundary_layer_um .or.                              &
-         convection     == convection_um ) then
-
-      call processor%apply(make_spec('theta_star', main%derived, Wtheta))
-
-    end if
+    call processor%apply(make_spec('theta_star', main%derived, Wtheta))
 
     if ( boundary_layer == boundary_layer_um .or.                              &
          convection     == convection_um     .or.                              &
