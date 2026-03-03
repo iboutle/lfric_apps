@@ -160,14 +160,14 @@ contains
     real(kind=r_def),        intent(in) :: dt
 
     ! Local fields...
-    type( field_type ) :: theta_latest, u_latest
-    ! ...for reuse in schemes
-    type( field_type ) :: dtheta_tmp, du_tmp
     ! ...for evaporation condensation
     type( field_type ) :: dtheta_cld
     type( field_type ) :: dmr_cld(nummr)
 
 #ifdef UM_PHYSICS
+    type( field_type ) :: theta_latest, u_latest
+    ! ...for reuse in schemes
+    type( field_type ) :: dtheta_tmp, du_tmp
     ! ...for boundary layer stochastic perturbation
     type( field_type ) :: dtheta_blpert
     type( field_type ) :: dmv_blpert
@@ -195,9 +195,6 @@ contains
     type( field_type), pointer :: u_star => null()
     type( field_type), pointer :: exner_in_wth => null()
 
-    ! Flags to indicate whether scheme has run and increments need adding
-    logical(kind=l_def) :: stph_done, blpert_done, evap_condense_done
-
     ! Flag to indicate that moisture mixing ratio fields are being used
     logical(kind=l_def) :: use_moisture
     real( kind=r_def )  :: Rv, cpv, cl
@@ -214,14 +211,10 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! Initialisation of fields and flags
+    ! Initialisation of fields
     !--------------------------------------------------------------------
     call invoke( setval_c(dtheta, 0.0_r_def), &
                  setval_c(du, 0.0_r_def) )
-    
-    stph_done= .false.
-    blpert_done= .false.
-    evap_condense_done = .false.
 
 #ifdef UM_PHYSICS
     if (boundary_layer == boundary_layer_um .or. &
@@ -237,7 +230,7 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! UM implicit boundary layer and Jules surface schemes
+    ! UM implicit boundary layer
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_b4conv) then
@@ -324,7 +317,7 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! UM implicit boundary layer and Jules surface schemes
+    ! UM implicit boundary layer
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um) then
       if(blayer_placement == blayer_placement_fast) then
@@ -338,8 +331,8 @@ contains
                         microphysics_fields, aerosol_fields, outer, clock)
         call invoke(inc_X_plus_Y(dtheta, dtheta_tmp), &
                     inc_X_plus_Y(theta_latest, dtheta_tmp), &
-                    inc_X_plus_Y(du, du_tmp), &
-                    inc_X_plus_Y(u_latest, du_tmp) )
+                    inc_X_plus_Y(du, du_tmp) )
+                    ! u_latest not updated as not used again
       end if
     !--------------------------------------------------------------------
     ! Jules surface and sub-surface (snow and hydrology)
@@ -354,12 +347,11 @@ contains
                              water_extraction, lake_evap, dt)
 
       end if ! jules
-    end if ! fast_bl
+    end if ! bl
 
     !--------------------------------------------------------------------
     ! Add Stochastic physics
     !--------------------------------------------------------------------
-
     if (stochastic_physics == stochastic_physics_um .and. &
         stochastic_physics_placement == stochastic_physics_placement_fast) then
       call stph_fields%get_field('dmv_stph', dmv_stph)
@@ -373,7 +365,13 @@ contains
                           microphysics_fields, radiation_fields,             &
                           derived_fields, orography_fields, clock)
       end if
-      stph_done=.true. ! Collect this increment later on
+      ! Adding stochastic physics theta, mv and winds
+      ! as part of the implicit solution
+      ! Note that these are stored from the first outer loop call
+      ! and then applied on subsequent outer loops
+      call invoke(inc_X_plus_Y(dtheta, dtheta_stph), &
+                  inc_X_plus_Y(mr(imr_v), dmv_stph), &
+                  inc_X_plus_Y(du, du_stph) )
 
       if (blpert_type /= blpert_type_off) then
         call dtheta_stph%copy_field_properties(dtheta_blpert)
@@ -381,12 +379,16 @@ contains
         call blpert_main_alg(dtheta_blpert, dmv_blpert, mr(imr_v),           &
                              theta_star_surf, qv_star_surf,                  &
                              turbulence_fields, stph_fields, outer, clock)
-        blpert_done = .true.
+        call invoke(inc_X_plus_Y(dtheta, dtheta_blpert), &
+                    inc_X_plus_Y(mr(imr_v), dmv_blpert) )
+
       end if
     end if
-
 #endif
 
+    !--------------------------------------------------------------------
+    ! Simple evap/condense cloud scheme
+    !--------------------------------------------------------------------
     if (evap_condense_placement == evap_condense_placement_fast .and. &
         cloud == cloud_evap_condense) then
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
@@ -408,29 +410,15 @@ contains
                                              mr(imr_v), mr(imr_cl),            &
                                              exner_in_wth,                     &
                                              Rd, Rv, cp, cpv, cl, p_zero) )
-      evap_condense_done = .true.
+
+      call invoke(inc_X_plus_Y(dtheta,      dtheta_cld),     &
+                  inc_X_plus_Y(mr(imr_v),   dmr_cld(imr_v)), &
+                  inc_X_plus_Y(mr(imr_cl),  dmr_cld(imr_cl)))
     end if
 
-    !=====================================================================
-    ! Update the main fields and increments to pass out
-    !=====================================================================
-#ifdef UM_PHYSICS
-    if (stph_done) then
-      ! Adding stochastic physics theta, mv and winds
-      ! as part of the implicit solution
-      ! Note that these are stored from the first outer loop call
-      ! and then applied on subsequent outer loops
-      call invoke(inc_X_plus_Y(dtheta, dtheta_stph), &
-                  inc_X_plus_Y(mr(imr_v), dmv_stph), &
-                  inc_X_plus_Y(du, du_stph) )
-    end if
-
-    if (blpert_done) then
-      call invoke(inc_X_plus_Y(dtheta, dtheta_blpert), &
-                  inc_X_plus_Y(mr(imr_v), dmv_blpert) )
-    end if
-#endif
-
+    !--------------------------------------------------------------------
+    ! Smagorinsky horizontal mixing
+    !--------------------------------------------------------------------
     if (smagorinsky .and. smagorinsky_placement == smagorinsky_placement_fast) then
       call smagorinsky_alg(dtheta, du, mr, theta_star, u_star, &
                            derived_fields, rho, dt)
@@ -438,11 +426,7 @@ contains
 
     call print_field_stats_alg(dtheta, LOG_LEVEL_INFO, printmin=-20.0_r_def, &
                                printmax=20.0_r_def, name='dtheta fast')
-    if (evap_condense_done) then
-      call invoke(inc_X_plus_Y(dtheta,      dtheta_cld),     &
-                  inc_X_plus_Y(mr(imr_v),   dmr_cld(imr_v)), &
-                  inc_X_plus_Y(mr(imr_cl),  dmr_cld(imr_cl)))
-    end if
+
     if ( use_moisture ) then
       do i_mr = 1, nummr
         call invoke( enforce_lower_bound_kernel_type (mr(i_mr), 0.0_r_def) )
