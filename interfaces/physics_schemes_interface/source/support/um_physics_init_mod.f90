@@ -126,11 +126,19 @@ module um_physics_init_mod
                                         number_of_convection_substeps,&
                                         cape_timescale_in => cape_timescale, &
                                         qlmin_in => qlmin,                   &
+                                        mparwtr_in => mparwtr,               &
                                         efrac_in => efrac,                   &
+                                        prog_ent_grad_in => prog_ent_grad,   &
+                                        prog_ent_int_in => prog_ent_int,     &
+                                        prog_ent_max_in => prog_ent_max,     &
                                         prog_ent_min_in => prog_ent_min,     &
                                         orig_mdet_fac_in => orig_mdet_fac,   &
                                         r_det_in => r_det,                   &
                                         cca_md_scaling,                      &
+                                        cpress_term_in => cpress_term,       &
+                                        ent_fac_sh_in => ent_fac_sh,         &
+                                        thpixs_mid_in => thpixs_mid,         &
+                                        c_mass_sh_in => c_mass_sh,           &
                                      par_gen_mass_fac_in => par_gen_mass_fac, &
                                      par_gen_rhpert_in => par_gen_rhpert,     &
                                      par_radius_ppn_max_in => par_radius_ppn_max, &
@@ -814,7 +822,7 @@ contains
       ! Options needed by all convection schemes
       l_param_conv = .true.
       fac_qsat     = 0.350_r_um
-      mparwtr      = 1.0000e-3_r_um
+      mparwtr      = mparwtr_in
       qlmin        = qlmin_in
 
       ! Options which are bespoke to the choice of scheme
@@ -908,7 +916,7 @@ contains
         cldbase_opt_md      = 2
         cnv_cold_pools      = 0
         cnv_wat_load_opt    = 0
-        cpress_term         = 0.3_r_um
+        cpress_term         = cpress_term_in
         dd_opt              = 1
         deep_cmt_opt        = 6
         eff_dcff            = 3.0_r_um
@@ -949,18 +957,18 @@ contains
         t_melt_snow         = 276.15_r_um
         termconv            = 2
         tice                = 263.1500_r_um
-        thpixs_mid          = 0.5_r_um
+        thpixs_mid          = thpixs_mid_in
         tower_factor        = 1.0000_r_um
         ud_factor           = 1.0000_r_um
         tau_conv_prog_precip = 10800.0_r_um
         tau_conv_prog_dtheta = 2700.0_r_um
         tau_conv_prog_dq    =  2700.0_r_um
-        prog_ent_grad       = -1.1_r_um
-        prog_ent_int        = -2.9_r_um
+        prog_ent_grad       = prog_ent_grad_in
+        prog_ent_int        = prog_ent_int_in
         prog_ent_min        = prog_ent_min_in
-        prog_ent_max        = 2.5_r_um
-        ent_fac_sh          = 1.0_r_um
-        c_mass_sh           = 0.03_r_um
+        prog_ent_max        = prog_ent_max_in
+        ent_fac_sh          = ent_fac_sh_in
+        c_mass_sh           = c_mass_sh_in
         orig_mdet_fac       = orig_mdet_fac_in
 
       case(cv_scheme_lambert_lewis)
