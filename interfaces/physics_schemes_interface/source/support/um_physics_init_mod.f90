@@ -129,6 +129,8 @@ module um_physics_init_mod
                                         efrac_in => efrac,                   &
                                         prog_ent_min_in => prog_ent_min,     &
                                         orig_mdet_fac_in => orig_mdet_fac,   &
+                                        r_det_in => r_det,                   &
+                                        cca_md_scaling,                      &
                                      par_gen_mass_fac_in => par_gen_mass_fac, &
                                      par_gen_rhpert_in => par_gen_rhpert,     &
                                      par_radius_ppn_max_in => par_radius_ppn_max, &
@@ -897,7 +899,7 @@ contains
         cca2d_md_opt        = 2
         cca2d_sh_opt        = 2
         cca_dp_knob         = 0.80_r_um
-        cca_md_knob         = 0.80_r_um
+        cca_md_knob         = cca_md_scaling
         cca_sh_knob         = 0.40_r_um
         ccw_dp_knob         = 1.00_r_um
         ccw_for_precip_opt  = 4
@@ -941,7 +943,7 @@ contains
         n_conv_calls        = number_of_convection_substeps
         pr_melt_frz_opt     = 2
         qstice              = 3.5000e-3_r_um
-        r_det               = 0.5000_r_um
+        r_det               = r_det_in
         rad_cloud_decay_opt = 0
         sh_pert_opt         = 1
         t_melt_snow         = 276.15_r_um
