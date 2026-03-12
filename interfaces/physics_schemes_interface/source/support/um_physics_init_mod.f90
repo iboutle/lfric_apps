@@ -139,6 +139,7 @@ module um_physics_init_mod
                                         ent_fac_sh_in => ent_fac_sh,         &
                                         thpixs_mid_in => thpixs_mid,         &
                                         c_mass_sh_in => c_mass_sh,           &
+                                        conv_prog_dtheta, conv_prog_dq,      &
                                      par_gen_mass_fac_in => par_gen_mass_fac, &
                                      par_gen_rhpert_in => par_gen_rhpert,     &
                                      par_radius_ppn_max_in => par_radius_ppn_max, &
@@ -170,6 +171,8 @@ module um_physics_init_mod
                                         ci_input_in => ci_input,             &
                                         cic_input_in => cic_input,           &
                                         c_r_correl_in => c_r_correl,         &
+                                        aut_qc_in => aut_qc,                 &
+                                        ai_in => ai,                         &
                                         l_proc_fluxes_in => l_proc_fluxes,   &
                                         l_mcr_precfrac_in => l_mcr_precfrac, &
                                    i_update_precfrac_in => i_update_precfrac,&
@@ -264,6 +267,7 @@ module um_physics_init_mod
                                            rp_lsfc_z0v,                        &
                                            rp_mp_ice_fspd,                     &
                                            rp_mp_fxd_cld_num,                  &
+                                           rp_mp_ci,                           &
                                            rp_mp_mp_czero,                     &
                                            rp_mp_mpof,                         &
                                            rp_mp_ndrop_surf,                   &
@@ -487,7 +491,7 @@ contains
          a_ent_shr_rp_max, alnir_rp, alpar_rp, cbl_mix_fac_rp, cs_rp,       &
          fxd_cld_num_rp, g0_rp, g1_rp, ice_fspd_rp, i_rp_scheme, l_rp2,     &
          l_rp2_cycle_in, l_rp2_cycle_out, lai_mult_rp, lambda_min_rp,       &
-         mp_czero_rp, mpof_rp, ndrop_surf_rp, omega_rp, omnir_rp,           &
+         m_ci_rp, mp_czero_rp, mpof_rp, ndrop_surf_rp, omega_rp, omnir_rp,  &
          orog_drag_param_rp, par_mezcla_rp, ran_max, ricrit_rp,             &
          rp2_callfreq, rp2_cycle_tm, rp2_decorr_ts, snow_fspd_rp,           &
          z0_soil_rp, z0_urban_mult_rp, z0hm_soil_rp, z0hm_pft_rp, z0v_rp
@@ -847,6 +851,10 @@ contains
         l_mom       = .true.
         l_ccrad     = .true.
         l_3d_cca    = .true.
+        l_conv_prog_dtheta  = conv_prog_dtheta
+        l_conv_prog_dq      = conv_prog_dq
+        tau_conv_prog_dtheta = 2700.0_r_um
+        tau_conv_prog_dq    =  2700.0_r_um
 
         ! main Comorph options
         ass_min_radius = 500.0_r_um
@@ -935,8 +943,8 @@ contains
         l_ccrad             = .true.
         l_cmt_heating       = .true.
         l_conv_prog_precip  = .true.
-        l_conv_prog_dtheta  = .true.
-        l_conv_prog_dq      = .true.
+        l_conv_prog_dtheta  = conv_prog_dtheta
+        l_conv_prog_dq      = conv_prog_dq
         l_cv_conserve_check = .true.
         l_fcape             = .true.
         l_mom               = .true.
@@ -1190,7 +1198,7 @@ contains
 
     ! The following are needed by the bimodal cloud scheme, hence we initialise
     ! them even when microphysics isn't used
-    ai             = 2.5700e-2_r_um
+    ai             = ai_in
     bi             = 2.00_r_um
     cx(84)         = 1.0_r_um
     constp(35)     = 1.0_r_um
@@ -1288,7 +1296,7 @@ contains
         sediment_loc   = all_sed_start
         timestep_mp_in = 120
         z_surf         = real(z_surf_in, r_um)
-        aut_qc         = 2.47_r_um
+        aut_qc         = aut_qc_in
         !     Needed by the Seeder Feeder scheme
         l_orograin     = orog_rain
         l_orogrime     = orog_rime
@@ -1607,6 +1615,7 @@ contains
         g1_rp = rp_bl_cld_top_diffusion
         ice_fspd_rp = rp_mp_ice_fspd
         lambda_min_rp = rp_bl_min_mix_length
+        m_ci_rp = rp_mp_ci
         mp_czero_rp = rp_mp_mp_czero
         mpof_rp = rp_mp_mpof
         ndrop_surf_rp = rp_mp_ndrop_surf
