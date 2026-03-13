@@ -389,7 +389,7 @@ contains
         cpv = 0.0_r_def
         cl = 0.0_r_def
       end if
-      call invoke( evap_condense_kernel_type(dtheta_cld, theta,                &
+      call invoke( evap_condense_kernel_type(dtheta_cld, theta_latest,         &
                                              dmr_cld(imr_v), dmr_cld(imr_cl),  &
                                              mr(imr_v), mr(imr_cl),            &
                                              exner_in_wth,                     &
