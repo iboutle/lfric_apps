@@ -75,7 +75,7 @@ module slow_physics_alg_mod
   use function_space_mod,            only: function_space_type
   use mesh_collection_mod,  only: mesh_collection
   ! Moisture species
-  use mr_indices_mod,            only: nummr, imr_v, imr_cl, imr_ci, imr_s
+  use mr_indices_mod,            only: nummr, imr_v, imr_cl, imr_ci, imr_s, imr_r
   use moist_dyn_mod,             only: num_moist_factors
   use sci_enforce_lower_bound_kernel_mod, &
                                  only: enforce_lower_bound_kernel_type
@@ -90,7 +90,8 @@ module slow_physics_alg_mod
                                        moisture_formulation_dry, &
                                        theta_moist_source
   use io_config_mod,             only: subroutine_timers,        &
-                                       write_conservation_diag
+                                       write_conservation_diag, write_diag, &
+                                       use_xios_io
   use timer_mod,                 only: timer
   use external_forcing_alg_mod,  only: external_forcing_alg
   use evap_condense_kernel_mod,  only: evap_condense_kernel_type
@@ -118,6 +119,7 @@ module slow_physics_alg_mod
   use map_drag_incs_alg_mod,     only: map_drag_incs_alg
   use bl_exp_alg_mod,            only: bl_exp_alg
   use bl_imp_alg_mod,            only: bl_imp_alg
+  use bl_extra_diags_mod,        only: output_diags_for_bl_extra
   use conv_ll_alg_mod,           only: conv_ll_alg
   use conv_gr_alg_mod,           only: conv_gr_alg
   use conv_comorph_alg_mod,      only: conv_comorph_alg
@@ -304,6 +306,9 @@ contains
     type( field_type ) :: canopy_evap
     type( field_type ) :: water_extraction
     type( field_type ) :: lake_evap
+    ! and for diagnostics
+    type( field_type ) :: ustar_implicit, t1p5m, q1p5m, qcl1p5m, t1p5m_ssi, &
+         q1p5m_ssi, qcl1p5m_ssi, t1p5m_land, q1p5m_land, qcl1p5m_land
     ! ...surface fields passed from BL to Stochastic Perturbation scheme
     type( field_type ) :: theta_star_surf
     type( field_type ) :: qv_star_surf
@@ -1169,7 +1174,10 @@ contains
         call bl_imp_alg(dtheta_tmp, du_tmp, theta_latest, u_latest, mr,     &
                         surf_heat_flux, canopy_evap, water_extraction,      &
                         lake_evap, theta_star_surf, qv_star_surf,           &
-                        theta, exner, mr_n, rho,                            &
+                        ustar_implicit, t1p5m, q1p5m, qcl1p5m,              &
+                        t1p5m_ssi, q1p5m_ssi, qcl1p5m_ssi,                  &
+                        t1p5m_land, q1p5m_land, qcl1p5m_land,               &
+                        theta, exner, mr_n,                                 &
                         derived_fields, radiation_fields, orography_fields, &
                         turbulence_fields, convection_fields, cloud_fields, &
                         surface_fields, soil_fields, snow_fields,           &
@@ -1188,6 +1196,16 @@ contains
                                surf_heat_flux, canopy_evap,                   &
                                water_extraction, lake_evap, dt)
         end if ! jules
+        ! Output diagnostics
+        if (use_xios_io .and. write_diag) then
+          call output_diags_for_bl_extra(derived_fields, turbulence_fields,   &
+                                         surface_fields, microphysics_fields, &
+                                         convection_fields, aerosol_fields,   &
+                                         ustar_implicit, rho, mr(imr_s),      &
+                                         mr(imr_r), t1p5m, q1p5m, qcl1p5m,    &
+                                         t1p5m_ssi, q1p5m_ssi, qcl1p5m_ssi,   &
+                                         t1p5m_land, q1p5m_land, qcl1p5m_land)
+        end if
       end if ! slow bl
     end if ! bl
 #endif
