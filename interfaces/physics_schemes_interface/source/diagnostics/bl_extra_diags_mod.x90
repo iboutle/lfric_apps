@@ -21,19 +21,6 @@ module bl_extra_diags_mod
 
   private
 
-  ! Logical indicating whether diagnostics are requested
-  logical( l_def ) :: wind_gust_flag
-  logical( l_def ) :: scale_dep_wind_gust_flag
-  logical( l_def ) :: vis_no_precip_flag
-  logical( l_def ) :: vis_with_precip_flag
-  logical( l_def ) :: fog_fraction_flag
-  logical( l_def ) :: fog_fraction_ssi_flag
-  logical( l_def ) :: fog_fraction_land_flag
-  logical( l_def ) :: vis_prob_5km_flag
-  logical( l_def ) :: dew_point_flag
-  logical( l_def ) :: dew_point_ssi_flag
-  logical( l_def ) :: dew_point_land_flag
-
   public :: output_diags_for_bl_extra
 
 contains
@@ -116,6 +103,18 @@ contains
     type( field_type ) :: dew_point_ssi
     type( field_type ) :: dew_point_land
 
+    ! Logical indicating whether diagnostics are requested
+    logical( l_def ) :: wind_gust_flag
+    logical( l_def ) :: scale_dep_wind_gust_flag
+    logical( l_def ) :: vis_no_precip_flag
+    logical( l_def ) :: vis_with_precip_flag
+    logical( l_def ) :: fog_fraction_flag
+    logical( l_def ) :: fog_fraction_ssi_flag
+    logical( l_def ) :: fog_fraction_land_flag
+    logical( l_def ) :: vis_prob_5km_flag
+    logical( l_def ) :: dew_point_flag
+    logical( l_def ) :: dew_point_ssi_flag
+    logical( l_def ) :: dew_point_land_flag
     logical( l_def ) :: ignore
 
     if ( subroutine_timers ) call timer("bl_extra_diags")
