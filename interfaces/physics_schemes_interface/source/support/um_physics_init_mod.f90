@@ -175,9 +175,9 @@ module um_physics_init_mod
                                         ai_in => ai,                         &
                                         l_proc_fluxes_in => l_proc_fluxes,   &
                                         l_mcr_precfrac_in => l_mcr_precfrac, &
-                                   i_update_precfrac_in => i_update_precfrac,&
-                                   i_update_precfrac_homog,                  &
-                                   i_update_precfrac_correl,                 &
+                                        update_precfrac_opt,                 &
+                                        update_precfrac_opt_homog,           &
+                                        update_precfrac_opt_correl,          &
                                         heavy_rain_evap_fac_in =>            &
                                                 heavy_rain_evap_fac
 
@@ -1258,10 +1258,10 @@ contains
         l_mcr_precfrac = l_mcr_precfrac_in
         if ( l_mcr_precfrac ) THEN
           ! Set option for method of updating the precip fraction
-          select case ( i_update_precfrac_in )
-          case ( i_update_precfrac_homog )
+          select case ( update_precfrac_opt )
+          case ( update_precfrac_opt_homog )
             i_update_precfrac = i_homog_areas
-          case ( i_update_precfrac_correl )
+          case ( update_precfrac_opt_correl )
             i_update_precfrac = i_sg_correl
           end select
         end if
