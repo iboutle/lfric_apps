@@ -25,7 +25,6 @@ class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
@@ -59,12 +58,16 @@ class vn31_t363(MacroUpgrade):
 
 
 class vn31_t348(MacroUpgrade):
-    # Upgrade macro for #348 by Ian Boutle
+    """Upgrade macro for ticket #348 by Ian Boutle."""
 
     BEFORE_TAG = "vn3.1_t363"
     AFTER_TAG = "vn3.1_t348"
 
     def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-gungho
         # Use PMSL halo calculations by default
-        self.add_setting(config, ["namelist:physics","pmsl_halo_calcs"],".true.")
+        self.add_setting(
+            config, ["namelist:physics", "pmsl_halo_calcs"], ".true."
+        )
+
         return config, self.reports
