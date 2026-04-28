@@ -217,14 +217,21 @@ subroutine smagorinsky_alg(dtheta_io, du_io, mr, theta, u, &
 
     end if ! With or without BL scheme
 
+    ! Scale by dt to obtain full increments
+    call invoke(inc_a_times_X(dt, dtheta), &
+                inc_a_times_X(dt, du))
     if (use_moisture) then
-      call invoke( inc_X_plus_bY( mr(imr_v), dt, dmr_v ),    &
-                   inc_X_plus_bY( mr(imr_cl), dt, dmr_cl ) )
+      call invoke(inc_a_times_X(dt, dmr_v), &
+                  inc_a_times_X(dt, dmr_cl) )
     end if
 
     ! Apply increments from Smagorinsky mixing
-    call invoke( inc_X_plus_bY( dtheta_io, dt, dtheta ),      &
-                 inc_X_plus_bY( du_io,     dt, du ) )
+    call invoke( inc_X_plus_Y( dtheta_io, dtheta ),      &
+                 inc_X_plus_Y( du_io,     du ) )
+    if (use_moisture) then
+      call invoke( inc_X_plus_Y( mr(imr_v), dmr_v ),    &
+                   inc_X_plus_Y( mr(imr_cl), dmr_cl ) )
+    end if
 
     if (write_conservation_diag .and. use_moisture) &
       call moisture_conservation_alg( rho, mr, 'After mixing' )
