@@ -127,6 +127,10 @@ contains
                             turbulence_fields, convection_fields, cloud_fields,   &
                             surface_fields, soil_fields, snow_fields,             &
                             chemistry_fields, aerosol_fields, stph_fields,        &
+                            spt_spectral_coeffc, spt_spectral_coeffs,             &
+                            spt_power_law,                                        &
+                            skeb_spectral_coeffc, skeb_spectral_coeffs,           &
+                            skeb_power_law,                                       &
                             outer, clock, dt)
 
     implicit none
@@ -154,6 +158,13 @@ contains
     type( field_collection_type ), intent(inout) :: chemistry_fields
     type( field_collection_type ), intent(inout) :: aerosol_fields
     type( field_collection_type ), intent(inout) :: stph_fields
+
+    real(r_def), intent(inout) :: spt_spectral_coeffc(:)
+    real(r_def), intent(inout) :: spt_spectral_coeffs(:)
+    real(r_def), intent(inout) :: spt_power_law(:)
+    real(r_def), intent(inout) :: skeb_spectral_coeffc(:)
+    real(r_def), intent(inout) :: skeb_spectral_coeffs(:)
+    real(r_def), intent(inout) :: skeb_power_law(:)
 
     ! scalars
     integer(kind=i_def),     intent(in) :: outer
@@ -369,7 +380,12 @@ contains
         call stph_main_alg( du_stph, dtheta_stph, dmv_stph,                  &
                           theta_latest, mr(imr_v), rho, u_n, convection_fields,&
                           microphysics_fields, radiation_fields,             &
-                          derived_fields, orography_fields, clock)
+                          derived_fields, orography_fields,                  &
+                          spt_spectral_coeffc, spt_spectral_coeffs,          &
+                          spt_power_law,                                     &
+                          skeb_spectral_coeffc, skeb_spectral_coeffs,        &
+                          skeb_power_law, clock)
+
       end if
       ! Adding stochastic physics theta, mv and winds
       ! as part of the implicit solution
