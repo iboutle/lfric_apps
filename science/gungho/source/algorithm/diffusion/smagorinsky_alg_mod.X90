@@ -23,7 +23,9 @@ module smagorinsky_alg_mod
                                        smagorinsky_placement_end
   use cloud_config_mod,          only: pc2_turb_horiz
   use physics_mappings_alg_mod,  only: map_physics_scalars
-
+#ifdef UM_PHYSICS
+  use pc2_force_response_alg_mod, only: pc2_force_response_alg
+#endif
   use tracer_smagorinsky_diff_kernel_mod, only: tracer_smagorinsky_diff_kernel_type
   use momentum_smagorinsky_kernel_mod,    only: momentum_smagorinsky_kernel_type
 
