@@ -224,7 +224,12 @@ contains
         call add_field(self%ckp_out, spec%name, mode=CHECKPOINTING, &
           operation=operation, id_as_name=.true., legacy=spec%legacy)
       end if
-      if (checkpoint_read .or. init_option == init_option_checkpoint_dump) &
+      if (checkpoint_read) &
+        call add_field(self%ckp_inp, spec%name, mode=RESTARTING, &
+          operation=operation, id_as_name=.true., legacy=spec%legacy)
+    end if
+    if (spec%ckp .and. (spec%name .ne. 'ozone') .and. space_has_xios_io(spec%space, spec%legacy)) then
+      if (init_option == init_option_checkpoint_dump) &
         call add_field(self%ckp_inp, spec%name, mode=RESTARTING, &
           operation=operation, id_as_name=.true., legacy=spec%legacy)
     end if

@@ -219,7 +219,13 @@ end function has_xios_io
             log_level_error)
         end select
       end if
-      if (checkpoint_read .or. init_option == init_option_checkpoint_dump) then
+      if (checkpoint_read) then
+          if (.not. field_is_valid('restart_' // trim(spec%name))) then
+            call log_event('restart field not enabled for ' &
+              // trim(spec%name), log_level_error)
+          end if
+      end if
+      if (init_option == init_option_checkpoint_dump .and. (spec%name .ne. 'ozone')) then
           if (.not. field_is_valid('restart_' // trim(spec%name))) then
             call log_event('restart field not enabled for ' &
               // trim(spec%name), log_level_error)
