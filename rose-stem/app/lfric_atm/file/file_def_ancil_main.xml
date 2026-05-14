@@ -21,25 +21,25 @@
   </file>
 
   <file id="soil_ancil" name="soil_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
-    <field id="soil_albedo" name="soil_albedo" long_name="soil_albedo" unit="1" operation="once" domain_ref="face"/>
-    <field id="soil_thermal_cond" name="soil_thermal_conductivity" long_name="soil_thermal_conductivity" unit="Wm-1K-1" operation="once" domain_ref="face"/>
-    <field id="soil_moist_wilt" name="volume_fraction_of_condensed_water_in_soil_at_wilting_point" long_name="soil_moisture_at_wilting_point" unit="m3 m-3" operation="once" domain_ref="face" />
-    <field id="soil_moist_crit" name="volume_fraction_of_condensed_water_in_soil_at_critical_point" long_name="soil_moisture_at_critical_point" unit="m3 m-3" operation="once" domain_ref="face" />
-    <field id="soil_moist_sat" name="soil_porosity" long_name="soil_moisture_at_saturation" unit="m3 m-3" operation="once" domain_ref="face" />
-    <field id="soil_cond_sat" name="soil_hydraulic_conductivity_at_saturation" long_name="soil_conductivity_at_saturation" unit="kg m-2 s-1" operation="once" domain_ref="face" />
-    <field id="soil_thermal_cap" name="soil_thermal_capacity" long_name="soil_thermal_capacity" unit="J K-1 m-3" operation="once" domain_ref="face" />
-    <field id="soil_suction_sat" name="soil_suction_at_saturation" long_name="soil_suction_at_saturation" unit="1" operation="once" domain_ref="face" />
-    <field id="clapp_horn_b" name="m01s00i207" long_name="exponent_for_soil_moisture_functions" unit="1" operation="once" domain_ref="face" />
+    <field field_ref="soil_albedo" operation="once"/>
+    <field field_ref="soil_thermal_cond" name="soil_thermal_conductivity" operation="once"/>
+    <field field_ref="soil_moist_wilt" name="volume_fraction_of_condensed_water_in_soil_at_wilting_point" operation="once"/>
+    <field field_ref="soil_moist_crit" name="volume_fraction_of_condensed_water_in_soil_at_critical_point" operation="once"/>
+    <field field_ref="soil_moist_sat" name="soil_porosity" operation="once"/>
+    <field field_ref="soil_cond_sat" name="soil_hydraulic_conductivity_at_saturation" operation="once"/>
+    <field field_ref="soil_thermal_cap" name="soil_thermal_capacity" operation="once"/>
+    <field field_ref="soil_suction_sat" name="soil_suction_at_saturation" operation="once"/>
+    <field field_ref="clapp_horn_b" name="m01s00i207" operation="once"/>
   </file>
 
   <file id="soil_rough_ancil" name="soil_rough_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
-    <field id="soil_roughness" name="surface_roughness_length" long_name="soil_surface_roughness_length" unit="m" operation="once" domain_ref="face"/>
+    <field field_ref="soil_roughness" name="surface_roughness_length" operation="once"/>
   </file>
 
   <file id="urban_ancil" name="urban_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
-    <field id="urbwrr" name="urbwrr" long_name="Urban width repeating ratio" unit="1" operation="once" domain_ref="face"/>
-    <field id="urbhwr" name="urbhwr" long_name="Urban height-to-width ratio" unit="1" operation="once" domain_ref="face"/>
-    <field id="urbhgt" name="urbhgt" long_name="Urban building height" unit="1" operation="once" domain_ref="face"/>
+    <field field_ref="urbwrr" operation="once"/>
+    <field field_ref="urbhwr" operation="once"/>
+    <field field_ref="urbhgt" operation="once"/>
   </file>
 
   <file id="plant_func_ancil" name="plant_func_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
@@ -217,9 +217,9 @@
   </file>
 
   <file id="soil_dust_ancil" name="soil_dust_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
-    <field id="soil_clay" name="volume_fraction_of_clay_in_soil" long_name="volume_fraction_of_clay_in_soil" unit="m3 m-3" operation="once" domain_ref="face"/>
-    <field id="soil_sand" name="volume_fraction_of_sand_in_soil" long_name="volume_fraction_of_sand_in_soil" unit="m3 m-3" operation="once" domain_ref="face"/>
-    <field id="dust_mrel" name="mass_fraction_of_dust_in_size_bins" long_name="mass_fraction_of_dust_in_size_bins" unit="kg kg-1" operation="once" domain_ref="face" axis_ref="dust_divisions" />
+    <field field_ref="soil_clay" name="volume_fraction_of_clay_in_soil" operation="once"/>
+    <field field_ref="soil_sand" name="volume_fraction_of_sand_in_soil" operation="once"/>
+    <field field_ref="dust_mrel" name="mass_fraction_of_dust_in_size_bins" operation="once"/>
   </file>
 
   <file id="emiss_murk_ancil" name="emiss_murk_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
