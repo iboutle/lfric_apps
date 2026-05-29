@@ -88,6 +88,7 @@ contains
     type( field_type ), pointer :: bcf_in
     type( field_type ), pointer :: cfl_in              => null()
     type( field_type ), pointer :: cff_in              => null()
+    type( field_type ), pointer :: sigma_ml
 
     type( field_type ), pointer :: dmv_mphys           => null()
     type( field_type ), pointer :: ls_rain             => null()
@@ -103,6 +104,7 @@ contains
     type( field_type ), pointer :: ni_mphys            => null()
     type( field_type ), pointer :: ns_mphys            => null()
     type( field_type ), pointer :: ng_mphys            => null()
+    type( field_type ), pointer :: precfrac
 
     ! In cloud value passed to radiation
     type( field_type ), pointer :: cloud_drop_no_conc  => null()
@@ -146,6 +148,7 @@ contains
     call cloud_fields%get_field('bulk_fraction', bcf_in)
     call cloud_fields%get_field('liquid_fraction', cfl_in)
     call cloud_fields%get_field('frozen_fraction', cff_in)
+    call cloud_fields%get_field('sigma_ml', sigma_ml)
 
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
@@ -161,6 +164,7 @@ contains
     call microphysics_fields%get_field('ni_mphys',ni_mphys)
     call microphysics_fields%get_field('ns_mphys',ns_mphys)
     call microphysics_fields%get_field('ng_mphys',ng_mphys)
+    call microphysics_fields%get_field('precfrac', precfrac)
 
     call aerosol_fields%get_field('cloud_drop_no_conc',cloud_drop_no_conc)
     call aerosol_fields%get_field('murk', murk)
@@ -176,10 +180,10 @@ contains
     call invoke(name = "invoke_casim_kernel_type",                             &
                  casim_kernel_type ( mr_n(imr_v), mr_n(imr_cl), mr_n(imr_ci),  &
                                      mr_n(imr_r), mr_n(imr_g), mr_n(imr_s),    &
-                                     cfl_in, cff_in,                           &
+                                     cfl_in, cff_in, sigma_ml,                 &
                                      nl_mphys, nr_mphys,                       &
                                      ni_mphys, ns_mphys, ng_mphys,             &
-                                     w_in_wth,                                 &
+                                     precfrac, w_in_wth,                       &
                                      theta, exner_in_wth,                      &
                                      wetrho_in_w3, dry_rho_in_w3,              &
                                      height_w3, height_wth,                    &

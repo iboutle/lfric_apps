@@ -358,6 +358,7 @@ contains
          l_pc2_homog_conv_pressure,                                        &
          i_bm_ez_orig, i_bm_ez_subcrit, i_bm_ez_entpar
     use cloud_config_mod, only: cld_fsd_hill
+    use comorph_constants_mod, only: l_cv_snow
     use comorph_um_namelist_mod, only: ass_min_radius, autoc_opt,            &
          cf_conv_fac, coef_auto, col_eff_coef, core_ent_fac, drag_coef_cond, &
          drag_coef_par, ent_coef, hetnuc_temp, l_core_ent_cmr,               &
@@ -1207,10 +1208,13 @@ contains
 
       ! Options used in Casim and old scheme
       l_mcr_qrain    = .true.
+      ! Namelist switch for prognostic precip fraction
+      l_mcr_precfrac = l_mcr_precfrac_in
       l_mphys_nonshallow = .true.
       l_rain         = .true.
       l_subgrid_qcl_mp = turb_gen_mixph
       mp_dz_scal     = real(mp_dz_scal_in, r_um)
+      c_r_correl     = real(c_r_correl_in, r_um)
 
       ! Domain top used in microphysics - contained in mphys_bypass_mod
       mphys_mod_top  = real(domain_height, r_um)
@@ -1236,8 +1240,6 @@ contains
         ! for sedimentation vs process-rates in WB microphysics
         l_proc_fluxes = l_proc_fluxes_in
 
-        ! Namelist switch for prognostic precip fraction
-        l_mcr_precfrac = l_mcr_precfrac_in
         if ( l_mcr_precfrac ) THEN
           ! Set option for method of updating the precip fraction
           select case ( i_update_precfrac_in )
@@ -1260,7 +1262,6 @@ contains
         a_ratio_exp    = real(a_ratio_exp_in, r_um)
         a_ratio_fac    = real(a_ratio_fac_in, r_um)
         ar             = 1.00_r_um
-        c_r_correl     = real(c_r_correl_in, r_um)
         ci_input       = real(ci_input_in, r_um)
         cic_input      = real(cic_input_in, r_um)
         di_input       = 0.416_r_um
@@ -1296,6 +1297,7 @@ contains
         l_psd          = .false.
         graupel_option = 2_i_um
         l_mcr_qcf2 = .true.
+        if (cv_scheme == cv_scheme_comorph) l_cv_snow = .true.
         l_mcr_qgraup = .true.
         wvarfac = 1.0_r_um
 

@@ -104,7 +104,7 @@ end if
 ! Loop over levels
 !$OMP PARALLEL do DEFAULT(none) SCHEDULE(STATIC)                               &
 !$OMP SHARED( nx_full, ny_full, k_bot_conv, k_top_conv, k_top_init,            &
-!$OMP         grid, fields, virt_temp, l_init_poss,                            &
+!$OMP         grid, fields, virt_temp, l_init_poss, l_cv_snow,                 &
 !$OMP         lb_p, ub_p, lb_v, ub_v, lb_l, ub_l, lb_r, ub_r, lb_f, ub_f,      &
 !$OMP         lb_s, ub_s, lb_g, ub_g )                                         &
 !$OMP private( i, j, k, exner_ratio )

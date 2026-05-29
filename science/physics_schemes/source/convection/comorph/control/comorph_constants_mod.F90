@@ -295,7 +295,7 @@ real(kind=real_cvprec), parameter :: max_cfl = 0.9_real_cvprec
 ! inside the convection scheme and incremented by it)
 logical, parameter :: l_cv_rain = .true.
 logical, parameter :: l_cv_cf = .true.
-logical, parameter :: l_cv_snow = .false.
+logical :: l_cv_snow = .false.
 logical, parameter :: l_cv_graup = .true.
 
 ! Switch for applying the "compensating subsidence" term

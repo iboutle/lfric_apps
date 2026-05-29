@@ -130,7 +130,7 @@ integer :: i, j, k
 
 !$OMP PARALLEL DEFAULT(none) private( i, j, k )                                &
 !$OMP SHARED( nx_full, ny_full, k_bot_conv, k_top_conv,                        &
-!$OMP         q_tot, q_cl, q_rain, q_cf, q_snow, q_graup, q_vap )
+!$OMP         q_tot, q_cl, q_rain, q_cf, q_snow, q_graup, q_vap, l_cv_snow )
 
 ! Initialise using liquid cloud
 !$OMP do SCHEDULE(STATIC)
