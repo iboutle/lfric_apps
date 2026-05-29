@@ -99,6 +99,9 @@ module um_physics_init_mod
                                         falliceshear_method_constant,         &
                                         falliceshear_method_off,              &
                                         subgrid_qv, ice_width_in => ice_width,&
+                                        cloud_call_b4_conv,                    &
+                                        l_ensure_max_in_cloud_pc2_in           &
+                                          => l_ensure_max_in_cloud_pc2,        &
                                     i_pc2_erosion_numerics_in                  &
                                       => i_pc2_erosion_numerics,               &
                                     dbsdtbs_turb_0_in => dbsdtbs_turb_0,       &
@@ -174,6 +177,8 @@ module um_physics_init_mod
                                         aut_qc_in => aut_qc,                 &
                                         ai_in => ai,                         &
                                         l_proc_fluxes_in => l_proc_fluxes,   &
+                                        l_improve_precfrac_checks_in         &
+                                          => l_improve_precfrac_checks,      &
                                         l_mcr_precfrac_in => l_mcr_precfrac, &
                                         update_precfrac_opt,                 &
                                         update_precfrac_opt_homog,           &
@@ -362,14 +367,14 @@ contains
          rhcrit, ice_fraction_method,falliceshear_method, cff_spread_rate, &
          l_subgrid_qv, ice_width, min_liq_overlap, i_eacf, not_mixph,      &
          i_pc2_checks_cld_frac_method, l_ensure_min_in_cloud_qcf,          &
-         i_pc2_init_logic, dbsdtbs_turb_0,                                 &
+         l_ensure_max_in_cloud_pc2, i_pc2_init_logic, dbsdtbs_turb_0,      &
          i_pc2_erosion_method, i_pc2_homog_g_method, i_pc2_init_method,    &
          check_run_cloud, i_pc2_erosion_numerics,                          &
          cloud_pc2_tol, cloud_pc2_tol_2,                                   &
          forced_cu_fac, i_pc2_conv_coupling, allicetdegc, starticetkelvin, &
          ent_coef_bm, ez_max_bm, i_bm_ez_opt, l_bm_sigma_s_grad,           &
          l_bm_tweaks, max_sigmas, min_sigx_ft, turb_var_fac_bm,            &
-         l_pc2_homog_conv_pressure,                                        &
+         l_pc2_homog_conv_pressure, l_cloud_call_b4_conv,                  &
          i_bm_ez_orig, i_bm_ez_subcrit, i_bm_ez_entpar
     use cloud_config_mod, only: cld_fsd_hill
     use comorph_constants_mod, only: l_cv_snow
@@ -450,7 +455,8 @@ contains
         l_mcr_qgraup, casim_max_sed_length, fixed_number, wvarfac,           &
         l_orograin, l_orogrime, l_orograin_block,                            &
         fcrit, nsigmasf, nscalesf, l_progn_tnuc, mp_czero, mp_tau_lim,       &
-        l_proc_fluxes, l_subgrid_graupel_frac, l_mcr_precfrac,               &
+        l_proc_fluxes, l_improve_precfrac_checks, l_subgrid_graupel_frac,    &
+        l_mcr_precfrac,                                                      &
         i_update_precfrac, i_homog_areas, i_sg_correl, heavy_rain_evap_fac
     use mphys_psd_mod, only: x1g, x2g, x4g, x1gl, x2gl, x4gl
     use mphys_switches, only: set_mphys_switches,            &
@@ -1093,6 +1099,8 @@ contains
         i_bm_ez_opt = i_bm_ez_entpar
       END SELECT
 
+      l_cloud_call_b4_conv = cloud_call_b4_conv
+
       ! Used by radiation to determine convective cloud, so potentially needed
       ! with any cloud scheme
       allicetdegc                  = -20.0_r_um
@@ -1124,6 +1132,7 @@ contains
         i_pc2_conv_coupling          = 3
         i_pc2_erosion_method         = pc2eros_hybrid_sidesonly
         l_ensure_min_in_cloud_qcf    = .false.
+        l_ensure_max_in_cloud_pc2    = l_ensure_max_in_cloud_pc2_in
         select case(pc2_init_logic)
           case(pc2_init_logic_original)
             i_pc2_init_logic = pc2init_logic_original
@@ -1266,6 +1275,8 @@ contains
           case ( update_precfrac_opt_correl )
             i_update_precfrac = i_sg_correl
           end select
+          ! Switch for extra checks on precip fraction
+          l_improve_precfrac_checks = l_improve_precfrac_checks_in
         end if
 
         select case (graupel_scheme)
