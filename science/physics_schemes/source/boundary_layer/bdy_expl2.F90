@@ -81,7 +81,7 @@ use bl_option_mod, only:                                                       &
     nl_bl_levels, local_fa, free_trop_layers, to_sharp_across_1km,             &
     sbl_op, equilibrium_sbl, one_third, two_thirds, blending_option,           &
     blend_except_cu, blend_cth_shcu_only, sg_shear, sg_shear_enh_lambda,       &
-    max_tke, tke_diag_fac,                                                     &
+    max_tke, tke_diag_fac, smooth_to_bdys,                                     &
     i_interp_local, i_interp_local_gradients, i_interp_local_cf_dbdz,          &
     shallow_cu_maxtop, sc_cftol, near_neut_z_on_l, zero, one, one_half
 use cloud_inputs_mod, only: i_rhcpt, forced_cu, i_cld_vn, i_pc2_init_method,   &
@@ -676,6 +676,7 @@ zh_local(pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end),                 &
                               !  boundary layer (metres) as
                               !  determined from the local
                               !  Richardson number profile.
+zdsc_base(pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end),                &
 dsldz(tdims%i_start:tdims%i_end,tdims%j_start:tdims%j_end,                     &
       bl_levels),                                                              &
                               ! TL+gz/cp gradient between
@@ -1868,7 +1869,7 @@ if (non_local_bl == on) then
     !     INOUT fields
              ftl,fqw,zhnl,dzh,cumulus,ntml_nl,w,etadot,t1_sd,q1_sd,wtrac_bl,   &
     !     out fields
-             rhokmz,rhokhz,rhokm_top,rhokh_top,zhsc,                           &
+             rhokmz,rhokhz,rhokm_top,rhokh_top,zhsc,zdsc_base,                 &
              unstable,dsc,coupled,sml_disc_inv,dsc_disc_inv,                   &
              ntdsc,nbdsc,f_ngstress,tke_nl,                                    &
              grad_t_adj, grad_q_adj,                                           &
@@ -1891,7 +1892,7 @@ else   ! not NON_LOCAL_BL
 !$OMP SHARED(pdims,unstable,fb_surf,cumulus,l_shallow,sml_disc_inv,ntpar,      &
 !$OMP        ntml_nl,zhnl,grad_t_adj,grad_q_adj,dsc,dsc_disc_inv,ntdsc,nbdsc,  &
 !$OMP        zhsc,dzh,coupled,kent,kent_dsc,t_frac,zrzi,we_lim,t_frac_dsc,     &
-!$OMP        zrzi_dsc,we_lim_dsc,kplume)
+!$OMP        zrzi_dsc,we_lim_dsc,kplume,zdsc_base)
 !$OMP do SCHEDULE(STATIC)
   do j = pdims%j_start, pdims%j_end
     do i = pdims%i_start, pdims%i_end
@@ -1912,6 +1913,7 @@ else   ! not NON_LOCAL_BL
       ntdsc(i,j)   = 0
       nbdsc(i,j)   = 0
       zhsc(i,j)    = zero
+      zdsc_base(i,j) = zero
       coupled(i,j) = .false.
       ! entrainment variables for non-local tracer mixing
       kent(i,j) = 2
@@ -1997,7 +1999,8 @@ call ex_coef (                                                                 &
 ! in levels/logicals
    bl_levels,k_log_layr,BL_diag,                                               &
 ! in fields
-   sigma_h,flandg,dvdzm,ri,rho_wet_tq,z_uv,z_tq,z0m_eff_gb,zhpar,ntpar,        &
+   sigma_h,flandg,dvdzm,ri,rho_wet_tq,z_uv,z_tq,z0m_eff_gb,zhnl,zhpar,zhsc,    &
+   zdsc_base, ntpar,                                                           &
    ntml_nl,ntdsc,nbdsc,l_shallow_cth,rmlmax2,rneutml_sq,delta_smag,            &
 ! in/out fields
    cumulus,weight_1dbl,                                                        &
@@ -2037,7 +2040,7 @@ do k = 2, bl_levels
                             + (weight2/weight1)*weight_1dbl(i,j,k)
       end if
 
-      if (local_fa == free_trop_layers) then
+      if (local_fa == free_trop_layers .or. local_fa==smooth_to_bdys) then
         ! elh already included in rhokh_th so no need to calculate
         ! here, but interpolate elh separately for diagnostic
         if (BL_diag%l_elh3d) then
