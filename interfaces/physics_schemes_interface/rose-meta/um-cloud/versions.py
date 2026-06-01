@@ -89,3 +89,19 @@ class vn31_t247(MacroUpgrade):
         self.add_setting(config, [nml, "pc2_init_method"], pc2_init_method)
 
         return config, self.reports
+
+class vn31_t249(MacroUpgrade):
+    # Upgrade macro for Issue #249 by Mike Whitall
+
+    BEFORE_TAG = "vn3.1_t247"
+    AFTER_TAG = "vn3.1_t249"
+
+    def upgrade(self, config, meta_config=None):
+        # Add settings
+
+        # Blank macro needed just to update meta-data version
+        # (apps using the new option 'smooth_fix' under the existing
+        #  multi-option switch 'pc2_init_logic' fail checks against
+        #  the existing meta-data).
+
+        return config, self.reports
