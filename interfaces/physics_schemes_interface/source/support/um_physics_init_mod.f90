@@ -118,7 +118,7 @@ module um_physics_init_mod
                                         l_bm_sigma_s_grad_in => l_bm_sigma_s_grad, &
                                         cloud_call_b4_conv,                    &
                                         l_ensure_max_in_cloud_pc2_in =>        &
-                                        l_ensure_max_in_cloud_pc2
+                                        l_ensure_max_in_cloud_pc2,             &
                                         l_bm_tweaks_in => l_bm_tweaks,         &
                                         max_sigmas_in => max_sigmas,           &
                                         min_sigx_ft_in => min_sigx_ft,         &
