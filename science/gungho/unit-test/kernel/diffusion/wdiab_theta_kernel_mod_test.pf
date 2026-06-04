@@ -1,0 +1,111 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2026 Met Office. All rights reserved.
+! For further details please refer to the file COPYRIGHT.txt
+! which you should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+module wdiab_theta_kernel_mod_test
+
+  use constants_mod,                       only : i_def, r_def
+  use funit
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: wdiab_theta_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type wdiab_theta_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(wdiab_theta_test_type), intent(inout) :: this
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(wdiab_theta_test_type), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_all( this )
+
+    use wdiab_theta_kernel_mod, only : wdiab_theta_code
+
+    implicit none
+
+    class(wdiab_theta_test_type), intent(inout) :: this
+
+    integer(i_def) :: nlayers
+    integer(i_def) :: ndf_wth, undf_wth
+    integer(i_def), allocatable :: map_wth(:)
+
+    real(r_def), allocatable :: dtheta_out(:)
+    real(r_def), allocatable :: theta(:)
+    real(r_def), allocatable :: dtheta_in(:)
+    real(r_def), allocatable :: answer(:)
+
+    real(r_def), parameter :: tol = 1.0e-10_r_def
+
+    integer(i_def) :: k
+
+    nlayers = 11_i_def
+    undf_wth = nlayers+1
+    ndf_wth = 2_i_def
+    allocate(map_wth(ndf_wth))
+    map_wth(1) = 1_i_def
+    
+    ! Create the data
+    allocate(dtheta_out(undf_wth))
+    allocate(theta(undf_wth))
+    allocate(dtheta_in(undf_wth))
+    allocate(answer(undf_wth))
+
+    dtheta_out = 0.0_r_def
+    theta = (/ 300.0_r_def, 300.0_r_def, 300.0_r_def, 304.0_r_def, &
+               308.0_r_def, 312.0_r_def, 316.0_r_def, 320.0_r_def, &
+               324.0_r_def, 328.0_r_def, 332.0_r_def, 336.0_r_def /)
+    dtheta_in = (/ 0.0_r_def, 1.0_r_def, 1.0_r_def, 0.0_r_def, &
+                   0.0_r_def, -1.0_r_def, 3.0_r_def, 0.0_r_def, &
+                   -3.0_r_def, 1.0_r_def, 1.0_r_def, 0.0_r_def /)
+    answer = (/ 0.0_r_def, 1.0_r_def, 0.75_r_def, 0.25_r_def, &
+                -0.25_r_def, -0.75_r_def, 3.0_r_def, 0.0_r_def, &
+                -3.0_r_def, 0.75_r_def, 1.0_r_def, 0.25_r_def /)
+    
+    ! Call the kernel
+    call wdiab_theta_code( nlayers,                               &
+                           dtheta_out,                            &
+                           theta,                                 &
+                           dtheta_in,                             &
+                           ndf_wth,                               &
+                           undf_wth,                              &
+                           map_wth )
+
+    do k = 0, nlayers
+      @assertEqual(answer(map_wth(1)+k), dtheta_out(map_wth(1)+k), tol)
+    end do
+
+    deallocate(dtheta_out)
+    deallocate(theta)
+    deallocate(dtheta_in)
+    deallocate(answer)
+
+  end subroutine test_all
+
+end module wdiab_theta_kernel_mod_test

@@ -79,8 +79,14 @@ subroutine wdiab_theta_code( nlayers,                               &
 
   real(kind=r_def) :: lapse, mix_coeff
 
-  ! levels 0 and 1 output increment is just input increment
+  ! levels 0 and 1 output increment is just input increment but can mix
+  ! down into here
   do k = 0, lev_pad
+    dtheta_out(map_wth(1)+k) = dtheta_in(map_wth(1)+k)
+  end do
+  ! top level output increment is just input increment but can mix up
+  ! into here
+  do k = nlayers-lev_pad+1, nlayers
     dtheta_out(map_wth(1)+k) = dtheta_in(map_wth(1)+k)
   end do
 
@@ -128,14 +134,10 @@ subroutine wdiab_theta_code( nlayers,                               &
     end if
 
     ! calculate mixing increment at current level
-    dtheta_out(map_wth(1)+k) = (1.0_r_def - mix_coeff) &
+    dtheta_out(map_wth(1)+k) = dtheta_out(map_wth(1)+k) &
+                                  + (1.0_r_def - mix_coeff) &
                                   * dtheta_in(map_wth(1)+k)
 
-  end do
-
-  ! top level output increment is just input increment
-  do k = nlayers-lev_pad+1, nlayers
-    dtheta_out(map_wth(1)+k) = dtheta_in(map_wth(1)+k)
   end do
 
 end subroutine wdiab_theta_code
