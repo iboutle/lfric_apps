@@ -48,7 +48,8 @@ module slow_physics_alg_mod
                                        convection_placement,           &
                                        convection_placement_slow,      &
                                        evap_condense_placement,        &
-                                       evap_condense_placement_slow
+                                       evap_condense_placement_slow,   &
+                                       diab_theta_opt
   use radiation_config_mod,      only: n_radstep, l_inc_radstep, &
                                        n_inc_radstep, &
                                        l_planet_grey_surface
@@ -93,6 +94,7 @@ module slow_physics_alg_mod
   use timing_mod,                only: start_timing, stop_timing, tik, LPROF
   use external_forcing_alg_mod,  only: external_forcing_alg
   use evap_condense_kernel_mod,  only: evap_condense_kernel_type
+  use wdiab_theta_kernel_mod,    only: wdiab_theta_kernel_type
   use physics_mappings_alg_mod,  only: map_physics_scalars
   use planet_config_mod,         only: p_zero, kappa, cp, Rd
   ! Physics schemes called
@@ -245,6 +247,8 @@ contains
          dmcl_forcing, dcfl_forcing, dbcf_forcing
     ! ... for energy correction
     type( field_type ) :: dtheta_encorr
+    ! ... for diabatic theta mixing
+    type( field_type ) :: dtheta_wdiab
     ! ...for microphysics
     type( field_type ), pointer :: dtheta_mphys => null()
     type( field_type ) :: dmr_mphys(nummr)
@@ -1118,6 +1122,14 @@ contains
       call dtheta_cld%field_final()
     end if
 
+    if (diab_theta_opt > 0) then
+      call dtheta%copy_field_properties(dtheta_wdiab)
+      call invoke(setval_c(dtheta_wdiab, 0.0_r_def))
+      call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta, dtheta))
+      call invoke(setval_X(dtheta, dtheta_wdiab))
+      call dtheta_wdiab%field_final()
+    end if
+      
 #ifdef UM_PHYSICS
     !--------------------------------------------------------------------
     ! PC2 checking of current state and preparation for advection
