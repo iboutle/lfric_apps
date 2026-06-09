@@ -115,6 +115,9 @@ contains
     type( field_type ), pointer :: dmv_conv
     type( field_type ), pointer :: dmcl_conv
     type( field_type ), pointer :: dms_conv
+    type( field_type ), pointer :: dmi_conv
+    type( field_type ), pointer :: dmr_conv
+    type( field_type ), pointer :: dmg_conv
     type( field_type ), pointer :: dcfl_conv
     type( field_type ), pointer :: dcff_conv
     type( field_type ), pointer :: dbcf_conv
@@ -320,6 +323,9 @@ contains
     call convection_fields%get_field('dmv_conv', dmv_conv)
     call convection_fields%get_field('dmcl_conv', dmcl_conv)
     call convection_fields%get_field('dms_conv', dms_conv)
+    call convection_fields%get_field('dmi_conv', dmi_conv)
+    call convection_fields%get_field('dmr_conv', dmr_conv)
+    call convection_fields%get_field('dmg_conv', dmg_conv)
     call convection_fields%get_field('dcfl_conv', dcfl_conv)
     call convection_fields%get_field('dcff_conv', dcff_conv)
     call convection_fields%get_field('dbcf_conv', dbcf_conv)
@@ -495,7 +501,8 @@ contains
                           theta_star, u_in_w3_star, v_in_w3_star,             &
                           height_w3, height_wth,                              &
                           dt_conv, dmv_conv, dmcl_conv,                       &
-                          dms_conv, du_conv, dv_conv,                         &
+                          dms_conv, dmi_conv, dmr_conv, dmg_conv,             &
+                          du_conv, dv_conv,                                   &
                           conv_prog_dtheta, conv_prog_dmv,                    &
                           mr_n(imr_v), mr_n(imr_cl), mr_n(imr_ci),            &
                           mr_n(imr_r), mr_n(imr_g), mr_n(imr_s),              &
@@ -634,7 +641,10 @@ contains
                           entrain_down,                                       &
                           detrain_up,                                         &
                           detrain_down,                                       &
-                          massflux_up_half)                                   &
+                          massflux_up_half),                                  &
+              inc_X_plus_Y(mr(imr_ci),dmi_conv),                              &
+              inc_X_plus_Y(mr(imr_r),dmr_conv),                               &
+              inc_X_plus_Y(mr(imr_g),dmg_conv)                                &
                                            ) ! end of invoke
 
     call um_sizes_init(1_i_def)

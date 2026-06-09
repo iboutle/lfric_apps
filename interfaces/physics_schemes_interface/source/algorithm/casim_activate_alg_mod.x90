@@ -47,6 +47,8 @@ contains
 
     use casim_activate_kernel_mod,  only: casim_activate_kernel_type
     use casim_ice_act_kernel_mod,  only: casim_ice_act_kernel_type
+    use casim_simple_act_kernel_mod,  only: casim_simple_act_kernel_type
+    use thresholds,           only: ns_tidy, nr_tidy, ng_tidy
 
     implicit none
 
@@ -62,15 +64,19 @@ contains
 
     type( field_type ), pointer :: cf_liq
     type( field_type ), pointer :: cf_fro
+    type( field_type ), pointer :: cf_x
     type( field_type ), pointer :: nl_mphys
     type( field_type ), pointer :: ni_mphys
+    type( field_type ), pointer :: nx_mphys
     type( field_type ), pointer :: height_wth
     type( field_type ), pointer :: exner_wth
     type( field_type ), pointer :: rho_wth
     type( field_type ), pointer :: mci_init
+    type( field_type ), pointer :: dmx_conv
 
     type( mesh_type ), pointer :: mesh
     integer( tik )             :: id
+    real(r_def) :: nx_tidy
 
     if ( LPROF ) call start_timing( id, 'microphysics.casim_activate' )
 
@@ -95,8 +101,7 @@ contains
 
     ! If convection has provided an increment to ice or we want to
     ! initialise the ice
-    if ((convection == convection_um .and. &
-         .not. (cv_scheme == cv_scheme_comorph)) .or. initialise) then
+    if ((convection == convection_um) .or. initialise) then
 
       call derived_fields%get_field('exner_in_wth', exner_wth)
       call derived_fields%get_field('rho_in_wth', rho_wth)
@@ -110,7 +115,11 @@ contains
       if (initialise) then
         mci_init => mr(imr_ci)
       else
-        call convection_fields%get_field('dms_conv', mci_init)
+        if (cv_scheme == cv_scheme_comorph) then
+          call convection_fields%get_field('dmi_conv', mci_init)
+        else
+          call convection_fields%get_field('dms_conv', mci_init)
+        end if
       end if
 
       call invoke(casim_ice_act_kernel_type( mci_init, ni_mphys, theta,      &
@@ -120,6 +129,30 @@ contains
         call ni_mphys%write_field('casim__ni_mphys_act')
       end if
 
+    end if
+
+    if (cv_scheme == cv_scheme_comorph) then
+      ! Snow
+      call microphysics_fields%get_field('ns_mphys', nx_mphys)
+      call cloud_fields%get_field('frozen_fraction', cf_x)
+      call convection_fields%get_field('dms_conv', dmx_conv)
+      nx_tidy=real(ns_tidy,r_def)
+      call invoke(casim_simple_act_kernel_type(dmx_conv, nx_mphys, cf_x, &
+                                               10000.0_r_def, nx_tidy))
+      ! Rain
+      call microphysics_fields%get_field('nr_mphys', nx_mphys)
+      call microphysics_fields%get_field('precfrac', cf_x)
+      call convection_fields%get_field('dmr_conv', dmx_conv)
+      nx_tidy=real(nr_tidy,r_def)
+      call invoke(casim_simple_act_kernel_type(dmx_conv, nx_mphys, cf_x, &
+                                               1000.0_r_def, nx_tidy))
+      ! Graupel
+      call microphysics_fields%get_field('ng_mphys', nx_mphys)
+      call cloud_fields%get_field('frozen_fraction', cf_x)
+      call convection_fields%get_field('dmg_conv', dmx_conv)
+      nx_tidy=real(ng_tidy,r_def)
+      call invoke(casim_simple_act_kernel_type(dmx_conv, nx_mphys, cf_x, &
+                                               100.0_r_def, nx_tidy))
     end if
 
     if ( LPROF ) call stop_timing( id, 'microphysics.casim_activate' )

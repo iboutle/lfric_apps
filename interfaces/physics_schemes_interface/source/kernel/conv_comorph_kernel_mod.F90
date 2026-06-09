@@ -33,7 +33,7 @@ module conv_comorph_kernel_mod
   !>
   type, public, extends(kernel_type) :: conv_comorph_kernel_type
     private
-    type(arg_type) :: meta_args(199) = (/                                         &
+    type(arg_type) :: meta_args(202) = (/                                         &
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                                &! outer
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      W3),                       &! rho_in_w3
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      WTHETA),                   &! rho_in_wth
@@ -55,6 +55,9 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dmv_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dmcl_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dms_conv
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dmi_conv
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dmr_conv
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dmg_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, W3),                       &! du_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, W3),                       &! dv_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! conv_prog_dtheta
@@ -476,6 +479,9 @@ contains
                           dmv_conv,                          &
                           dmcl_conv,                         &
                           dms_conv,                          &
+                          dmi_conv,                          &
+                          dmr_conv,                          &
+                          dmg_conv,                          &
                           du_conv,                           &
                           dv_conv,                           &
                           conv_prog_dtheta,                  &
@@ -875,7 +881,8 @@ contains
                                                          cf_bulk_n
 
     real(kind=r_def), dimension(undf_wth), intent(inout) :: dt_conv, dmv_conv, &
-                                          dmcl_conv, dms_conv, cca, ccw,       &
+                                          dmcl_conv, dms_conv, dmi_conv,       &
+                                          dmr_conv, dmg_conv,  cca, ccw,       &
                                           massflux_up, massflux_down,          &
                                           tke_bl, pressure_inc_env,            &
                                           conv_prog_dtheta, conv_prog_dmv,     &
@@ -2534,25 +2541,25 @@ contains
     if (microphysics_casim) then
       do i = 1, row_length
         do k = 1, nlayers
-          m_ci(map_wth(1,i) + k) = qcf2_conv(i,1,k)
+          dmi_conv(map_wth(1,i) + k) = qcf2_inc(i,1,k)
         end do
-        m_ci(map_wth(1,i) + 0) = m_ci(map_wth(1,i) + 1)
+        dmi_conv(map_wth(1,i) + 0) = dmi_conv(map_wth(1,i) + 1)
       end do
     end if
     if (l_mcr_qrain) then
       do i = 1, row_length
         do k = 1, nlayers
-          m_r(map_wth(1,i) + k) = qrain_conv(i,1,k)
+          dmr_conv(map_wth(1,i) + k) = qrain_inc(i,1,k)
         end do
-        m_r(map_wth(1,i) + 0) = m_r(map_wth(1,i) + 1)
+        dmr_conv(map_wth(1,i) + 0) = dmr_conv(map_wth(1,i) + 1)
       end do
     end if
     if (l_mcr_qgraup) then
       do i = 1, row_length
         do k = 1, nlayers
-          m_g(map_wth(1,i) + k) = qgraup_conv(i,1,k)
+          dmg_conv(map_wth(1,i) + k) = qgraup_inc(i,1,k)
         end do
-        m_g(map_wth(1,i) + 0) = m_g(map_wth(1,i) + 1)
+        dmg_conv(map_wth(1,i) + 0) = dmg_conv(map_wth(1,i) + 1)
       end do
     end if
 
