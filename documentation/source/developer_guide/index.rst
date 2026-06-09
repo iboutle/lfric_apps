@@ -14,3 +14,4 @@ Developer Guide
    local_builds
    lfric_apps_rose_stem/index
    psyclone/index
+   how_to_guide/index
