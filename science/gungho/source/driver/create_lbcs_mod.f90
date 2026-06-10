@@ -56,7 +56,7 @@ module create_lbcs_mod
       character(str_def) :: name
       logical(l_def) :: legacy
 
-      legacy = .true.
+      legacy = .false.
 
       select case( lbc_option )
 
@@ -64,19 +64,16 @@ module create_lbcs_mod
 
           call proc%apply(make_spec('lbc_theta', main%lbc, Wtheta, ckp=.true., legacy=legacy))
           call proc%apply(make_spec('lbc_u', main%lbc, W2, ckp=.true., legacy=legacy))
-          call proc%apply(make_spec('lbc_h_u', main%lbc, W2H, ckp=.true., legacy=legacy))
-          call proc%apply(make_spec('lbc_v_u', main%lbc, W2V, ckp=.true., legacy=legacy))
+          call proc%apply(make_spec('lbc_multi_u', main%lbc, W3, mult='w2_dofs', ckp=.true., legacy=legacy))
           call proc%apply(make_spec('lbc_rho', main%lbc, W3, ckp=.true., legacy=legacy))
           call proc%apply(make_spec('lbc_exner', main%lbc, W3, ckp=.true., legacy=legacy))
           call proc%apply(make_spec('boundary_u_diff', main%lbc, W2, ckp=.true., legacy=legacy))
           if (.not. legacy) then
-            call proc%apply(make_spec('boundary_h_u_diff', main%lbc, W2H, ckp=.true., legacy=.false.))
-            call proc%apply(make_spec('boundary_v_u_diff', main%lbc, W2V, ckp=.true., legacy=.false.))
+            call proc%apply(make_spec('boundary_multi_u_diff', main%lbc, W3, mult='w2_dofs', ckp=.true., legacy=.false.))
           end if
           call proc%apply(make_spec('boundary_u_driving', main%lbc, W2, ckp=.true., legacy=legacy))
           if (.not. legacy) then
-            call proc%apply(make_spec('boundary_h_u_driving', main%lbc, W2H, ckp=.true., legacy=.false.))
-            call proc%apply(make_spec('boundary_v_u_driving', main%lbc, W2V, ckp=.true., legacy=.false.))
+            call proc%apply(make_spec('boundary_multi_u_driving', main%lbc, W3, mult='w2_dofs', ckp=.true., legacy=.false.))
           end if
           do imr = 1, nummr
             name = trim('lbc_') // adjustl(mr_names(imr))

@@ -463,6 +463,7 @@
         "resolution": "C896_MG",
         "DT": 240,
         "tsteps": 120,
+        "crun": 2,
         "wallclock": 15,
         "mpi_parts": 4704,
         "xios_nodes": 4,

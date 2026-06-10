@@ -316,11 +316,12 @@ wind_time_period=0.0,
 /
 &io
 checkpoint_read=.false.,
-checkpoint_write=.false.,
+checkpoint_write=.true.,
 counter_output_suffix='counter.txt',
 diag_active_files='lfric_diag',
 diag_always_on_sampling=.false.,
 diagnostic_frequency=1,
+end_of_run_checkpoint=.true.,
 file_convention='UGRID',
 nodal_output_on_w3=.false.,
 subroutine_counters=.false.,

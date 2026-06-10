@@ -4,8 +4,7 @@
   <field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
   <field id="rho" name="rho" long_name="air_density" standard_name="air_density" unit="kg m-3" grid_ref="half_level_face_grid" />
   <field id="exner" name="exner" long_name="exner_pressure" unit="1" grid_ref="half_level_face_grid" />
-  <field id="h_u" name="h_u" long_name="Horizontal flux" unit="m-1 s-1" grid_ref="half_level_edge_grid" />
-  <field id="v_u" name="v_u" long_name="Vertical flux " unit="m-1 s-1" grid_ref="full_level_face_grid" />
+  <field id="multi_u" name="multi_u" long_name="Horizontal flux" unit="m-1 s-1" grid_ref="w2_half_level_face_grid" />
   <field id="m_v" name="m_v" long_name="m_v" standard_name="humidity_mixing_ratio" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="m_cl" name="m_cl" long_name="m_cl" standard_name="cloud_liquid_water_mixing_ratio" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="m_r" name="m_r" long_name="m_r" unit="kg kg-1" grid_ref="full_level_face_grid" />
@@ -24,14 +23,11 @@
   <field id="lbc_rho" name="lbc_rho" long_name="lbc_air_density" standard_name="lbc_air_density" unit="kg m-3" grid_ref="half_level_face_grid" />
   <field id="lbc_exner" name="lbc_exner" long_name="lbc_exner_pressure" unit="1" grid_ref="half_level_face_grid" />
   <!-- field id="lbc_u" name="lbc_u" long_name="lbc_U" unit="m s-1" domain_ref="checkpoint_W2" enabled=".FALSE." /-->
-  <field id="lbc_h_u" name="lbc_h_u" long_name="Horizontal flux" unit="m-1 s-1" grid_ref="half_level_edge_grid" />
-  <field id="lbc_v_u" name="lbc_v_u" long_name="Vertical flux " unit="m-1 s-1" grid_ref="full_level_face_grid" />
+  <field id="lbc_multi_u" name="lbc_multi_u" long_name="Horizontal flux" unit="m-1 s-1" grid_ref="w2_half_level_face_grid" />
   <!-- field id="boundary_u_diff" name="boundary_u_diff" long_name="boundary_U_diff" unit="m s-1" domain_ref="checkpoint_W2" /-->
-  <field id="boundary_h_u_diff" name="boundary_h_u_diff" long_name="boundary_h_u_diff" unit="m s-1" grid_ref="half_level_edge_grid" />
-  <field id="boundary_v_u_diff" name="boundary_v_u_diff" long_name="boundary_v_u_diff" unit="m s-1" grid_ref="full_level_face_grid" />
+  <field id="boundary_multi_u_diff" name="boundary_multi_u_diff" long_name="boundary_multi_u_diff" unit="m s-1" grid_ref="w2_half_level_face_grid" />
   <!-- field id="boundary_u_driving" name="boundary_u_driving" long_name="boundary_U_driving" unit="m s-1" domain_ref="checkpoint_W2" /-->
-  <field id="boundary_h_u_driving" name="boundary_h_u_driving" long_name="boundary_h_u_driving" unit="m s-1" grid_ref="half_level_edge_grid" />
-  <field id="boundary_v_u_driving" name="boundary_v_u_driving" long_name="boundary_v_u_driving" unit="m s-1" grid_ref="full_level_face_grid" />
+  <field id="boundary_multi_u_driving" name="boundary_multi_u_driving" long_name="boundary_multi_u_driving" unit="m s-1" grid_ref="w2_half_level_face_grid" />
   <field id="lbc_m_v" name="lbc_m_v" long_name="lbc_m_v" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="lbc_m_cl" name="lbc_m_cl" long_name="lbc_m_cl" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="lbc_m_r" name="lbc_m_r" long_name="lbc_m_r" unit="kg kg-1" grid_ref="full_level_face_grid" />

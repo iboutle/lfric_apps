@@ -8,6 +8,11 @@
     <domain domain_ref="face"/>
     <axis axis_ref="vert_axis_half_levels"/>
   </grid>
+  <grid id="w2_half_level_face_grid">
+    <domain domain_ref="face"/>
+    <axis axis_ref="vert_axis_half_levels"/>
+    <axis axis_ref="w2_dofs"/>
+  </grid>
   <grid id="full_level_face_grid">
     <domain domain_ref="face"/>
     <axis axis_ref="vert_axis_full_levels"/>

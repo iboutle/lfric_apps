@@ -165,9 +165,9 @@ contains
   !> @param[in]    name          Name of field to be split into components
   !> @param[in]    h_name        Name of horizontal component
   !> @param[in]    v_name        Name of vertical component
-  subroutine split_single_complex_field(prognostics, fs, name, h_name, v_name)
+  subroutine split_single_complex_field(prognostics, fs, name, h_name)
 
-    use split_w2_field_kernel_mod,   only: split_w2_field_kernel_type
+    use w2_to_multi_kernel_mod,   only: w2_to_multi_kernel_type
     use sci_geometric_constants_mod, only: get_face_selector_ew, &
                                            get_face_selector_ns
 
@@ -177,7 +177,6 @@ contains
     integer(i_def),              intent(in) :: fs
     character(*),                intent(in) :: name
     character(*),                intent(in) :: h_name
-    character(*),                intent(in) :: v_name
 
     character(26), parameter :: routine_name = 'split_single_complex_field'
 
@@ -194,18 +193,13 @@ contains
 
     call prognostics%get_field(name, field)
     call prognostics%get_field(h_name, h_field)
-    call prognostics%get_field(v_name, v_field)
 
     select case (fs)
     case (W1)
       call log_event(                                                           &
         'unsupported function space W1 in ' // routine_name, log_level_error)
     case (W2)
-      face_selector_ew => get_face_selector_ew(field%get_mesh_id())
-      face_selector_ns => get_face_selector_ns(field%get_mesh_id())
-      call invoke( split_w2_field_kernel_type(h_field, v_field, field, &
-                                              face_selector_ew,        &
-                                              face_selector_ns) )
+      call invoke(w2_to_multi_kernel_type(h_field, field))
     case default
       call log_event(                                                           &
         'unexpected function space in ' // routine_name, log_level_error)
@@ -219,9 +213,9 @@ contains
   !> @param[in]    name          Name of field to be restored from components
   !> @param[in]    h_name        Name of horizontal component
   !> @param[in]    v_name        Name of vertical component
-  subroutine combine_single_complex_field(prognostics, fs, name, h_name, v_name)
+  subroutine combine_single_complex_field(prognostics, fs, name, h_name)
 
-    use combine_w2_field_kernel_mod, only: combine_w2_field_kernel_type
+    use multi_to_w2_kernel_mod, only: multi_to_w2_kernel_type
     use sci_geometric_constants_mod, only: get_face_selector_ew, &
                                            get_face_selector_ns
 
@@ -231,7 +225,6 @@ contains
     integer(i_def),              intent(in) :: fs
     character(*),                intent(in) :: name
     character(*),                intent(in) :: h_name
-    character(*),                intent(in) :: v_name
 
     character(28), parameter :: routine_name = 'combine_single_complex_field'
 
@@ -248,18 +241,13 @@ contains
 
     call prognostics%get_field(name, field)
     call prognostics%get_field(h_name, h_field)
-    call prognostics%get_field(v_name, v_field)
 
     select case (fs)
     case (W1)
       call log_event(                                                           &
         'unsupported function space W1 in ' // routine_name, log_level_error)
     case (W2)
-      face_selector_ew => get_face_selector_ew(field%get_mesh_id())
-      face_selector_ns => get_face_selector_ns(field%get_mesh_id())
-      call invoke( combine_w2_field_kernel_type(field, h_field, v_field, &
-                                                face_selector_ew,        &
-                                                face_selector_ns) )
+      call invoke(multi_to_w2_kernel_type(h_field, field))
     case default
       call log_event(                                                           &
         'unexpected function space in ' // routine_name, log_level_error)
@@ -277,15 +265,15 @@ contains
     type(field_collection_type), intent(in) :: prognostic_fields
 
     call split_single_complex_field(prognostic_fields, W2,                      &
-      'u', 'h_u', 'v_u')
+      'u', 'multi_u')
 
     if (prognostic_fields%field_exists('lbc_u')) then
       call split_single_complex_field(prognostic_fields, W2,                    &
-        'lbc_u', 'lbc_h_u', 'lbc_v_u')
+        'lbc_u', 'lbc_multi_u')
       call split_single_complex_field(prognostic_fields, W2,                    &
-        'boundary_u_diff', 'boundary_h_u_diff', 'boundary_v_u_diff')
+        'boundary_u_diff', 'boundary_multi_u_diff')
       call split_single_complex_field(prognostic_fields, W2,                    &
-        'boundary_u_driving', 'boundary_h_u_driving', 'boundary_v_u_driving')
+        'boundary_u_driving', 'boundary_multi_u_driving')
     end if
 
   end subroutine split_complex_prognostics
@@ -300,15 +288,15 @@ contains
     type(field_collection_type), intent(in) :: prognostic_fields
 
     call combine_single_complex_field(prognostic_fields, W2,                    &
-      'u', 'h_u', 'v_u')
+      'u', 'multi_u')
 
     if (prognostic_fields%field_exists('lbc_u')) then
       call combine_single_complex_field(prognostic_fields, W2,                  &
-        'lbc_u', 'lbc_h_u', 'lbc_v_u')
+        'lbc_u', 'lbc_multi_u')
       call combine_single_complex_field(prognostic_fields, W2,                  &
-        'boundary_u_diff', 'boundary_h_u_diff', 'boundary_v_u_diff')
+        'boundary_u_diff', 'boundary_multi_u_diff')
       call combine_single_complex_field(prognostic_fields, W2,                  &
-        'boundary_u_driving', 'boundary_h_u_driving', 'boundary_v_u_driving')
+        'boundary_u_driving', 'boundary_multi_u_driving')
     end if
   end subroutine combine_complex_prognostics
 
