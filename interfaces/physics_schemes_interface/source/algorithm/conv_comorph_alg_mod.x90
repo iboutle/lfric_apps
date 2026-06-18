@@ -252,6 +252,7 @@ contains
     type( field_type ), pointer :: precfrac
     type( field_type ), pointer :: ls_rain
     type( field_type ), pointer :: ls_snow
+    type( field_type ), pointer :: ls_qw_sink
 
     type( field_type ), pointer :: height_w3
     type( field_type ), pointer :: height_wth
@@ -457,6 +458,7 @@ contains
     call microphysics_fields%get_field('precfrac', precfrac)
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
+    call microphysics_fields%get_field('ls_qw_sink',ls_qw_sink)
 
     height_wth => get_height_fv(Wtheta, mesh%get_id())
     height_w3  => get_height_fv(W3, mesh%get_id())
@@ -621,6 +623,7 @@ contains
                           pres_lowest_cv_base,                                &
                           pres_lowest_cv_top,                                 &
                           lowest_cca_2d,                                      &
+                          ls_qw_sink,                                         &
                           entrain_up,                                         &   ! 3-D local variables
                           entrain_down,                                       &
                           detrain_up,                                         &

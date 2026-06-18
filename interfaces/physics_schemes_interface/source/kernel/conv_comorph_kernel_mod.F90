@@ -33,7 +33,7 @@ module conv_comorph_kernel_mod
   !>
   type, public, extends(kernel_type) :: conv_comorph_kernel_type
     private
-    type(arg_type) :: meta_args(195) = (/                                         &
+    type(arg_type) :: meta_args(196) = (/                                         &
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                                &! outer
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      W3),                       &! rho_in_w3
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      WTHETA),                   &! rho_in_wth
@@ -224,6 +224,7 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_base
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_top
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! lowest_cca_2d
+         arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_qw_sink
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_up
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_down
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! detrain_up
@@ -641,6 +642,7 @@ contains
                           pres_lowest_cv_base,               &
                           pres_lowest_cv_top,                &
                           lowest_cca_2d,                     &
+                          ls_qw_sink,                        &
                           entrain_up,                        &
                           entrain_down,                      &
                           detrain_up,                        &
@@ -1001,7 +1003,8 @@ contains
                                                 pres_cv_top(:),            &
                                                 pres_lowest_cv_base(:),    &
                                                 pres_lowest_cv_top(:),     &
-                                                lowest_cca_2d(:)
+                                                lowest_cca_2d(:),          &
+                                                ls_qw_sink(:)
 
     real(kind=r_def), pointer, intent(inout) :: entrain_up(:),       &
                                                 entrain_down(:),     &
