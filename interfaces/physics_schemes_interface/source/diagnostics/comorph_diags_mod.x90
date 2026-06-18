@@ -92,7 +92,7 @@ contains
 
     lowest_cca_2d_flag = init_diag(lowest_cca_2d, &
                                    'convection__lowest_cca_2d')
-    conv_frac = init_diag(conv_frac, 'convection__conv_frac')
+    conv_frac_flag = init_diag(conv_frac, 'convection__conv_frac')
 
     ! Convective diagnostics - 3d  - theta levels
     entrain_up_flag = init_diag(entrain_up, 'convection__entrain_up')

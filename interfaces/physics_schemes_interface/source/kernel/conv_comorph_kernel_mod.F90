@@ -2483,7 +2483,7 @@ contains
         end do
       end if
 
-      if (.not. associate(conv_frac, empty_real_data) ) then
+      if (.not. associated(conv_frac, empty_real_data) ) then
         do i = 1, row_length
           ! Cartesian domain, grid area constant with height
           cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) &
@@ -2498,7 +2498,7 @@ contains
 
           ! Calculate convective fraction
           if (cv_qw_sink > 0.0_r_def) then
-            conv_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + ls_qw_sink(map_2d(1,i))
+            conv_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + ls_qw_sink(map_2d(1,i)))
           else
             conv_frac(map_2d(1,i)) = 0.0_r_def
           end if
