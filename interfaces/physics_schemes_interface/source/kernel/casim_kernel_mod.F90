@@ -3,6 +3,10 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!-------------------------------------------------------------------------------
 !> @brief Interface to CASIM microphysics scheme.
 
 module casim_kernel_mod
@@ -33,7 +37,7 @@ private
 
 type, public, extends(kernel_type) :: casim_kernel_type
   private
-  type(arg_type) :: meta_args(40) = (/                                      &
+  type(arg_type) :: meta_args(78) = (/                                      &
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mv_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ml_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mi_wth
@@ -73,7 +77,48 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! refl_tot
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! refl_1km
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_liq
-       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA)                        & ! superc_rain
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_rain
+       ! Prognostic CASIM aerosol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! aitken_sol_mass_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! aitken_sol_number_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! accum_sol_mass_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! accum_sol_number_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! coarse_sol_mass_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! coarse_sol_number_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! accum_dust_mass_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! accum_dust_number_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! coarse_dust_mass_in
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! coarse_dust_number_in
+       ! CASIM aerosol processing prognostics
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_sol_liquid
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_sol_rain
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_insol_ice
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_sol_ice
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_insol_liquid
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_sol_number
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! active_insol_number
+       ! GLOMAP modal aerosol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_ait_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_acc_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_ss
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_cor_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_ss
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_ait_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_ins_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_ins_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_acc_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_ins_du
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_cor_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA)                        & ! cor_ins_du
        /)
    integer :: operates_on = CELL_COLUMN
 contains
@@ -134,6 +179,44 @@ contains
 !!                                     surface
 !> @param[in,out] superc_liq          Supercooled liquid cloud mass mixing ratio
 !> @param[in,out] superc_rain         Supercooled rain mass mixing ratio
+!> @param[in]     aitken_sol_mass_in  Prognostic soluble Aitken mode mass
+!> @param[in]     aitken_sol_number_in Prognostic soluble Aitken number
+!> @param[in]     accum_sol_mass_in   Prognostic soluble accum mode mass
+!> @param[in]     accum_sol_number_in Prognostic soluble accum mode number
+!> @param[in]     coarse_sol_mass_in  Prognostic soluble coarse mode mass
+!> @param[in]     coarse_sol_number_in Prognostic soluble coarse number
+!> @param[in]     accum_dust_mass_in  Prognostic accum mode dust mass
+!> @param[in]     accum_dust_number_in Prognostic accum mode dust number
+!> @param[in]     coarse_dust_mass_in Prognostic coarse mode dust mass
+!> @param[in]     coarse_dust_number_in Prognostic coarse dust number
+!> @param[in,out] active_sol_liquid   Soluble aerosol mass activated in liquid
+!> @param[in,out] active_sol_rain     Soluble aerosol mass activated in rain
+!> @param[in,out] active_insol_ice    Insoluble aerosol mass activated in ice
+!> @param[in,out] active_sol_ice      Soluble aerosol mass activated in ice
+!> @param[in,out] active_insol_liquid Insoluble aerosol mass activated in liquid
+!> @param[in,out] active_sol_number   Soluble aerosol number in cloud
+!> @param[in,out] active_insol_number Insoluble aerosol number in cloud
+!> @param[in]     n_ait_sol           GLOMAP Aitken soluble number mr
+!> @param[in]     ait_sol_su          GLOMAP Aitken soluble sulphate mmr
+!> @param[in]     ait_sol_bc          GLOMAP Aitken soluble black carbon mmr
+!> @param[in]     ait_sol_om          GLOMAP Aitken soluble organic carbon mmr
+!> @param[in]     n_acc_sol           GLOMAP accum soluble number mr
+!> @param[in]     acc_sol_su          GLOMAP accum soluble sulphate mmr
+!> @param[in]     acc_sol_bc          GLOMAP accum soluble black carbon mmr
+!> @param[in]     acc_sol_om          GLOMAP accum soluble organic carbon mmr
+!> @param[in]     acc_sol_ss          GLOMAP accum soluble sea salt mmr
+!> @param[in]     n_cor_sol           GLOMAP coarse soluble number mr
+!> @param[in]     cor_sol_su          GLOMAP coarse soluble sulphate mmr
+!> @param[in]     cor_sol_bc          GLOMAP coarse soluble black carbon mmr
+!> @param[in]     cor_sol_om          GLOMAP coarse soluble organic carbon mmr
+!> @param[in]     cor_sol_ss          GLOMAP coarse soluble sea salt mmr
+!> @param[in]     n_ait_ins           GLOMAP Aitken insoluble number mr
+!> @param[in]     ait_ins_bc          GLOMAP Aitken insoluble black carbon mmr
+!> @param[in]     ait_ins_om          GLOMAP Aitken insoluble organic carbon mmr
+!> @param[in]     n_acc_ins           GLOMAP accum insoluble number mr
+!> @param[in]     acc_ins_du          GLOMAP accumulation insoluble dust mmr
+!> @param[in]     n_cor_ins           GLOMAP coarse insoluble number mr
+!> @param[in]     cor_ins_du          GLOMAP coarse insoluble dust mmr
 !> @param[in]     ndf_wth             Number of degrees of freedom per cell for
 !!                                     potential temperature space
 !> @param[in]     undf_wth            Number unique of degrees of freedom for
@@ -174,6 +257,35 @@ subroutine casim_code( nlayers,                     &
                        cloud_drop_no_conc, murk,    &
                        refl_tot, refl_1km,          &
                        superc_liq, superc_rain,     &
+                       aitken_sol_mass_in,          &
+                       aitken_sol_number_in,        &
+                       accum_sol_mass_in,           &
+                       accum_sol_number_in,         &
+                       coarse_sol_mass_in,          &
+                       coarse_sol_number_in,        &
+                       accum_dust_mass_in,          &
+                       accum_dust_number_in,        &
+                       coarse_dust_mass_in,         &
+                       coarse_dust_number_in,       &
+                       active_sol_liquid,           &
+                       active_sol_rain,             &
+                       active_insol_ice,            &
+                       active_sol_ice,              &
+                       active_insol_liquid,         &
+                       active_sol_number,           &
+                       active_insol_number,         &
+                       n_ait_sol, ait_sol_su,       &
+                       ait_sol_bc, ait_sol_om,      &
+                       n_acc_sol, acc_sol_su,       &
+                       acc_sol_bc, acc_sol_om,      &
+                       acc_sol_ss,                  &
+                       n_cor_sol, cor_sol_su,       &
+                       cor_sol_bc, cor_sol_om,      &
+                       cor_sol_ss,                  &
+                       n_ait_ins, ait_ins_bc,       &
+                       ait_ins_om,                  &
+                       n_acc_ins, acc_ins_du,       &
+                       n_cor_ins, cor_ins_du,       &
                        ndf_wth, undf_wth, map_wth,  &
                        ndf_w3,  undf_w3,  map_w3,   &
                        ndf_2d,  undf_2d,  map_2d    )
@@ -194,7 +306,32 @@ subroutine casim_code( nlayers,                     &
 
     use micro_main,                 only: shipway_microphysics
     use casim_switches,             only: its, ite, jts, jte, kts, kte, &
-                                          ils, ile, jls, jle
+                                          ils, ile, jls, jle,           &
+                                          l_fix_aerosol,                &
+                                          l_tracer_aerosol,             &
+                                          l_ukca_aerosol,               &
+                                          no_aerosol_modes,             &
+                                          no_processing,                &
+                                          l_mp_activesolliquid,         &
+                                          l_mp_activesolrain,           &
+                                          l_mp_activeinsolice,          &
+                                          l_mp_activesolice,            &
+                                          l_mp_activeinsolliquid,       &
+                                          l_mp_activesolnumber,         &
+                                          l_mp_activeinsolnumber
+    use mphys_inputs_mod,           only: casim_aerosol_option,         &
+                                          casim_aerosol_process_level
+    use aerosol_extract_convert_mod,                                    &
+                                    only: aerosol_extract_convert,      &
+                                          aerosol_extract_convert_murk, &
+                                          aerosol_extract_convert_ft
+    use ukca_mode_setup,            only: nmodes,                       &
+                                          mode_ait_sol, mode_acc_sol,   &
+                                          mode_cor_sol, mode_ait_insol, &
+                                          mode_acc_insol,               &
+                                          mode_cor_insol,               &
+                                          cp_su, cp_bc, cp_oc, cp_cl,   &
+                                          cp_du
     use generic_diagnostic_variables,                                  &
                                     only: allocate_diagnostic_space,   &
                                           deallocate_diagnostic_space, &
@@ -257,6 +394,54 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), pointer, intent(inout) :: superc_rain(:)
     real(kind=r_def), pointer, intent(inout) :: ls_graup_3d(:)
 
+    ! Prognostic CASIM aerosol. These fields are empty unless
+    ! casim_aerosol_couple is set to tracer, so they are only ever
+    ! referenced under l_tracer_aerosol.
+    real(kind=r_def), intent(in), dimension(undf_wth) :: aitken_sol_mass_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: aitken_sol_number_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: accum_sol_mass_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: accum_sol_number_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: coarse_sol_mass_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: coarse_sol_number_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: accum_dust_mass_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: accum_dust_number_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: coarse_dust_mass_in
+    real(kind=r_def), intent(in), dimension(undf_wth) :: coarse_dust_number_in
+
+    ! CASIM aerosol processing prognostics. These fields are empty unless
+    ! casim_aerosol_process is active, so they are only ever referenced
+    ! under casim_aerosol_process_level > no_processing.
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_sol_liquid
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_sol_rain
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_insol_ice
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_sol_ice
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_insol_liquid
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_sol_number
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: active_insol_number
+
+    ! GLOMAP modal aerosol
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_ait_sol
+    real(kind=r_def), intent(in), dimension(undf_wth) :: ait_sol_su
+    real(kind=r_def), intent(in), dimension(undf_wth) :: ait_sol_bc
+    real(kind=r_def), intent(in), dimension(undf_wth) :: ait_sol_om
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_acc_sol
+    real(kind=r_def), intent(in), dimension(undf_wth) :: acc_sol_su
+    real(kind=r_def), intent(in), dimension(undf_wth) :: acc_sol_bc
+    real(kind=r_def), intent(in), dimension(undf_wth) :: acc_sol_om
+    real(kind=r_def), intent(in), dimension(undf_wth) :: acc_sol_ss
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_cor_sol
+    real(kind=r_def), intent(in), dimension(undf_wth) :: cor_sol_su
+    real(kind=r_def), intent(in), dimension(undf_wth) :: cor_sol_bc
+    real(kind=r_def), intent(in), dimension(undf_wth) :: cor_sol_om
+    real(kind=r_def), intent(in), dimension(undf_wth) :: cor_sol_ss
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_ait_ins
+    real(kind=r_def), intent(in), dimension(undf_wth) :: ait_ins_bc
+    real(kind=r_def), intent(in), dimension(undf_wth) :: ait_ins_om
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_acc_ins
+    real(kind=r_def), intent(in), dimension(undf_wth) :: acc_ins_du
+    real(kind=r_def), intent(in), dimension(undf_wth) :: n_cor_ins
+    real(kind=r_def), intent(in), dimension(undf_wth) :: cor_ins_du
+
     integer(kind=i_def), intent(in), dimension(ndf_wth) :: map_wth
     integer(kind=i_def), intent(in), dimension(ndf_w3)  :: map_w3
     integer(kind=i_def), intent(in), dimension(ndf_2d)  :: map_2d
@@ -308,6 +493,32 @@ subroutine casim_code( nlayers,                     &
          q_work, qcl_work, qcf_work, qrain_work, qcf2_work, qgraup_work,       &
          deltaz, rhodz_dry, rhodz_moist, rho_r2, dry_rho, r_rho_levels
     real(r_um), dimension(1,1,0:nlayers) :: r_theta_levels
+
+    ! Working arrays for the aerosol extraction. The extraction routines are
+    ! written on UM physics precision, so the results are copied into the
+    ! CASIM precision arrays afterwards.
+    real(r_um), dimension(nlayers) ::                                          &
+         ait_sol_mass_um,  ait_sol_num_um,                                     &
+         acc_sol_mass_um,  acc_sol_num_um,                                     &
+         cor_sol_mass_um,  cor_sol_num_um,                                     &
+         acc_dust_mass_um, acc_dust_num_um,                                    &
+         cor_dust_mass_um, cor_dust_num_um,                                    &
+         ait_sol_bk_um,    acc_sol_bk_um,   cor_sol_bk_um,                     &
+         p_wth_um, t_wth_um, rho_casim_um, murk_um,                            &
+         prog_ait_sol_mass,  prog_ait_sol_num,                                 &
+         prog_acc_sol_mass,  prog_acc_sol_num,                                 &
+         prog_cor_sol_mass,  prog_cor_sol_num,                                 &
+         prog_acc_dust_mass, prog_acc_dust_num,                                &
+         prog_cor_dust_mass, prog_cor_dust_num
+
+    ! At a later date we would like to obtain this as a variable via the api.
+    ! This value is hard coded for the time being to work with
+    ! ukca_mode_sussbcocdu_7mode, matching glomap_aerosol_kernel_mod.
+    integer(i_um), parameter :: ncp_lfric = 6
+
+    ! GLOMAP mass and number mixing ratios gathered by mode and component
+    real(r_um), dimension(nlayers,nmodes,ncp_lfric) :: mode_mmr_um
+    real(r_um), dimension(nlayers,nmodes)           :: mode_nmr_um
 
     integer(i_um) :: k
 
@@ -389,26 +600,13 @@ subroutine casim_code( nlayers,                     &
       m3s_casim(k,1,1) = 0.0_wp
       m3g_casim(k,1,1) = 0.0_wp
       th_casim(k,1,1) = theta_in_wth(map_wth(1) + k)
-      aitken_sol_mass(k,1,1) = 0.0_wp
-      aitken_sol_number(k,1,1) = 0.0_wp
-      accum_sol_mass(k,1,1) =  0.0_wp
-      accum_sol_number(k,1,1) = 0.0_wp
-      coarse_sol_mass(k,1,1) = 0.0_wp
-      coarse_sol_number(k,1,1) =  0.0_wp
       act_sol_liq_casim(k,1,1) = 0.0_wp
       act_sol_rain_casim(k,1,1) = 0.0_wp
-      coarse_dust_mass(k,1,1) =  0.0_wp
-      coarse_dust_number(k,1,1) = 0.0_wp
       act_insol_ice_casim(k,1,1) = 0.0_wp
       act_sol_ice_casim(k,1,1) = 0.0_wp
       act_insol_liq_casim(k,1,1) = 0.0_wp
-      accum_dust_mass(k,1,1) =  0.0_wp
-      accum_dust_number(k,1,1) =  0.0_wp
       act_sol_number_casim(k,1,1) =   0.0_wp
       act_insol_number_casim(k,1,1) = 0.0_wp
-      aitken_sol_bk(k,1,1) = 0.0_wp
-      accum_sol_bk(k,1,1) =   0.0_wp
-      coarse_sol_bk(k,1,1) = 0.0_wp
       pii_casim(k,1,1) = exner_in_wth(map_wth(1) + k)
       p_casim(k,1,1) = p_zero*(exner_in_wth(map_wth(1) + k))               &
                                           **(1.0_wp/kappa)
@@ -453,6 +651,221 @@ subroutine casim_code( nlayers,                     &
       dact_sol_number_casim(k,1,1) = 0.0_wp
       dact_insol_number_casim(k,1,1) = 0.0_wp
     end do     ! k
+
+    !-----------------------------------------------------------------------
+    ! Extract and convert the aerosol which is to be supplied to CASIM.
+    ! This follows the source selection made in the UM routine casim_ctl.
+    !-----------------------------------------------------------------------
+    do k = 1, nlayers
+      p_wth_um(k)     = p_casim(k,1,1)
+      t_wth_um(k)     = exner_in_wth(map_wth(1) + k) *                         &
+                        theta_in_wth(map_wth(1) + k)
+      rho_casim_um(k) = rho_casim(k,1,1)
+    end do
+
+    if ( ( l_fix_aerosol .or. l_tracer_aerosol ) .and.                         &
+         casim_aerosol_option > no_aerosol_modes ) then
+
+      ! Either a fixed aerosol, or the prognostic CASIM aerosol. The UM
+      ! reads the prognostic aerosol out of its free tracer array; LFRic
+      ! holds each species in its own field. The fields are only present
+      ! for the prognostic option.
+      if ( l_tracer_aerosol ) then
+        do k = 1, nlayers
+          prog_ait_sol_mass(k)  = aitken_sol_mass_in(map_wth(1) + k)
+          prog_ait_sol_num(k)   = aitken_sol_number_in(map_wth(1) + k)
+          prog_acc_sol_mass(k)  = accum_sol_mass_in(map_wth(1) + k)
+          prog_acc_sol_num(k)   = accum_sol_number_in(map_wth(1) + k)
+          prog_cor_sol_mass(k)  = coarse_sol_mass_in(map_wth(1) + k)
+          prog_cor_sol_num(k)   = coarse_sol_number_in(map_wth(1) + k)
+          prog_acc_dust_mass(k) = accum_dust_mass_in(map_wth(1) + k)
+          prog_acc_dust_num(k)  = accum_dust_number_in(map_wth(1) + k)
+          prog_cor_dust_mass(k) = coarse_dust_mass_in(map_wth(1) + k)
+          prog_cor_dust_num(k)  = coarse_dust_number_in(map_wth(1) + k)
+        end do
+      else
+        prog_ait_sol_mass(:)  = 0.0_r_um
+        prog_ait_sol_num(:)   = 0.0_r_um
+        prog_acc_sol_mass(:)  = 0.0_r_um
+        prog_acc_sol_num(:)   = 0.0_r_um
+        prog_cor_sol_mass(:)  = 0.0_r_um
+        prog_cor_sol_num(:)   = 0.0_r_um
+        prog_acc_dust_mass(:) = 0.0_r_um
+        prog_acc_dust_num(:)  = 0.0_r_um
+        prog_cor_dust_mass(:) = 0.0_r_um
+        prog_cor_dust_num(:)  = 0.0_r_um
+      end if
+
+      call aerosol_extract_convert_ft( int(nlayers),                           &
+               prog_ait_sol_mass, prog_ait_sol_num,                            &
+               prog_acc_sol_mass, prog_acc_sol_num,                            &
+               prog_cor_sol_mass, prog_cor_sol_num,                            &
+               prog_acc_dust_mass, prog_acc_dust_num,                          &
+               prog_cor_dust_mass, prog_cor_dust_num,                          &
+               ait_sol_mass_um, ait_sol_num_um,                                &
+               acc_sol_mass_um, acc_sol_num_um,                                &
+               cor_sol_mass_um, cor_sol_num_um,                                &
+               acc_dust_mass_um, acc_dust_num_um,                              &
+               cor_dust_mass_um, cor_dust_num_um )
+
+      ait_sol_bk_um(:) = 0.0_r_um
+      acc_sol_bk_um(:) = 0.0_r_um
+      cor_sol_bk_um(:) = 0.0_r_um
+
+    else if ( l_ukca_aerosol .and.                                             &
+              casim_aerosol_option > no_aerosol_modes ) then
+
+      ! Extract the GLOMAP aerosol. The UM reads the modes straight out of
+      ! its single UKCA tracer array; LFRic holds each component in its own
+      ! field so they are gathered by mode and component here.
+      mode_mmr_um(:,:,:) = 0.0_r_um
+      mode_nmr_um(:,:)   = 0.0_r_um
+
+      do k = 1, nlayers
+        mode_nmr_um(k,mode_ait_sol)      = n_ait_sol(map_wth(1) + k)
+        mode_mmr_um(k,mode_ait_sol,cp_su) = ait_sol_su(map_wth(1) + k)
+        mode_mmr_um(k,mode_ait_sol,cp_bc) = ait_sol_bc(map_wth(1) + k)
+        mode_mmr_um(k,mode_ait_sol,cp_oc) = ait_sol_om(map_wth(1) + k)
+
+        mode_nmr_um(k,mode_acc_sol)      = n_acc_sol(map_wth(1) + k)
+        mode_mmr_um(k,mode_acc_sol,cp_su) = acc_sol_su(map_wth(1) + k)
+        mode_mmr_um(k,mode_acc_sol,cp_bc) = acc_sol_bc(map_wth(1) + k)
+        mode_mmr_um(k,mode_acc_sol,cp_oc) = acc_sol_om(map_wth(1) + k)
+        mode_mmr_um(k,mode_acc_sol,cp_cl) = acc_sol_ss(map_wth(1) + k)
+
+        mode_nmr_um(k,mode_cor_sol)      = n_cor_sol(map_wth(1) + k)
+        mode_mmr_um(k,mode_cor_sol,cp_su) = cor_sol_su(map_wth(1) + k)
+        mode_mmr_um(k,mode_cor_sol,cp_bc) = cor_sol_bc(map_wth(1) + k)
+        mode_mmr_um(k,mode_cor_sol,cp_oc) = cor_sol_om(map_wth(1) + k)
+        mode_mmr_um(k,mode_cor_sol,cp_cl) = cor_sol_ss(map_wth(1) + k)
+
+        mode_nmr_um(k,mode_ait_insol)      = n_ait_ins(map_wth(1) + k)
+        mode_mmr_um(k,mode_ait_insol,cp_bc) = ait_ins_bc(map_wth(1) + k)
+        mode_mmr_um(k,mode_ait_insol,cp_oc) = ait_ins_om(map_wth(1) + k)
+
+        mode_nmr_um(k,mode_acc_insol)      = n_acc_ins(map_wth(1) + k)
+        mode_mmr_um(k,mode_acc_insol,cp_du) = acc_ins_du(map_wth(1) + k)
+
+        mode_nmr_um(k,mode_cor_insol)      = n_cor_ins(map_wth(1) + k)
+        mode_mmr_um(k,mode_cor_insol,cp_du) = cor_ins_du(map_wth(1) + k)
+      end do
+
+      ! LFRic has no prognostic dust in the soluble accumulation and coarse
+      ! modes, so those components are left at zero.
+
+      call aerosol_extract_convert( int(nlayers), int(ncp_lfric),              &
+               p_wth_um, t_wth_um, rho_casim_um,                               &
+               mode_mmr_um, mode_nmr_um,                                       &
+               ait_sol_mass_um, ait_sol_num_um,                                &
+               acc_sol_mass_um, acc_sol_num_um,                                &
+               cor_sol_mass_um, cor_sol_num_um,                                &
+               acc_dust_mass_um, acc_dust_num_um,                              &
+               cor_dust_mass_um, cor_dust_num_um,                              &
+               ait_sol_bk_um, acc_sol_bk_um, cor_sol_bk_um )
+
+    else if ( murk_prognostic ) then
+
+      ! Convert murk into soluble accumulation mode mass and number
+      do k = 1, nlayers
+        murk_um(k) = murk(map_wth(1) + k)
+      end do
+
+      call aerosol_extract_convert_murk( int(nlayers), rho_casim_um,           &
+               murk_um,                                                        &
+               ait_sol_mass_um, ait_sol_num_um,                                &
+               acc_sol_mass_um, acc_sol_num_um,                                &
+               cor_sol_mass_um, cor_sol_num_um,                                &
+               acc_dust_mass_um, acc_dust_num_um,                              &
+               cor_dust_mass_um, cor_dust_num_um )
+
+      ait_sol_bk_um(:) = 0.0_r_um
+      acc_sol_bk_um(:) = 0.0_r_um
+      cor_sol_bk_um(:) = 0.0_r_um
+
+    else
+
+      ! No aerosol supplied to CASIM (failsafe option)
+      ait_sol_mass_um(:)  = 0.0_r_um
+      ait_sol_num_um(:)   = 0.0_r_um
+      acc_sol_mass_um(:)  = 0.0_r_um
+      acc_sol_num_um(:)   = 0.0_r_um
+      cor_sol_mass_um(:)  = 0.0_r_um
+      cor_sol_num_um(:)   = 0.0_r_um
+      acc_dust_mass_um(:) = 0.0_r_um
+      acc_dust_num_um(:)  = 0.0_r_um
+      cor_dust_mass_um(:) = 0.0_r_um
+      cor_dust_num_um(:)  = 0.0_r_um
+      ait_sol_bk_um(:)    = 0.0_r_um
+      acc_sol_bk_um(:)    = 0.0_r_um
+      cor_sol_bk_um(:)    = 0.0_r_um
+
+    end if ! aerosol source
+
+    do k = 1, nlayers
+      aitken_sol_mass(k,1,1)    = ait_sol_mass_um(k)
+      aitken_sol_number(k,1,1)  = ait_sol_num_um(k)
+      accum_sol_mass(k,1,1)     = acc_sol_mass_um(k)
+      accum_sol_number(k,1,1)   = acc_sol_num_um(k)
+      coarse_sol_mass(k,1,1)    = cor_sol_mass_um(k)
+      coarse_sol_number(k,1,1)  = cor_sol_num_um(k)
+      accum_dust_mass(k,1,1)    = acc_dust_mass_um(k)
+      accum_dust_number(k,1,1)  = acc_dust_num_um(k)
+      coarse_dust_mass(k,1,1)   = cor_dust_mass_um(k)
+      coarse_dust_number(k,1,1) = cor_dust_num_um(k)
+      aitken_sol_bk(k,1,1)      = ait_sol_bk_um(k)
+      accum_sol_bk(k,1,1)       = acc_sol_bk_um(k)
+      coarse_sol_bk(k,1,1)      = cor_sol_bk_um(k)
+    end do
+
+    !-----------------------------------------------------------------------
+    ! For aerosol processing runs, supply the aerosol processing prognostics
+    ! to CASIM.
+    !-----------------------------------------------------------------------
+    if ( casim_aerosol_process_level > no_processing ) then
+
+      if ( l_mp_activesolliquid ) then
+        do k = 1, nlayers
+          act_sol_liq_casim(k,1,1) = active_sol_liquid(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activesolrain ) then
+        do k = 1, nlayers
+          act_sol_rain_casim(k,1,1) = active_sol_rain(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activeinsolice ) then
+        do k = 1, nlayers
+          act_insol_ice_casim(k,1,1) = active_insol_ice(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activesolice ) then
+        do k = 1, nlayers
+          act_sol_ice_casim(k,1,1) = active_sol_ice(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activeinsolliquid ) then
+        do k = 1, nlayers
+          act_insol_liq_casim(k,1,1) = active_insol_liquid(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activesolnumber ) then
+        do k = 1, nlayers
+          act_sol_number_casim(k,1,1) = active_sol_number(map_wth(1) + k)
+        end do
+      end if
+
+      if ( l_mp_activeinsolnumber ) then
+        do k = 1, nlayers
+          act_insol_number_casim(k,1,1) = active_insol_number(map_wth(1) + k)
+        end do
+      end if
+
+    end if ! casim_aerosol_process_level > no_processing
 
     cfrain_casim(nlayers,:,:)=0.0_wp
     cfgr_casim(nlayers,:,:)=0.0_wp
@@ -513,6 +926,73 @@ subroutine casim_code( nlayers,                     &
                             daccum_dust_number,   dact_sol_number_casim,      &
                             dact_insol_number_casim,                          &
                             ils, ile,  jls, jle )
+
+    !-----------------------------------------------------------------------
+    ! Pass back the increments to the aerosol processing prognostics.
+    ! The UM accumulates these into the dActive* arrays, which are not
+    ! currently applied anywhere, so LFRic adds them to the prognostics
+    ! directly.
+    !-----------------------------------------------------------------------
+    if ( casim_aerosol_process_level > no_processing ) then
+
+      if ( l_mp_activesolliquid ) then
+        do k = 1, nlayers
+          active_sol_liquid(map_wth(1) + k) =                                  &
+              active_sol_liquid(map_wth(1) + k) + dact_sol_liq_casim(k,1,1)
+        end do
+        active_sol_liquid(map_wth(1)) = active_sol_liquid(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activesolrain ) then
+        do k = 1, nlayers
+          active_sol_rain(map_wth(1) + k) =                                    &
+              active_sol_rain(map_wth(1) + k) + dact_sol_rain_casim(k,1,1)
+        end do
+        active_sol_rain(map_wth(1)) = active_sol_rain(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activeinsolice ) then
+        do k = 1, nlayers
+          active_insol_ice(map_wth(1) + k) =                                   &
+              active_insol_ice(map_wth(1) + k) + dact_insol_ice_casim(k,1,1)
+        end do
+        active_insol_ice(map_wth(1)) = active_insol_ice(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activesolice ) then
+        do k = 1, nlayers
+          active_sol_ice(map_wth(1) + k) =                                     &
+              active_sol_ice(map_wth(1) + k) + dact_sol_ice_casim(k,1,1)
+        end do
+        active_sol_ice(map_wth(1)) = active_sol_ice(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activeinsolliquid ) then
+        do k = 1, nlayers
+          active_insol_liquid(map_wth(1) + k) =                                &
+              active_insol_liquid(map_wth(1) + k) + dact_insol_liq_casim(k,1,1)
+        end do
+        active_insol_liquid(map_wth(1)) = active_insol_liquid(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activesolnumber ) then
+        do k = 1, nlayers
+          active_sol_number(map_wth(1) + k) =                                  &
+              active_sol_number(map_wth(1) + k) + dact_sol_number_casim(k,1,1)
+        end do
+        active_sol_number(map_wth(1)) = active_sol_number(map_wth(1) + 1)
+      end if
+
+      if ( l_mp_activeinsolnumber ) then
+        do k = 1, nlayers
+          active_insol_number(map_wth(1) + k) =                                &
+              active_insol_number(map_wth(1) + k) +                            &
+              dact_insol_number_casim(k,1,1)
+        end do
+        active_insol_number(map_wth(1)) = active_insol_number(map_wth(1) + 1)
+      end if
+
+    end if ! casim_aerosol_process_level > no_processing
 
     ! Update murk for scavenging washout
     if (murk_prognostic) then

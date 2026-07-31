@@ -270,6 +270,24 @@
   <field id="ni_mphys" name="ni_mphys" long_name="number_concentration_of_cloud_ice_after_microphysics" unit="kg-1" grid_ref="full_level_face_grid" />
   <field id="ns_mphys" name="ns_mphys" long_name="number_concentration_of_snow_after_microphysics" unit="kg-1" grid_ref="full_level_face_grid" />
   <field id="ng_mphys" name="ng_mphys" long_name="number_concentration_of_graupel_after_microphysics" unit="kg-1" grid_ref="full_level_face_grid" />
+  <!-- casim aerosol and aerosol processing prognostics -->
+  <field id="aitken_sol_mass" name="aitken_sol_mass" long_name="mass_fraction_of_soluble_aitken_mode_aerosol_in_air" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="aitken_sol_number" name="aitken_sol_number" long_name="number_concentration_of_soluble_aitken_mode_aerosol" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="accum_sol_mass" name="accum_sol_mass" long_name="mass_fraction_of_soluble_accumulation_mode_aerosol_in_air" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="accum_sol_number" name="accum_sol_number" long_name="number_concentration_of_soluble_accumulation_mode_aerosol" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="coarse_sol_mass" name="coarse_sol_mass" long_name="mass_fraction_of_soluble_coarse_mode_aerosol_in_air" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="coarse_sol_number" name="coarse_sol_number" long_name="number_concentration_of_soluble_coarse_mode_aerosol" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="accum_dust_mass" name="accum_dust_mass" long_name="mass_fraction_of_insoluble_accumulation_mode_aerosol_in_air" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="accum_dust_number" name="accum_dust_number" long_name="number_concentration_of_insoluble_accumulation_mode_aerosol" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="coarse_dust_mass" name="coarse_dust_mass" long_name="mass_fraction_of_insoluble_coarse_mode_aerosol_in_air" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="coarse_dust_number" name="coarse_dust_number" long_name="number_concentration_of_insoluble_coarse_mode_aerosol" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_sol_liquid" name="active_sol_liquid" long_name="mass_fraction_of_soluble_aerosol_activated_in_cloud_liquid_water" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_sol_rain" name="active_sol_rain" long_name="mass_fraction_of_soluble_aerosol_activated_in_rain" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_insol_ice" name="active_insol_ice" long_name="mass_fraction_of_insoluble_aerosol_activated_in_cloud_ice" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_sol_ice" name="active_sol_ice" long_name="mass_fraction_of_soluble_aerosol_activated_in_cloud_ice" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_insol_liquid" name="active_insol_liquid" long_name="mass_fraction_of_insoluble_aerosol_activated_in_cloud_liquid_water" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_sol_number" name="active_sol_number" long_name="number_concentration_of_soluble_aerosol_activated_in_cloud" unit="kg-1" grid_ref="full_level_face_grid" />
+  <field id="active_insol_number" name="active_insol_number" long_name="number_concentration_of_insoluble_aerosol_activated_in_cloud" unit="kg-1" grid_ref="full_level_face_grid" />
   <!-- turbulence fields -->
   <field id="zh" name="zh" long_name="boundary_layer_depth" unit="m" domain_ref="face" />
   <field id="wvar" name="wvar" long_name="vertical_velocity_variance" unit="m2 s-2" grid_ref="full_level_face_grid" />

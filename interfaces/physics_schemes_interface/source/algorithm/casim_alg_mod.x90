@@ -3,6 +3,10 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!-------------------------------------------------------------------------------
 !> @brief Interface to the CASIM Microphysics scheme
 
 module casim_alg_mod
@@ -113,6 +117,50 @@ contains
     type( field_type ), pointer :: cloud_drop_no_conc  => null()
     type( field_type ), pointer :: murk                => null()
 
+    ! Prognostic CASIM aerosol
+    type( field_type ), pointer :: aitken_sol_mass
+    type( field_type ), pointer :: aitken_sol_number
+    type( field_type ), pointer :: accum_sol_mass
+    type( field_type ), pointer :: accum_sol_number
+    type( field_type ), pointer :: coarse_sol_mass
+    type( field_type ), pointer :: coarse_sol_number
+    type( field_type ), pointer :: accum_dust_mass
+    type( field_type ), pointer :: accum_dust_number
+    type( field_type ), pointer :: coarse_dust_mass
+    type( field_type ), pointer :: coarse_dust_number
+
+    ! CASIM aerosol processing prognostics
+    type( field_type ), pointer :: active_sol_liquid
+    type( field_type ), pointer :: active_sol_rain
+    type( field_type ), pointer :: active_insol_ice
+    type( field_type ), pointer :: active_sol_ice
+    type( field_type ), pointer :: active_insol_liquid
+    type( field_type ), pointer :: active_sol_number
+    type( field_type ), pointer :: active_insol_number
+
+    ! GLOMAP modal aerosol
+    type( field_type ), pointer :: n_ait_sol
+    type( field_type ), pointer :: ait_sol_su
+    type( field_type ), pointer :: ait_sol_bc
+    type( field_type ), pointer :: ait_sol_om
+    type( field_type ), pointer :: n_acc_sol
+    type( field_type ), pointer :: acc_sol_su
+    type( field_type ), pointer :: acc_sol_bc
+    type( field_type ), pointer :: acc_sol_om
+    type( field_type ), pointer :: acc_sol_ss
+    type( field_type ), pointer :: n_cor_sol
+    type( field_type ), pointer :: cor_sol_su
+    type( field_type ), pointer :: cor_sol_bc
+    type( field_type ), pointer :: cor_sol_om
+    type( field_type ), pointer :: cor_sol_ss
+    type( field_type ), pointer :: n_ait_ins
+    type( field_type ), pointer :: ait_ins_bc
+    type( field_type ), pointer :: ait_ins_om
+    type( field_type ), pointer :: n_acc_ins
+    type( field_type ), pointer :: acc_ins_du
+    type( field_type ), pointer :: n_cor_ins
+    type( field_type ), pointer :: cor_ins_du
+
     type( field_type ), pointer :: wvar
 
     type( field_type ), pointer :: height_w3 => null()
@@ -167,8 +215,52 @@ contains
     call microphysics_fields%get_field('ns_mphys',ns_mphys)
     call microphysics_fields%get_field('ng_mphys',ng_mphys)
 
+    call microphysics_fields%get_field('aitken_sol_mass', aitken_sol_mass)
+    call microphysics_fields%get_field('aitken_sol_number', aitken_sol_number)
+    call microphysics_fields%get_field('accum_sol_mass', accum_sol_mass)
+    call microphysics_fields%get_field('accum_sol_number', accum_sol_number)
+    call microphysics_fields%get_field('coarse_sol_mass', coarse_sol_mass)
+    call microphysics_fields%get_field('coarse_sol_number', coarse_sol_number)
+    call microphysics_fields%get_field('accum_dust_mass', accum_dust_mass)
+    call microphysics_fields%get_field('accum_dust_number', accum_dust_number)
+    call microphysics_fields%get_field('coarse_dust_mass', coarse_dust_mass)
+    call microphysics_fields%get_field('coarse_dust_number',                   &
+                                       coarse_dust_number)
+
+    call microphysics_fields%get_field('active_sol_liquid', active_sol_liquid)
+    call microphysics_fields%get_field('active_sol_rain', active_sol_rain)
+    call microphysics_fields%get_field('active_insol_ice', active_insol_ice)
+    call microphysics_fields%get_field('active_sol_ice', active_sol_ice)
+    call microphysics_fields%get_field('active_insol_liquid',                  &
+                                       active_insol_liquid)
+    call microphysics_fields%get_field('active_sol_number', active_sol_number)
+    call microphysics_fields%get_field('active_insol_number',                  &
+                                       active_insol_number)
+
     call aerosol_fields%get_field('cloud_drop_no_conc',cloud_drop_no_conc)
     call aerosol_fields%get_field('murk', murk)
+
+    call aerosol_fields%get_field('n_ait_sol', n_ait_sol)
+    call aerosol_fields%get_field('ait_sol_su', ait_sol_su)
+    call aerosol_fields%get_field('ait_sol_bc', ait_sol_bc)
+    call aerosol_fields%get_field('ait_sol_om', ait_sol_om)
+    call aerosol_fields%get_field('n_acc_sol', n_acc_sol)
+    call aerosol_fields%get_field('acc_sol_su', acc_sol_su)
+    call aerosol_fields%get_field('acc_sol_bc', acc_sol_bc)
+    call aerosol_fields%get_field('acc_sol_om', acc_sol_om)
+    call aerosol_fields%get_field('acc_sol_ss', acc_sol_ss)
+    call aerosol_fields%get_field('n_cor_sol', n_cor_sol)
+    call aerosol_fields%get_field('cor_sol_su', cor_sol_su)
+    call aerosol_fields%get_field('cor_sol_bc', cor_sol_bc)
+    call aerosol_fields%get_field('cor_sol_om', cor_sol_om)
+    call aerosol_fields%get_field('cor_sol_ss', cor_sol_ss)
+    call aerosol_fields%get_field('n_ait_ins', n_ait_ins)
+    call aerosol_fields%get_field('ait_ins_bc', ait_ins_bc)
+    call aerosol_fields%get_field('ait_ins_om', ait_ins_om)
+    call aerosol_fields%get_field('n_acc_ins', n_acc_ins)
+    call aerosol_fields%get_field('acc_ins_du', acc_ins_du)
+    call aerosol_fields%get_field('n_cor_ins', n_cor_ins)
+    call aerosol_fields%get_field('cor_ins_du', cor_ins_du)
 
     call turbulence_fields%get_field('wvar', wvar)
 
@@ -195,7 +287,25 @@ contains
                                      ls_rain_3d, ls_snow_3d, ls_graup_3d,      &
                                      theta_inc, cloud_drop_no_conc, murk,      &
                                      refl_tot, refl_1km,                       &
-                                     superc_liq, superc_rain ) )
+                                     superc_liq, superc_rain,                  &
+                                     aitken_sol_mass, aitken_sol_number,       &
+                                     accum_sol_mass, accum_sol_number,         &
+                                     coarse_sol_mass, coarse_sol_number,       &
+                                     accum_dust_mass, accum_dust_number,       &
+                                     coarse_dust_mass, coarse_dust_number,     &
+                                     active_sol_liquid, active_sol_rain,       &
+                                     active_insol_ice, active_sol_ice,         &
+                                     active_insol_liquid,                      &
+                                     active_sol_number, active_insol_number,   &
+                                     n_ait_sol, ait_sol_su,                    &
+                                     ait_sol_bc, ait_sol_om,                   &
+                                     n_acc_sol, acc_sol_su,                    &
+                                     acc_sol_bc, acc_sol_om, acc_sol_ss,       &
+                                     n_cor_sol, cor_sol_su,                    &
+                                     cor_sol_bc, cor_sol_om, cor_sol_ss,       &
+                                     n_ait_ins, ait_ins_bc, ait_ins_om,        &
+                                     n_acc_ins, acc_ins_du,                    &
+                                     n_cor_ins, cor_ins_du ) )
 
     if (turb_gen_mixph) then
       dz_in_wth => get_dz_at_wtheta(config, theta%get_mesh())

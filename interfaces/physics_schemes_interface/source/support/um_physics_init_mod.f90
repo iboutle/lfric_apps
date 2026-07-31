@@ -3,12 +3,17 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !----------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!----------------------------------------------------------------------------
 !> @brief Controls the setting of variables for UM physics schemes, which
 !>         are either fixed in LFRic or derived from LFRic inputs
 
 module um_physics_init_mod
 
   ! LFRic namelists which have been read
+  use multires_coupling_config_mod,                                            &
+                                 only : coarse_rad_aerosol
   use aerosol_config_mod,        only : glomap_mode,                           &
                                         glomap_mode_climatology,               &
                                         glomap_mode_ukca,                      &
@@ -193,6 +198,32 @@ module um_physics_init_mod
                                         update_precfrac_opt_correl,          &
                                         heavy_rain_evap_fac_in =>            &
                                                 heavy_rain_evap_fac
+
+  ! Namelist choices controlling how aerosol is coupled to CASIM. These are
+  ! renamed on import to keep the lines short and to distinguish them from
+  ! the UM variables of the same name in mphys_inputs_mod.
+  use microphysics_config_mod,   only :                                      &
+      aer_act         => casim_activation,                                   &
+      aer_act_fix     => casim_activation_fixed,                             &
+      aer_act_arg     => casim_activation_arg,                               &
+      aer_act_argd    => casim_activation_arg_dust,                          &
+      aer_act_soli    => casim_activation_sol_insol,                         &
+      aer_couple      => casim_aerosol_couple,                               &
+      aer_couple_fix  => casim_aerosol_couple_fixed,                         &
+      aer_couple_trac => casim_aerosol_couple_tracer,                        &
+      aer_couple_ukin => casim_aerosol_couple_ukca_in,                       &
+      aer_couple_ukio => casim_aerosol_couple_ukca_inout,                    &
+      aer_modes       => casim_aerosol_modes,                                &
+      aer_modes_none  => casim_aerosol_modes_none,                           &
+      aer_modes_solac => casim_aerosol_modes_soluble_accum_coarse,           &
+      aer_modes_solal => casim_aerosol_modes_soluble_all,                    &
+      aer_modes_solin => casim_aerosol_modes_soluble_insoluble,              &
+      aer_proc        => casim_aerosol_process,                              &
+      aer_proc_none   => casim_aerosol_process_none,                         &
+      aer_proc_pass   => casim_aerosol_process_passive,                      &
+      aer_proc_full   => casim_aerosol_process_full,                         &
+      aer_proc_ice    => casim_aerosol_process_passive_ice_only,             &
+      aer_proc_liq    => casim_aerosol_process_passive_liquid_only
 
   use mixing_config_mod,         only : smagorinsky,                 &
                                         mixing_method => method,     &
@@ -478,11 +509,17 @@ contains
                               irs, ire, jrs, jre, krs, kre,              &
                               casim_moments_option, n_casim_tracers,     &
                               l_casim_warm_only,                         &
-                              l_ukca_aerosol, no_aerosol_modes
+                              l_ukca_aerosol, no_aerosol_modes,          &
+                              soluble_accumulation_coarse,               &
+                              soluble_all_modes, soluble_insoluble_modes,&
+                              no_processing, passive_processing,         &
+                              full_processing, passive_ice_only,         &
+                              passive_liquid_only
     use casim_stph, only: l_rp2_casim
     use casim_set_dependent_switches_mod, only:                                &
           casim_set_dependent_switches,                                        &
-          casim_print_dependent_switches
+          casim_print_dependent_switches,                                      &
+          fixed_aerosol, tracer_aerosol, ukca_aerosol_in, ukca_aerosol_inout
     use casim_parent_mod, only: casim_parent, parent_um
     use initialize, only: mphys_init
     use generic_diagnostic_variables, only: casdiags
@@ -1374,11 +1411,111 @@ contains
 
 
         casim_moments_option = 22222   ! all double moment
-        casim_iopt_act = 0_i_um     ! 'fixed number'
-        casim_aerosol_option = 0_i_um   ! no soluble or insoluble aerosol modes
-        casim_aerosol_process_level = 0_i_um
-        casim_aerosol_couple_choice = 0_i_um
-        l_ukca_aerosol = .false.
+
+        ! Translate the LFRic aerosol namelist choices onto the integer
+        ! options expected by the UM CASIM interface. The parameter values
+        ! come from casim_switches and casim_set_dependent_switches_mod.
+
+        select case ( aer_act )
+        case ( aer_act_fix )
+          casim_iopt_act = 0_i_um    ! fixed droplet number
+        case ( aer_act_arg )
+          casim_iopt_act = 3_i_um    ! Abdul-Razzak and Ghan (2000)
+        case ( aer_act_argd )
+          casim_iopt_act = 4_i_um    ! Abdul-Razzak and Ghan including dust
+        case ( aer_act_soli )
+          casim_iopt_act = 7_i_um    ! soluble and insoluble aerosol
+        case default
+          write( log_scratch_space, '(A,I0)' )                                 &
+              'Unrecognised value of casim_activation: ', aer_act
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end select
+
+        select case ( aer_modes )
+        case ( aer_modes_none )
+          casim_aerosol_option = int( no_aerosol_modes, i_um )
+        case ( aer_modes_solac )
+          casim_aerosol_option = int( soluble_accumulation_coarse, i_um )
+        case ( aer_modes_solal )
+          casim_aerosol_option = int( soluble_all_modes, i_um )
+        case ( aer_modes_solin )
+          casim_aerosol_option = int( soluble_insoluble_modes, i_um )
+        case default
+          write( log_scratch_space, '(A,I0)' )                                 &
+              'Unrecognised value of casim_aerosol_modes: ', aer_modes
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end select
+
+        select case ( aer_couple )
+        case ( aer_couple_fix )
+          casim_aerosol_couple_choice = int( fixed_aerosol, i_um )
+        case ( aer_couple_trac )
+          casim_aerosol_couple_choice = int( tracer_aerosol, i_um )
+        case ( aer_couple_ukin )
+          casim_aerosol_couple_choice = int( ukca_aerosol_in, i_um )
+        case ( aer_couple_ukio )
+          casim_aerosol_couple_choice = int( ukca_aerosol_inout, i_um )
+        case default
+          write( log_scratch_space, '(A,I0)' )                                 &
+              'Unrecognised value of casim_aerosol_couple: ', aer_couple
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end select
+
+        select case ( aer_proc )
+        case ( aer_proc_none )
+          casim_aerosol_process_level = int( no_processing, i_um )
+        case ( aer_proc_pass )
+          casim_aerosol_process_level = int( passive_processing, i_um )
+        case ( aer_proc_full )
+          casim_aerosol_process_level = int( full_processing, i_um )
+        case ( aer_proc_ice )
+          casim_aerosol_process_level = int( passive_ice_only, i_um )
+        case ( aer_proc_liq )
+          casim_aerosol_process_level = int( passive_liquid_only, i_um )
+        case default
+          write( log_scratch_space, '(A,I0)' )                                 &
+              'Unrecognised value of casim_aerosol_process: ', aer_proc
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end select
+
+        ! Aerosol processing is only supported with the prognostic tracer
+        ! aerosol. casim_set_dependent_switches would silently disable it
+        ! for fixed aerosol and error out for UKCA, so trap it here where a
+        ! more helpful message can be given.
+        if ( casim_aerosol_process_level /= int( no_processing, i_um ) .and.   &
+             casim_aerosol_couple_choice /= int( tracer_aerosol, i_um ) ) then
+          write( log_scratch_space, '(A)' )                                    &
+              'CASIM aerosol processing requires casim_aerosol_couple to '  // &
+              'be set to tracer'
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end if
+
+        ! The GLOMAP aerosol is only prognostic when UKCA is running, so
+        ! reading it into CASIM only makes sense in that case.
+        if ( ( casim_aerosol_couple_choice ==                                  &
+                                        int( ukca_aerosol_in, i_um ) .or.      &
+               casim_aerosol_couple_choice ==                                  &
+                                        int( ukca_aerosol_inout, i_um ) ) .and.&
+             glomap_mode /= glomap_mode_ukca ) then
+          write( log_scratch_space, '(A)' )                                    &
+              'CASIM aerosol coupling to UKCA requires glomap_mode to be '  // &
+              'set to ukca'
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end if
+
+        ! The GLOMAP fields live on the coarse radiation mesh when
+        ! coarse_rad_aerosol is set, and so cannot be passed into the CASIM
+        ! kernel alongside the microphysics fields on the main mesh.
+        if ( ( casim_aerosol_couple_choice ==                                  &
+                                        int( ukca_aerosol_in, i_um ) .or.      &
+               casim_aerosol_couple_choice ==                                  &
+                                        int( ukca_aerosol_inout, i_um ) ) .and.&
+             coarse_rad_aerosol ) then
+          write( log_scratch_space, '(A)' )                                    &
+              'CASIM aerosol coupling to UKCA is not supported with '       // &
+              'coarse_rad_aerosol'
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end if
 
         casim_moments_choice = 1_i_um
         CALL casim_set_dependent_switches

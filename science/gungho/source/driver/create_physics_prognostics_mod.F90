@@ -3,6 +3,9 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!-------------------------------------------------------------------------------
 !> @brief create physics prognostics
 !> @details Creates the physics prognostic fields
 module create_physics_prognostics_mod
@@ -95,6 +98,10 @@ module create_physics_prognostics_mod
                                              surf_temp_forcing_int_flux
   use spectral_gwd_config_mod,        only : add_cgw
   use microphysics_config_mod,        only : turb_gen_mixph
+  use microphysics_config_mod,        only : casim_aerosol_couple,             &
+                                             casim_aerosol_couple_tracer,      &
+                                             casim_aerosol_process,            &
+                                             casim_aerosol_process_none
   use derived_config_mod,             only : l_couple_ocean, l_couple_sea_ice
   use chemistry_config_mod,           only : chem_scheme, chem_scheme_none,    &
                                              chem_scheme_strattrop,            &
@@ -168,6 +175,8 @@ contains
     logical(l_def) :: checkpoint_couple
     logical(l_def) :: advection_flag
     logical(l_def) :: advection_flag_dust
+    logical(l_def) :: casim_aerosol_tracer     ! CASIM prognostic aerosol
+    logical(l_def) :: casim_aerosol_processing ! CASIM aerosol processing
     logical(l_def) :: is_empty
     logical(l_def) :: is_rad ! Flag for chemistry fields
                              ! that are radiatively active
@@ -564,6 +573,75 @@ contains
     call processor%apply(make_spec('ng_mphys', main%microphysics,              &
         adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
         empty = (.not. microphysics_casim) ))
+
+    ! Prognostic aerosol mass and number supplied to CASIM. These are only
+    ! present when CASIM is taking its aerosol from these fields rather than
+    ! from a fixed value, murk or GLOMAP.
+    casim_aerosol_tracer = ( microphysics_casim .and.                          &
+                   casim_aerosol_couple == casim_aerosol_couple_tracer )
+    checkpoint_flag = casim_aerosol_tracer
+    advection_flag  = casim_aerosol_tracer
+
+    call processor%apply(make_spec('aitken_sol_mass', main%microphysics,       &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('aitken_sol_number', main%microphysics,     &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('accum_sol_mass', main%microphysics,        &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('accum_sol_number', main%microphysics,      &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('coarse_sol_mass', main%microphysics,       &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('coarse_sol_number', main%microphysics,     &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('accum_dust_mass', main%microphysics,       &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('accum_dust_number', main%microphysics,     &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('coarse_dust_mass', main%microphysics,      &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+    call processor%apply(make_spec('coarse_dust_number', main%microphysics,    &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_tracer) ))
+
+    ! Aerosol processing prognostics, which track the aerosol which has been
+    ! activated into each hydrometeor species. These are only present when
+    ! aerosol processing is switched on.
+    casim_aerosol_processing = ( microphysics_casim .and.                      &
+                          casim_aerosol_process /= casim_aerosol_process_none )
+    checkpoint_flag = casim_aerosol_processing
+    advection_flag  = casim_aerosol_processing
+
+    call processor%apply(make_spec('active_sol_liquid', main%microphysics,     &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_sol_rain', main%microphysics,       &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_insol_ice', main%microphysics,      &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_sol_ice', main%microphysics,        &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_insol_liquid', main%microphysics,   &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_sol_number', main%microphysics,     &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
+    call processor%apply(make_spec('active_insol_number', main%microphysics,   &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. casim_aerosol_processing) ))
 
     ! 2D fields, don't need checkpointing
     call processor%apply(make_spec('ls_rain', main%microphysics, W3, twod=.true.))
