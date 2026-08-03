@@ -23,7 +23,8 @@ use kernel_mod,        only: kernel_type
 use empty_data_mod,    only: empty_real_data
 use aerosol_config_mod, only: murk_prognostic
 use microphysics_config_mod, only: casim_cdnc_opt, casim_cdnc_opt_external, &
-                                   casim_cdnc_opt_fixed
+                                   casim_activation,                        &
+                                   casim_activation_fixed
 
 implicit none
 
@@ -548,18 +549,13 @@ subroutine casim_code( nlayers,                     &
     ! Configure optional diagnostics
     casdiags % l_graupfall_3d = ls_graup_3d_flag
 
-    ! Set CDNC for radiation here as we need the start of timestep value
-    if (casim_cdnc_opt == casim_cdnc_opt_fixed) then
-      do k = 0, nlayers
-        if (cfl_wth(map_wth(1) + k) > 0.001_r_def) then
-          cloud_drop_no_conc(map_wth(1) + k) = max(nl_mphys(map_wth(1) + k) / &
-                                                   cfl_wth(map_wth(1) + k), &
-                                                   min_cdnc_sea_ice)
-        else
-          cloud_drop_no_conc(map_wth(1) + k) = min_cdnc_sea_ice
-        end if
-      end do
-    else if (casim_cdnc_opt == casim_cdnc_opt_external) then
+    ! Set CDNC for radiation here as we need the start of timestep value.
+    ! casim_cdnc_opt only has a meaning for the fixed droplet number: the
+    ! mechanistic activation always works the cloud number out from the
+    ! aerosol supplied to CASIM, so there is nothing external to take it
+    ! from and the number CASIM holds is the one radiation should see.
+    if (casim_activation == casim_activation_fixed .and.                     &
+        casim_cdnc_opt == casim_cdnc_opt_external) then
       ! If we are getting the drop number from Glomap-clim or UKCA, then
       ! set the Casim drop number from this here. Ideally this would be done
       ! in casim_activate_kernel, but Glomap-clim and UKCA are both called
@@ -569,6 +565,16 @@ subroutine casim_code( nlayers,                     &
           nl_mphys( map_wth(1) + k) = cloud_drop_no_conc(map_wth(1) + k) * cfl_wth(map_wth(1) + k)
         else
           nl_mphys( map_wth(1) + k) = 0.0_r_def
+        end if
+      end do
+    else
+      do k = 0, nlayers
+        if (cfl_wth(map_wth(1) + k) > 0.001_r_def) then
+          cloud_drop_no_conc(map_wth(1) + k) = max(nl_mphys(map_wth(1) + k) / &
+                                                   cfl_wth(map_wth(1) + k), &
+                                                   min_cdnc_sea_ice)
+        else
+          cloud_drop_no_conc(map_wth(1) + k) = min_cdnc_sea_ice
         end if
       end do
     end if
