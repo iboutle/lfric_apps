@@ -3,6 +3,10 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!-------------------------------------------------------------------------------
 !> @brief Interface to the CASIM activation scheme
 
 module casim_activate_alg_mod
@@ -17,7 +21,8 @@ module casim_activate_alg_mod
   use mesh_mod,                      only: mesh_type
   use microphysics_config_mod,       only: casim_cdnc_opt, &
                                            casim_cdnc_opt_fixed
-  use mr_indices_mod,                only: nummr, imr_cl, imr_ci
+  use mphys_inputs_mod,              only: casim_iopt_act
+  use mr_indices_mod,                only: nummr, imr_cl, imr_ci, imr_r
   use sci_geometric_constants_mod,   only: get_height_fv
   use section_choice_config_mod,     only: convection, convection_um
   use timing_mod,                    only: start_timing, stop_timing, &
@@ -36,18 +41,27 @@ contains
   !>         and adjust vapour and temperature, as described in CASIM
   !>         documentation.
   !>@param[in]     config              Application namelist configuration object
+  !>@param[in]     theta               (in) Potential temperature
   !>@param[in]     mr                  (in) Mixing ratios, in theta space
+  !>@param[in]     derived_fields      (in) Fields derived from the prognostics
   !>@param[in]     cloud_fields        (in) Fields for cloud fractions
   !>@param[in,out] microphysics_fields (in,out) Fields for mphys scheme
+  !>@param[in]     convection_fields   (in) Fields for the convection scheme
+  !>@param[in,out] aerosol_fields      (in,out) Fields for the aerosol schemes
+  !>@param[in]     turbulence_fields   (in) Fields for the turbulence scheme
   !>@param[in]     initialise          Flag to use routine to initialise fields
   subroutine casim_activate_alg(config,                                        &
                                 theta, mr,                                     &
                                 derived_fields,                                &
                                 cloud_fields,                                  &
                                 microphysics_fields,                           &
-                                convection_fields, initialise)
+                                convection_fields,                             &
+                                aerosol_fields,                                &
+                                turbulence_fields, initialise)
 
     use casim_activate_kernel_mod,  only: casim_activate_kernel_type
+    use casim_aerosol_act_kernel_mod,                                          &
+                                    only: casim_aerosol_act_kernel_type
     use casim_ice_act_kernel_mod,  only: casim_ice_act_kernel_type
 
     implicit none
@@ -57,7 +71,9 @@ contains
     type( field_collection_type ), intent(in) :: derived_fields
     type( field_collection_type ), intent(in) :: cloud_fields
     type( field_collection_type ), intent(in) :: convection_fields
+    type( field_collection_type ), intent(in) :: turbulence_fields
     type( field_collection_type ), intent(inout) :: microphysics_fields
+    type( field_collection_type ), intent(inout) :: aerosol_fields
 
     type( field_type ), intent( in ), target :: mr(nummr)
     type( field_type ), intent( in ) :: theta
@@ -65,13 +81,42 @@ contains
     logical, intent(in) :: initialise
 
     type( field_type ), pointer :: cf_liq
+    type( field_type ), pointer :: cf_liq_pre_fast
+    type( field_type ), pointer :: m_cl_pre_fast
     type( field_type ), pointer :: cf_fro
     type( field_type ), pointer :: nl_mphys
+    type( field_type ), pointer :: nr_mphys
     type( field_type ), pointer :: ni_mphys
     type( field_type ), pointer :: height_wth
     type( field_type ), pointer :: exner_wth
     type( field_type ), pointer :: rho_wth
+    type( field_type ), pointer :: w_in_wth
+    type( field_type ), pointer :: wvar
     type( field_type ), pointer :: mci_init
+
+    ! CASIM aerosol prognostics
+    type( field_type ), pointer :: aitken_sol_mass, aitken_sol_number
+    type( field_type ), pointer :: accum_sol_mass, accum_sol_number
+    type( field_type ), pointer :: coarse_sol_mass, coarse_sol_number
+    type( field_type ), pointer :: accum_dust_mass, accum_dust_number
+    type( field_type ), pointer :: coarse_dust_mass, coarse_dust_number
+
+    ! CASIM aerosol processing prognostics
+    type( field_type ), pointer :: active_sol_liquid, active_sol_rain
+    type( field_type ), pointer :: active_insol_ice, active_sol_ice
+    type( field_type ), pointer :: active_insol_liquid
+    type( field_type ), pointer :: active_sol_number, active_insol_number
+
+    ! Murk and GLOMAP aerosol
+    type( field_type ), pointer :: murk
+    type( field_type ), pointer :: n_ait_sol, ait_sol_su, ait_sol_bc, ait_sol_om
+    type( field_type ), pointer :: n_acc_sol, acc_sol_su, acc_sol_bc, acc_sol_om
+    type( field_type ), pointer :: acc_sol_ss
+    type( field_type ), pointer :: n_cor_sol, cor_sol_su, cor_sol_bc, cor_sol_om
+    type( field_type ), pointer :: cor_sol_ss
+    type( field_type ), pointer :: n_ait_ins, ait_ins_bc, ait_ins_om
+    type( field_type ), pointer :: n_acc_ins, acc_ins_du
+    type( field_type ), pointer :: n_cor_ins, cor_ins_du
 
     type( mesh_type ), pointer :: mesh
     integer( tik )             :: id
@@ -79,7 +124,8 @@ contains
     if ( LPROF ) call start_timing( id, 'microphysics.casim_activate' )
 
     ! For fixed CDNC or if we want to initialise the CDNC
-    if (casim_cdnc_opt == casim_cdnc_opt_fixed .or. initialise) then
+    if ( ( casim_cdnc_opt == casim_cdnc_opt_fixed .and.                        &
+           casim_iopt_act == 0_i_def ) .or. initialise ) then
 
       call cloud_fields%get_field('liquid_fraction', cf_liq)
       call microphysics_fields%get_field('nl_mphys', nl_mphys)
@@ -92,6 +138,97 @@ contains
                                                height_wth,                     &
                                                nl_mphys)   )
       if (write_diag .and. use_xios_io .and. .not. initialise) then
+        call nl_mphys%write_field('casim__nl_mphys_act')
+      end if
+
+    else if ( casim_iopt_act /= 0_i_def .and. .not. initialise ) then
+
+      ! Mechanistic activation of cloud droplets on the aerosol supplied to
+      ! CASIM, following the UM routine casim_step_cloud.
+
+      call cloud_fields%get_field('liquid_fraction', cf_liq)
+      call microphysics_fields%get_field('cf_liq_pre_fast', cf_liq_pre_fast)
+      call microphysics_fields%get_field('m_cl_pre_fast', m_cl_pre_fast)
+
+      call derived_fields%get_field('exner_in_wth', exner_wth)
+      call derived_fields%get_field('rho_in_wth', rho_wth)
+      call derived_fields%get_field('w_in_wth', w_in_wth)
+
+      call turbulence_fields%get_field('wvar', wvar)
+
+      call microphysics_fields%get_field('nl_mphys', nl_mphys)
+      call microphysics_fields%get_field('nr_mphys', nr_mphys)
+
+      call microphysics_fields%get_field('aitken_sol_mass', aitken_sol_mass)
+      call microphysics_fields%get_field('aitken_sol_number', aitken_sol_number)
+      call microphysics_fields%get_field('accum_sol_mass', accum_sol_mass)
+      call microphysics_fields%get_field('accum_sol_number', accum_sol_number)
+      call microphysics_fields%get_field('coarse_sol_mass', coarse_sol_mass)
+      call microphysics_fields%get_field('coarse_sol_number', coarse_sol_number)
+      call microphysics_fields%get_field('accum_dust_mass', accum_dust_mass)
+      call microphysics_fields%get_field('accum_dust_number', accum_dust_number)
+      call microphysics_fields%get_field('coarse_dust_mass', coarse_dust_mass)
+      call microphysics_fields%get_field('coarse_dust_number',                 &
+                                          coarse_dust_number)
+
+      call microphysics_fields%get_field('active_sol_liquid', active_sol_liquid)
+      call microphysics_fields%get_field('active_sol_rain', active_sol_rain)
+      call microphysics_fields%get_field('active_insol_ice', active_insol_ice)
+      call microphysics_fields%get_field('active_sol_ice', active_sol_ice)
+      call microphysics_fields%get_field('active_insol_liquid',                &
+                                          active_insol_liquid)
+      call microphysics_fields%get_field('active_sol_number', active_sol_number)
+      call microphysics_fields%get_field('active_insol_number',                &
+                                          active_insol_number)
+
+      call aerosol_fields%get_field('murk', murk)
+
+      call aerosol_fields%get_field('n_ait_sol', n_ait_sol)
+      call aerosol_fields%get_field('ait_sol_su', ait_sol_su)
+      call aerosol_fields%get_field('ait_sol_bc', ait_sol_bc)
+      call aerosol_fields%get_field('ait_sol_om', ait_sol_om)
+      call aerosol_fields%get_field('n_acc_sol', n_acc_sol)
+      call aerosol_fields%get_field('acc_sol_su', acc_sol_su)
+      call aerosol_fields%get_field('acc_sol_bc', acc_sol_bc)
+      call aerosol_fields%get_field('acc_sol_om', acc_sol_om)
+      call aerosol_fields%get_field('acc_sol_ss', acc_sol_ss)
+      call aerosol_fields%get_field('n_cor_sol', n_cor_sol)
+      call aerosol_fields%get_field('cor_sol_su', cor_sol_su)
+      call aerosol_fields%get_field('cor_sol_bc', cor_sol_bc)
+      call aerosol_fields%get_field('cor_sol_om', cor_sol_om)
+      call aerosol_fields%get_field('cor_sol_ss', cor_sol_ss)
+      call aerosol_fields%get_field('n_ait_ins', n_ait_ins)
+      call aerosol_fields%get_field('ait_ins_bc', ait_ins_bc)
+      call aerosol_fields%get_field('ait_ins_om', ait_ins_om)
+      call aerosol_fields%get_field('n_acc_ins', n_acc_ins)
+      call aerosol_fields%get_field('acc_ins_du', acc_ins_du)
+      call aerosol_fields%get_field('n_cor_ins', n_cor_ins)
+      call aerosol_fields%get_field('cor_ins_du', cor_ins_du)
+
+      call invoke( casim_aerosol_act_kernel_type(                              &
+                       mr(imr_cl), m_cl_pre_fast, mr(imr_r),                   &
+                       cf_liq, cf_liq_pre_fast,                                &
+                       theta, exner_wth, rho_wth, w_in_wth, wvar,              &
+                       nl_mphys, nr_mphys, murk,                               &
+                       aitken_sol_mass, aitken_sol_number,                     &
+                       accum_sol_mass, accum_sol_number,                       &
+                       coarse_sol_mass, coarse_sol_number,                     &
+                       accum_dust_mass, accum_dust_number,                     &
+                       coarse_dust_mass, coarse_dust_number,                   &
+                       active_sol_liquid, active_sol_rain,                     &
+                       active_insol_ice, active_sol_ice,                       &
+                       active_insol_liquid, active_sol_number,                 &
+                       active_insol_number,                                    &
+                       n_ait_sol, ait_sol_su, ait_sol_bc, ait_sol_om,          &
+                       n_acc_sol, acc_sol_su, acc_sol_bc, acc_sol_om,          &
+                       acc_sol_ss,                                             &
+                       n_cor_sol, cor_sol_su, cor_sol_bc, cor_sol_om,          &
+                       cor_sol_ss,                                             &
+                       n_ait_ins, ait_ins_bc, ait_ins_om,                      &
+                       n_acc_ins, acc_ins_du,                                  &
+                       n_cor_ins, cor_ins_du ) )
+
+      if (write_diag .and. use_xios_io) then
         call nl_mphys%write_field('casim__nl_mphys_act')
       end if
 

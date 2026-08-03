@@ -47,7 +47,7 @@ contains
   !>@param[in]     derived_fields Group of derived fields
   !>@param[in,out] microphysics_fields    Fields for mphys scheme
   !>@param[in]     cloud_fields           Fields for cloud scheme
-  !>@param[in]     aerosol_fields         Fields for the aerosol schemes
+  !>@param[in,out] aerosol_fields         Fields for the aerosol schemes
   !>@param[in]     turbulence_fields      Fields for turbulence scheme
   !>@param[in]     mesh                   Current mesh
   !>@param[in,out] dmr_mphys      Mixing ratio increment due to microphysics
@@ -77,9 +77,9 @@ contains
     type( field_type ), intent( in )    :: mr_n ( nummr ), theta, dry_rho_in_w3
 
     type( field_collection_type ), intent(in)    :: derived_fields
-    type( field_collection_type ), intent(in)    :: microphysics_fields
+    type( field_collection_type ), intent(inout) :: microphysics_fields
     type( field_collection_type ), intent(in)    :: cloud_fields
-    type( field_collection_type ), intent(in)    :: aerosol_fields
+    type( field_collection_type ), intent(inout) :: aerosol_fields
     type( field_collection_type ), intent(in)    :: turbulence_fields
 
     type( field_type ), intent( inout ) :: dmr_mphys ( nummr )

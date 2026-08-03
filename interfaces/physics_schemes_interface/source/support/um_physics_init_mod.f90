@@ -1478,15 +1478,18 @@ contains
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end select
 
-        ! Aerosol processing is only supported with the prognostic tracer
-        ! aerosol. casim_set_dependent_switches would silently disable it
-        ! for fixed aerosol and error out for UKCA, so trap it here where a
-        ! more helpful message can be given.
+        ! Aerosol processing needs somewhere to return the processed aerosol
+        ! to, which means either the prognostic tracer aerosol or the two way
+        ! UKCA coupling. casim_set_dependent_switches would silently disable
+        ! it for fixed aerosol and error out for one way UKCA, so trap it here
+        ! where a more helpful message can be given.
         if ( casim_aerosol_process_level /= int( no_processing, i_um ) .and.   &
-             casim_aerosol_couple_choice /= int( tracer_aerosol, i_um ) ) then
+             casim_aerosol_couple_choice /= int( tracer_aerosol, i_um ) .and.  &
+             casim_aerosol_couple_choice /=                                    &
+                                    int( ukca_aerosol_inout, i_um ) ) then
           write( log_scratch_space, '(A)' )                                    &
               'CASIM aerosol processing requires casim_aerosol_couple to '  // &
-              'be set to tracer'
+              'be set to tracer or ukca_inout'
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
 

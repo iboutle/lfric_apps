@@ -352,25 +352,28 @@ case DEFAULT
 
 end select
 
-if ( l_ukca_feeding_out .or. ( l_ukca_aerosol .and.                            &
-          casim_aerosol_process_level > 0 )) then
+if ( l_ukca_aerosol .and. casim_aerosol_process_level > 0 .and.                &
+     .not. l_ukca_feeding_out ) then
 
-    ! UKCA has not yet been coupled to accept processed aerosol from CASIM.
-    ! The rose settings should have prevented this from happening, but
-    ! if not the model needs to throw an error immediately
-    ! Aerosol processing with UKCA on is also currently a bad idea.
+    ! Processing takes aerosol out of the interstitial aerosol, so it can only
+    ! be run where CASIM has somewhere to return that aerosol to. With UKCA
+    ! feeding in but not out there is nowhere to put it, and the aerosol would
+    ! be counted twice. The UM errors here for l_ukca_feeding_out as well,
+    ! because it has never been coupled to accept processed aerosol back from
+    ! CASIM; LFRic returns it in casim_kernel and casim_aerosol_act_kernel, so
+    ! that combination is allowed here.
 
   errorstatus = 1
-  cmessage    = 'CASIM has been set to feed back  to UKCA    ' //newline//     &
-                'aerosol or UKCA is feeding in and processing' //newline//     &
-                'is on. These options are not yet available, ' //newline//     &
-                'so for your model to run, please choose an  ' //newline//     &
-                'alternative aerosol input option in the     ' //newline//     &
-                'CASIM settings of the run_precip namelist.'
+  cmessage    = 'CASIM aerosol processing has been switched on' //newline//    &
+                'with UKCA feeding aerosol in but not taking  ' //newline//    &
+                'the processed aerosol back. Please either use' //newline//    &
+                'the two way UKCA coupling or switch the      ' //newline//    &
+                'processing off in the CASIM settings of the  ' //newline//    &
+                'run_precip namelist.'
 
   call ereport('casim_set_dependent_switches', errorstatus, cmessage)
 
-end if ! l_ukca_feeding_out
+end if ! l_ukca_aerosol .and. processing .and. .not. l_ukca_feeding_out
 
 !-------------------------------------------------------------------------------
 ! 2.4 Select moments for microphysical species dependent on casim_aerosol_choice

@@ -177,6 +177,8 @@ contains
     logical(l_def) :: advection_flag_dust
     logical(l_def) :: casim_aerosol_tracer     ! CASIM prognostic aerosol
     logical(l_def) :: casim_aerosol_processing ! CASIM aerosol processing
+    logical(l_def) :: casim_mechanistic_activation ! CASIM droplet activation
+                                                   ! on the supplied aerosol
     logical(l_def) :: is_empty
     logical(l_def) :: is_rad ! Flag for chemistry fields
                              ! that are radiatively active
@@ -642,6 +644,19 @@ contains
     call processor%apply(make_spec('active_insol_number', main%microphysics,   &
         adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
         empty = (.not. casim_aerosol_processing) ))
+
+    ! Copies of the liquid cloud taken immediately before the fast physics is
+    ! called. The CASIM mechanistic activation uses these to work out how much
+    ! liquid cloud the fast physics has created or removed. They are rewritten
+    ! every timestep before they are read, so need neither checkpointing nor
+    ! advecting.
+    casim_mechanistic_activation = ( microphysics_casim .and.                  &
+                                     casim_iopt_act /= 0_i_def )
+
+    call processor%apply(make_spec('m_cl_pre_fast', main%microphysics, Wtheta, &
+        empty = (.not. casim_mechanistic_activation) ))
+    call processor%apply(make_spec('cf_liq_pre_fast', main%microphysics,       &
+        Wtheta, empty = (.not. casim_mechanistic_activation) ))
 
     ! 2D fields, don't need checkpointing
     call processor%apply(make_spec('ls_rain', main%microphysics, W3, twod=.true.))
