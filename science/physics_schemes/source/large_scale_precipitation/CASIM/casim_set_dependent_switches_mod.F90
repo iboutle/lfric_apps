@@ -3,6 +3,10 @@
 ! For further details please refer to the file COPYRIGHT.txt
 ! which you should have received as part of this distribution.
 ! *****************************COPYRIGHT*******************************
+!-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Anthropic Claude Opus 5 (Claude Code).
+!-------------------------------------------------------------------------------
 
 ! Cloud Aerosol Interacting Microphysics (CASIM)
 ! Set variables in module casim_switches dependent on values in
@@ -17,7 +21,11 @@ logical ::  l_passivenumbers      ! True if aerosol processing and passive
                                   ! numbers in liquid
 logical ::  l_passivenumbers_ice  ! True if aerosol processing and passive
 
-
+! Parameters for casim_aerosol_couple_choice
+integer, parameter :: fixed_aerosol      = 0
+integer, parameter :: tracer_aerosol     = 1
+integer, parameter :: ukca_aerosol_in    = 2
+integer, parameter :: ukca_aerosol_inout = 3
 
 character(len=*), parameter, private ::                                        &
   ModuleName='CASIM_SET_DEPENDENT_SWITCHES_MOD'
@@ -96,12 +104,6 @@ integer, parameter :: warm_cloud1_rain3 = 5
 integer, parameter :: warm_cloud2_rain2 = 6
 integer, parameter :: double_no_graupel = 7
 integer, parameter :: all_moments_on    = 8
-
-! Parameters for casim_aerosol_couple_choice
-integer, parameter :: fixed_aerosol      = 0
-integer, parameter :: tracer_aerosol     = 1
-integer, parameter :: ukca_aerosol_in    = 2
-integer, parameter :: ukca_aerosol_inout = 3
 
 integer(kind=jpim), parameter :: zhook_in  = 0
 integer(kind=jpim), parameter :: zhook_out = 1
