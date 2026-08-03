@@ -31,3 +31,21 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn32_t123(MacroUpgrade):
+    """Upgrade macro for ticket #123 by Ian Boutle."""
+
+    BEFORE_TAG = "vn3.2"
+    AFTER_TAG = "vn3.2_t123"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/um-microphysics
+        nml = "namelist:microphysics"
+        # Defaults reproduce the previous behaviour, in which CASIM was
+        # supplied with zero aerosol and used a fixed droplet number.
+        self.add_setting(config, [nml, "casim_activation"], "'fixed'")
+        self.add_setting(config, [nml, "casim_aerosol_couple"], "'fixed'")
+        self.add_setting(config, [nml, "casim_aerosol_modes"], "'none'")
+        self.add_setting(config, [nml, "casim_aerosol_process"], "'none'")
+        return config, self.reports
