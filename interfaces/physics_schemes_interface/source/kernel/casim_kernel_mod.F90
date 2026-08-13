@@ -36,7 +36,7 @@ private
 
 type, public, extends(kernel_type) :: casim_kernel_type
   private
-  type(arg_type) :: meta_args(48) = (/                                      &
+  type(arg_type) :: meta_args(69) = (/                                      &
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mv_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ml_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mi_wth
@@ -84,7 +84,28 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! refl_tot
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! refl_1km
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_liq
-       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA)                        & ! superc_rain
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_rain
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_ait_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_acc_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_sol_ss
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_cor_sol
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_su
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cor_sol_ss
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_ait_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_ins_bc
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ait_ins_om
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_acc_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! acc_ins_du
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! n_cor_ins
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA)                        & ! cor_ins_du
        /)
    integer :: operates_on = CELL_COLUMN
 contains
@@ -152,6 +173,27 @@ contains
 !!                                     surface
 !> @param[in,out] superc_liq          Supercooled liquid cloud mass mixing ratio
 !> @param[in,out] superc_rain         Supercooled rain mass mixing ratio
+!> @param[in]     n_ait_sol           Soluble Aitken mode number mixing ratio
+!> @param[in]     ait_sol_su          Soluble Aitken mode H2SO4 mass mixing ratio
+!> @param[in]     ait_sol_bc          Soluble Aitken mode black carbon m.m.r.
+!> @param[in]     ait_sol_om          Soluble Aitken mode organic m.m.r.
+!> @param[in]     n_acc_sol           Soluble accumulation mode number m.r.
+!> @param[in]     acc_sol_su          Soluble accumulation mode H2SO4 m.m.r.
+!> @param[in]     acc_sol_bc          Soluble accumulation mode black carbon m.m.r.
+!> @param[in]     acc_sol_om          Soluble accumulation mode organic m.m.r.
+!> @param[in]     acc_sol_ss          Soluble accumulation mode sea salt m.m.r.
+!> @param[in]     n_cor_sol           Soluble coarse mode number mixing ratio
+!> @param[in]     cor_sol_su          Soluble coarse mode H2SO4 mass mixing ratio
+!> @param[in]     cor_sol_bc          Soluble coarse mode black carbon m.m.r.
+!> @param[in]     cor_sol_om          Soluble coarse mode organic m.m.r.
+!> @param[in]     cor_sol_ss          Soluble coarse mode sea salt m.m.r.
+!> @param[in]     n_ait_ins           Insoluble Aitken mode number mixing ratio
+!> @param[in]     ait_ins_bc          Insoluble Aitken mode black carbon m.m.r.
+!> @param[in]     ait_ins_om          Insoluble Aitken mode organic m.m.r.
+!> @param[in]     n_acc_ins           Insoluble accumulation mode number m.r.
+!> @param[in]     acc_ins_du          Insoluble accumulation mode dust m.m.r.
+!> @param[in]     n_cor_ins           Insoluble coarse mode number mixing ratio
+!> @param[in]     cor_ins_du          Insoluble coarse mode dust m.m.r.
 !> @param[in]     ndf_wth             Number of degrees of freedom per cell for
 !!                                     potential temperature space
 !> @param[in]     undf_wth            Number unique of degrees of freedom for
@@ -196,6 +238,18 @@ subroutine casim_code( nlayers,                     &
                        cloud_drop_no_conc, murk,    &
                        refl_tot, refl_1km,          &
                        superc_liq, superc_rain,     &
+                       n_ait_sol, ait_sol_su,       &
+                       ait_sol_bc, ait_sol_om,      &
+                       n_acc_sol, acc_sol_su,       &
+                       acc_sol_bc, acc_sol_om,      &
+                       acc_sol_ss,                  &
+                       n_cor_sol, cor_sol_su,       &
+                       cor_sol_bc, cor_sol_om,      &
+                       cor_sol_ss,                  &
+                       n_ait_ins, ait_ins_bc,       &
+                       ait_ins_om,                  &
+                       n_acc_ins, acc_ins_du,       &
+                       n_cor_ins, cor_ins_du,       &
                        ndf_wth, undf_wth, map_wth,  &
                        ndf_w3,  undf_w3,  map_w3,   &
                        ndf_2d,  undf_2d,  map_2d    )
@@ -211,6 +265,12 @@ subroutine casim_code( nlayers,                     &
 
     use atm_fields_bounds_mod,      only: pdims
 
+    use nlsizes_namelist_mod,       only: tr_ukca
+    use mphys_inputs_mod,           only: casim_aerosol_option,               &
+                                          casim_iopt_act, fixed_number
+    use aerosol_extract_convert_mod, only: aerosol_extract_convert
+    use casim_ukca_tracer_mod,      only: casim_ukca_tracer_column
+
     use planet_constants_mod,       only: p_zero, kappa, planet_radius
     use water_constants_mod,        only: tm
     use fsd_parameters_mod,         only: fsd_eff_lam
@@ -218,7 +278,8 @@ subroutine casim_code( nlayers,                     &
 
     use micro_main,                 only: shipway_microphysics
     use casim_switches,             only: its, ite, jts, jte, kts, kte, &
-                                          ils, ile, jls, jle
+                                          ils, ile, jls, jle,           &
+                                          l_ukca_aerosol
     use generic_diagnostic_variables,                                  &
                                     only: allocate_diagnostic_space,   &
                                           deallocate_diagnostic_space, &
@@ -262,6 +323,29 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), intent(in),  dimension(undf_w3)  :: v_in_w3
     real(kind=r_def), intent(in),  dimension(undf_w3)  :: height_w3
     real(kind=r_def), intent(in),  dimension(undf_wth) :: dry_rho_in_wth
+
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_ait_sol
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: ait_sol_su
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: ait_sol_bc
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: ait_sol_om
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_acc_sol
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: acc_sol_su
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: acc_sol_bc
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: acc_sol_om
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: acc_sol_ss
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_cor_sol
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: cor_sol_su
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: cor_sol_bc
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: cor_sol_om
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: cor_sol_ss
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_ait_ins
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: ait_ins_bc
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: ait_ins_om
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_acc_ins
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: acc_ins_du
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: n_cor_ins
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: cor_ins_du
+
     real(kind=r_def), intent(inout), dimension(undf_wth) :: nl_mphys
     real(kind=r_def), intent(inout), dimension(undf_wth) :: nr_mphys
     real(kind=r_def), intent(inout), dimension(undf_wth) :: ni_mphys
@@ -389,6 +473,14 @@ subroutine casim_code( nlayers,                     &
     real(r_def) :: t_pc2         ! Temperature after the CASIM increments
 
     real(r_def), dimension(nlayers) :: cff_work_pc2, cfl_work_pc2, cf_work_pc2
+    ! Pressure and temperature on theta levels, shaped as the UM aerosol
+    ! extraction routine expects them
+    real(r_um), dimension(1,1,0:nlayers) :: p_layer_centres
+    real(r_um), dimension(1,1,nlayers)   :: t_layer_centres
+
+    ! UKCA tracer array holding the GLOMAP modes for this column
+    real(r_um), allocatable :: tracer_ukca(:,:,:,:)
+
 
     logical :: l_pc2_response   ! PC2 is the active cloud scheme
 
@@ -401,8 +493,11 @@ subroutine casim_code( nlayers,                     &
     ! Configure optional diagnostics
     casdiags % l_graupfall_3d = ls_graup_3d_flag
 
-    ! Set CDNC for radiation here as we need the start of timestep value
-    if (casim_cdnc_opt == casim_cdnc_opt_fixed) then
+    ! Set CDNC for radiation here as we need the start of timestep value.
+    ! The mechanistic activation options always work the cloud number out from
+    ! the aerosol, so the in-cloud number for radiation comes from CASIM too.
+    if (casim_iopt_act /= fixed_number .or.                                    &
+        casim_cdnc_opt == casim_cdnc_opt_fixed) then
       do k = 0, nlayers
         if (cfl_wth(map_wth(1) + k) > 0.001_r_def) then
           cloud_drop_no_conc(map_wth(1) + k) = max(nl_mphys(map_wth(1) + k) * &
@@ -538,6 +633,49 @@ subroutine casim_code( nlayers,                     &
       dact_sol_number_casim(k,1,1) = 0.0_wp
       dact_insol_number_casim(k,1,1) = 0.0_wp
     end do     ! k
+
+    !-----------------------------------------------------------------------
+    ! Overwrite the zeroed aerosol above with the GLOMAP modal aerosol
+    !-----------------------------------------------------------------------
+    if ( l_ukca_aerosol .and. casim_aerosol_option > 0 ) then
+
+      allocate( tracer_ukca(1,1,0:nlayers,tr_ukca) )
+
+      call casim_ukca_tracer_column( nlayers, undf_wth, map_wth(1),            &
+                                     n_ait_sol, ait_sol_su, ait_sol_bc,        &
+                                     ait_sol_om,                               &
+                                     n_acc_sol, acc_sol_su, acc_sol_bc,        &
+                                     acc_sol_om, acc_sol_ss,                   &
+                                     n_cor_sol, cor_sol_su, cor_sol_bc,        &
+                                     cor_sol_om, cor_sol_ss,                   &
+                                     n_ait_ins, ait_ins_bc, ait_ins_om,        &
+                                     n_acc_ins, acc_ins_du,                    &
+                                     n_cor_ins, cor_ins_du,                    &
+                                     tracer_ukca )
+
+      do k = 0, nlayers
+        p_layer_centres(1,1,k) = p_zero *                                      &
+                          ( exner_in_wth(map_wth(1) + k) )**(1.0_r_um / kappa)
+      end do
+
+      do k = 1, nlayers
+        t_layer_centres(1,1,k) = exner_in_wth(map_wth(1) + k) *                &
+                                 theta_in_wth(map_wth(1) + k)
+      end do
+
+      call aerosol_extract_convert( p_layer_centres, t_layer_centres,          &
+                                    rho_casim, tracer_ukca,                    &
+                                    aitken_sol_mass, aitken_sol_number,        &
+                                    accum_sol_mass,  accum_sol_number,         &
+                                    coarse_sol_mass, coarse_sol_number,        &
+                                    accum_dust_mass, accum_dust_number,        &
+                                    coarse_dust_mass, coarse_dust_number,      &
+                                    aitken_sol_bk, accum_sol_bk,               &
+                                    coarse_sol_bk )
+
+      deallocate( tracer_ukca )
+
+    end if
 
     cfrain_casim(nlayers,:,:)=0.0_wp
     cfgr_casim(nlayers,:,:)=0.0_wp
