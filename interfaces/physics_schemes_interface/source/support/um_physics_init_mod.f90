@@ -1279,6 +1279,7 @@ contains
       l_rain         = .true.
       l_subgrid_qcl_mp = turb_gen_mixph
       mp_dz_scal     = real(mp_dz_scal_in, r_um)
+      c_r_correl     = real(c_r_correl_in, r_um)
 
       ! Domain top used in microphysics - contained in mphys_bypass_mod
       mphys_mod_top  = real(domain_height, r_um)
@@ -1330,7 +1331,6 @@ contains
         a_ratio_exp    = real(a_ratio_exp_in, r_um)
         a_ratio_fac    = real(a_ratio_fac_in, r_um)
         ar             = 1.00_r_um
-        c_r_correl     = real(c_r_correl_in, r_um)
         ci_input       = real(ci_input_in, r_um)
         cic_input      = real(cic_input_in, r_um)
         di_input       = 0.416_r_um
