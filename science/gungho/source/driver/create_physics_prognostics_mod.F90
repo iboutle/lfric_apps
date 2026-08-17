@@ -572,7 +572,7 @@ contains
 
     call processor%apply(make_spec('ls_graup', main%microphysics, W3, twod=.true.))
     call processor%apply(make_spec('tnuc_nlcl', main%microphysics, W3, twod=.true.))
-    call processor%apply(make_spec('ls_qw_sink', main%microphysics, W3, twod=.true., empty = (cv_scheme /= cv_scheme_comorph)))
+    call processor%apply(make_spec('conv_frac', main%microphysics, W3, twod=.true., empty = (cv_scheme /= cv_scheme_comorph)))
 
     ! 3D fields, don't need checkpointing
     call processor%apply(make_spec('dtheta_mphys', main%microphysics, Wtheta))

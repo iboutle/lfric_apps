@@ -25,7 +25,6 @@ module comorph_diags_mod
                       pres_lowest_cv_base_flag,    &
                       pres_lowest_cv_top_flag,     &
                       lowest_cca_2d_flag,          &
-                      conv_frac_flag,              &
                       entrain_up_flag,             & ! 3-D
                       entrain_down_flag,           &
                       detrain_up_flag,             &
@@ -47,7 +46,6 @@ contains
                                           pres_lowest_cv_base,    &
                                           pres_lowest_cv_top,     &
                                           lowest_cca_2d,          &
-                                          conv_frac,              &
                                           entrain_up,             & ! 3-D
                                           entrain_down,           &
                                           detrain_up,             &
@@ -66,7 +64,6 @@ contains
                                          pres_lowest_cv_base,     &
                                          pres_lowest_cv_top,      &
                                          lowest_cca_2d,           &
-                                         conv_frac,               &
                                          entrain_up,              & ! 3-D
                                          entrain_down,            &
                                          detrain_up,              &
@@ -92,7 +89,6 @@ contains
 
     lowest_cca_2d_flag = init_diag(lowest_cca_2d, &
                                    'convection__lowest_cca_2d')
-    conv_frac_flag = init_diag(conv_frac, 'convection__conv_frac')
 
     ! Convective diagnostics - 3d  - theta levels
     entrain_up_flag = init_diag(entrain_up, 'convection__entrain_up')
@@ -133,6 +129,7 @@ contains
                                     conv_rain_3d,           &
                                     conv_snow_3d,           &
                                     cca_2d,                 &
+                                    conv_frac,              &
                                     lowest_cv_base,         &
                                     lowest_cv_top,          &
                                     cv_base,                &
@@ -142,7 +139,6 @@ contains
                                     pres_lowest_cv_base,    &
                                     pres_lowest_cv_top,     &
                                     lowest_cca_2d,          &
-                                    conv_frac,              &
                                     entrain_up,             & ! 3-D
                                     entrain_down,           &
                                     detrain_up,             &
@@ -172,7 +168,8 @@ contains
                                        conv_snow,     &
                                        conv_rain_3d,  &
                                        conv_snow_3d,  &
-                                       cca_2d
+                                       cca_2d,        &
+                                       conv_frac
     ! local diagnostic fields to output
     type( field_type ), intent(in)  :: lowest_cv_base,         &
                                        lowest_cv_top,          &
@@ -183,7 +180,6 @@ contains
                                        pres_lowest_cv_base,    &
                                        pres_lowest_cv_top,     &
                                        lowest_cca_2d,          &
-                                       conv_frac,              &
                                        entrain_up,             & ! 3-D
                                        entrain_down,           &
                                        detrain_up,             &
@@ -217,6 +213,7 @@ contains
     call conv_rain_3d%write_field('convection__conv_rain_3d')
     call conv_snow_3d%write_field('convection__conv_snow_3d')
     call cca_2d%write_field('convection__cca_2d')
+    call conv_frac%write_field('convection__conv_frac')
 
     ! Diagnostics computed within the kernel
     ! 2D
@@ -229,7 +226,6 @@ contains
     if (pres_lowest_cv_base_flag) call pres_lowest_cv_base%write_field()
     if (pres_lowest_cv_top_flag) call pres_lowest_cv_top%write_field()
     if (lowest_cca_2d_flag) call lowest_cca_2d%write_field()
-    if (conv_frac_flag) call conv_frac%write_field()
 
     ! 3D
     if (entrain_up_flag) call entrain_up%write_field()

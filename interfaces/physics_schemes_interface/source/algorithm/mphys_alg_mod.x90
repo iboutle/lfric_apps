@@ -115,7 +115,7 @@ contains
     type( field_type ), pointer :: precfrac
     type( field_type ), pointer :: ni_mphys
     type( field_type ), pointer :: ns_mphys
-    type( field_type ), pointer :: ls_qw_sink
+    type( field_type ), pointer :: conv_frac
 
     type( field_type ), pointer :: cloud_drop_no_conc  => null()
     type( field_type ), pointer :: n_acc_ins           => null()
@@ -187,7 +187,7 @@ contains
     call microphysics_fields%get_field('precfrac', precfrac)
     call microphysics_fields%get_field('ni_mphys',ni_mphys)
     call microphysics_fields%get_field('ns_mphys',ns_mphys)
-    call microphysics_fields%get_field('ls_qw_sink',ls_qw_sink)
+    call microphysics_fields%get_field('conv_frac',conv_frac)
 
     call aerosol_fields%get_field('cloud_drop_no_conc', cloud_drop_no_conc)
     call aerosol_fields%get_field('murk', murk)
@@ -244,7 +244,7 @@ contains
                                      dbcf_mphys, f_arr, tnuc, superc_liq,      &
                                      superc_rain,                              &
                                      sfwater, sfrain, sfsnow,                  &
-                                     refl_tot, refl_1km, ls_qw_sink ) )
+                                     refl_tot, refl_1km, conv_frac ) )
 
     if (turb_gen_mixph) then
       dz_in_wth => get_dz_at_wtheta(config, mesh)

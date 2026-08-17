@@ -224,8 +224,7 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_base
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_top
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! lowest_cca_2d
-         arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! conv_frac
-         arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_qw_sink
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_frac (in: ls_qw_sink)
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_up
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_down
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! detrain_up
@@ -644,7 +643,6 @@ contains
                           pres_lowest_cv_top,                &
                           lowest_cca_2d,                     &
                           conv_frac,                         &
-                          ls_qw_sink,                        &
                           entrain_up,                        &
                           entrain_down,                      &
                           detrain_up,                        &
@@ -1011,8 +1009,7 @@ contains
                                                 pres_lowest_cv_base(:),    &
                                                 pres_lowest_cv_top(:),     &
                                                 lowest_cca_2d(:),          &
-                                                conv_frac(:),              &
-                                                ls_qw_sink(:)
+                                                conv_frac(:)
 
     real(kind=r_def), pointer, intent(inout) :: entrain_up(:),       &
                                                 entrain_down(:),     &
@@ -2532,7 +2529,9 @@ contains
 
           ! Calculate convective fraction
           if (cv_qw_sink > 0.0_r_def) then
-            conv_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + ls_qw_sink(map_2d(1,i)))
+            ! conv_frac holds the large-scale qw sink on input and is
+            ! updated in place to hold the convective fraction on output
+            conv_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + conv_frac(map_2d(1,i)))
           else
             conv_frac(map_2d(1,i)) = 0.0_r_def
           end if
