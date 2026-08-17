@@ -1122,7 +1122,7 @@ contains
       call dtheta_cld%field_final()
     end if
 
-    if (diab_theta_opt > 0) then
+    if (diab_theta_opt == 1 .or. diab_theta_opt == 3) then
       call dtheta%copy_field_properties(dtheta_wdiab)
       call invoke(setval_c(dtheta_wdiab, 0.0_r_def))
       call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta, dtheta))

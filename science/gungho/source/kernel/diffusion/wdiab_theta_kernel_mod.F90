@@ -103,7 +103,7 @@ subroutine wdiab_theta_code( nlayers,                               &
       if (lapse > 2.0_r_def * dtheta_in(map_wth(1)+k)) then
         mix_coeff = dtheta_in(map_wth(1)+k) / lapse
       else
-        mix_coeff = 0.0_r_def
+        mix_coeff = 0.5_r_def
       end if
 
       ! calculate mixing increment at level above
@@ -120,7 +120,7 @@ subroutine wdiab_theta_code( nlayers,                               &
       if (lapse < 2.0_r_def * dtheta_in(map_wth(1)+k)) then
         mix_coeff = dtheta_in(map_wth(1)+k) / lapse
       else
-        mix_coeff = 0.0_r_def
+        mix_coeff = 0.5_r_def
       end if
 
       ! calculate mixing increment at level below

@@ -896,6 +896,7 @@
   <field id="forcing__dw_force" name="dw_force" long_name="vertical_air_velocity_increment_from_external_forcing" unit="m s-1" grid_ref="half_level_face_grid" />
   <!-- Processed diagnostics -->
   <field id="processed__dtheta_slow" name="dtheta_slow" long_name="potential_temperature_increment_from_slow_physics" unit="K" grid_ref="full_level_face_grid" />
+  <field id="processed__dtheta_fast" name="dtheta_fast" long_name="potential_temperature_increment_from_fast_physics" unit="K" grid_ref="full_level_face_grid" />
   <field id="processed__dtheta_tot" name="dtheta_tot" long_name="total_potential_temperature_increment" unit="K" grid_ref="full_level_face_grid" />
   <field id="processed__dt_tot" name="dt_tot" long_name="total_temperature_increment" unit="K" grid_ref="full_level_face_grid" />
   <field id="processed__dmv_methox" name="dmv_methox" long_name="vapour_increment_from_methane_oxidation" unit="kg/kg" grid_ref="full_level_face_grid" />

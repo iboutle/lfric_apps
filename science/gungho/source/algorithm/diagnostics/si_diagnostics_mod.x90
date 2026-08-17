@@ -87,6 +87,7 @@ contains
       call invoke(X_minus_Y(dtheta_slow,state_after_slow(igh_t),state_n(igh_t)))
       call dtheta_slow%write_field('processed__dtheta_slow')
     end if
+    call dtheta_fast%write_field('processed__dtheta_fast')
 
     ! Total increments
     ! Difference between current value (X) and X_n
