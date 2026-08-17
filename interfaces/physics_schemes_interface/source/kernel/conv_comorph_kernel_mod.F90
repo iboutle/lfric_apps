@@ -33,7 +33,7 @@ module conv_comorph_kernel_mod
   !>
   type, public, extends(kernel_type) :: conv_comorph_kernel_type
     private
-    type(arg_type) :: meta_args(197) = (/                                         &
+    type(arg_type) :: meta_args(196) = (/                                         &
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                                &! outer
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      W3),                       &! rho_in_w3
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      WTHETA),                   &! rho_in_wth
@@ -224,7 +224,7 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_base
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_top
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! lowest_cca_2d
-         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_frac (in: ls_qw_sink)
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_ppn_frac (in: ls_qw_sink)
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_up
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_down
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! detrain_up
@@ -642,7 +642,7 @@ contains
                           pres_lowest_cv_base,               &
                           pres_lowest_cv_top,                &
                           lowest_cca_2d,                     &
-                          conv_frac,                         &
+                          conv_ppn_frac,                     &
                           entrain_up,                        &
                           entrain_down,                      &
                           detrain_up,                        &
@@ -1009,7 +1009,7 @@ contains
                                                 pres_lowest_cv_base(:),    &
                                                 pres_lowest_cv_top(:),     &
                                                 lowest_cca_2d(:),          &
-                                                conv_frac(:)
+                                                conv_ppn_frac(:)
 
     real(kind=r_def), pointer, intent(inout) :: entrain_up(:),       &
                                                 entrain_down(:),     &
@@ -2514,7 +2514,7 @@ contains
         end do
       end if
 
-      if (.not. associated(conv_frac, empty_real_data) ) then
+      if (.not. associated(conv_ppn_frac, empty_real_data) ) then
         do i = 1, row_length
           ! Cartesian domain, grid area constant with height
           cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) &
@@ -2529,11 +2529,11 @@ contains
 
           ! Calculate convective fraction
           if (cv_qw_sink > 0.0_r_def) then
-            ! conv_frac holds the large-scale qw sink on input and is
+            ! conv_ppn_frac holds the large-scale qw sink on input and is
             ! updated in place to hold the convective fraction on output
-            conv_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + conv_frac(map_2d(1,i)))
+            conv_ppn_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + conv_ppn_frac(map_2d(1,i)))
           else
-            conv_frac(map_2d(1,i)) = 0.0_r_def
+            conv_ppn_frac(map_2d(1,i)) = 0.0_r_def
           end if
         end do
       end if

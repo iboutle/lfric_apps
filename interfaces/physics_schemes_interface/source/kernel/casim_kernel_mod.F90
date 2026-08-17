@@ -74,7 +74,7 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! refl_1km
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_liq
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_rain
-       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1)     & ! conv_frac
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1)     & ! conv_ppn_frac
        /)
    integer :: operates_on = CELL_COLUMN
 contains
@@ -175,7 +175,7 @@ subroutine casim_code( nlayers,                     &
                        cloud_drop_no_conc, murk,    &
                        refl_tot, refl_1km,          &
                        superc_liq, superc_rain,     &
-                       conv_frac,                   &
+                       conv_ppn_frac,               &
                        ndf_wth, undf_wth, map_wth,  &
                        ndf_w3,  undf_w3,  map_w3,   &
                        ndf_2d,  undf_2d,  map_2d    )
@@ -258,7 +258,7 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), pointer, intent(inout) :: superc_liq(:)
     real(kind=r_def), pointer, intent(inout) :: superc_rain(:)
     real(kind=r_def), pointer, intent(inout) :: ls_graup_3d(:)
-    real(kind=r_def), pointer, intent(inout) :: conv_frac(:)
+    real(kind=r_def), pointer, intent(inout) :: conv_ppn_frac(:)
 
     integer(kind=i_def), intent(in), dimension(ndf_wth) :: map_wth
     integer(kind=i_def), intent(in), dimension(ndf_w3)  :: map_w3
@@ -632,13 +632,13 @@ subroutine casim_code( nlayers,                     &
     end if ! not assoc. either superc species
 
     ! Vertical integral of qw sink
-    if (.not. associated(conv_frac, empty_real_data)) then
-      conv_frac(map_2d(1)) = 0.0_r_def
+    if (.not. associated(conv_ppn_frac, empty_real_data)) then
+      conv_ppn_frac(map_2d(1)) = 0.0_r_def
       do k = 1, nlayers
         dqw = (dmv_wth(map_wth(1)+k)+dml_wth(map_wth(1)+k))*rhodz_dry(1,1,k)
-        conv_frac(map_2d(1)) = conv_frac(map_2d(1)) + max(-dqw, 0.0_r_def)
+        conv_ppn_frac(map_2d(1)) = conv_ppn_frac(map_2d(1)) + max(-dqw, 0.0_r_def)
       end do
-      conv_frac(map_2d(1)) = conv_frac(map_2d(1)) * recip_timestep
+      conv_ppn_frac(map_2d(1)) = conv_ppn_frac(map_2d(1)) * recip_timestep
     end if
 
     ! CASIM deallocate diagnostics

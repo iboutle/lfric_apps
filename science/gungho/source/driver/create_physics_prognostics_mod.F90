@@ -572,7 +572,6 @@ contains
 
     call processor%apply(make_spec('ls_graup', main%microphysics, W3, twod=.true.))
     call processor%apply(make_spec('tnuc_nlcl', main%microphysics, W3, twod=.true.))
-    call processor%apply(make_spec('conv_frac', main%microphysics, W3, twod=.true., empty = (cv_scheme /= cv_scheme_comorph)))
 
     ! 3D fields, don't need checkpointing
     call processor%apply(make_spec('dtheta_mphys', main%microphysics, Wtheta))
@@ -744,6 +743,7 @@ contains
 
     ! 2D fields, don't need checkpointing
     call processor%apply(make_spec('cca_2d', main%convection, W3, twod=.true.))
+    call processor%apply(make_spec('conv_ppn_frac', main%convection, W3, twod=.true., empty = (cv_scheme /= cv_scheme_comorph)))
     call processor%apply(make_spec('shallow_flag', main%convection, W3, twod=.true.,  &
         is_int=.true.))
     call processor%apply(make_spec('uw0_flux', main%convection, W3, twod=.true.))

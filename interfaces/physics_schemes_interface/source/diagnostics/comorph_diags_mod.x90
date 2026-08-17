@@ -129,7 +129,7 @@ contains
                                     conv_rain_3d,           &
                                     conv_snow_3d,           &
                                     cca_2d,                 &
-                                    conv_frac,              &
+                                    conv_ppn_frac,          &
                                     lowest_cv_base,         &
                                     lowest_cv_top,          &
                                     cv_base,                &
@@ -169,7 +169,7 @@ contains
                                        conv_rain_3d,  &
                                        conv_snow_3d,  &
                                        cca_2d,        &
-                                       conv_frac
+                                       conv_ppn_frac
     ! local diagnostic fields to output
     type( field_type ), intent(in)  :: lowest_cv_base,         &
                                        lowest_cv_top,          &
@@ -213,7 +213,7 @@ contains
     call conv_rain_3d%write_field('convection__conv_rain_3d')
     call conv_snow_3d%write_field('convection__conv_snow_3d')
     call cca_2d%write_field('convection__cca_2d')
-    call conv_frac%write_field('convection__conv_frac')
+    call conv_ppn_frac%write_field('convection__conv_ppn_frac')
 
     ! Diagnostics computed within the kernel
     ! 2D

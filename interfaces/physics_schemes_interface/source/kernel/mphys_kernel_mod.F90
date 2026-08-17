@@ -81,7 +81,7 @@ type, public, extends(kernel_type) :: mphys_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! sfsnow
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! refl_tot
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! refl_1km
-       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1)     & ! conv_frac
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1)     & ! conv_ppn_frac
        /)
    integer :: operates_on = DOMAIN
 contains
@@ -189,7 +189,7 @@ subroutine mphys_code( nlayers, seg_len,            &
                        superc_rain_wth,             &
                        sfwater, sfrain, sfsnow,     &
                        refl_tot, refl_1km,          &
-                       conv_frac,                   &
+                       conv_ppn_frac,               &
                        ndf_wth, undf_wth, map_wth,  &
                        ndf_w3,  undf_w3,  map_w3,   &
                        ndf_2d,  undf_2d,  map_2d,   &
@@ -300,7 +300,7 @@ subroutine mphys_code( nlayers, seg_len,            &
     real(kind=r_def), pointer, intent(inout) :: sfsnow(:)
     real(kind=r_def), pointer, intent(inout) :: refl_tot(:)
     real(kind=r_def), pointer, intent(inout) :: refl_1km(:)
-    real(kind=r_def), pointer, intent(inout) :: conv_frac(:)
+    real(kind=r_def), pointer, intent(inout) :: conv_ppn_frac(:)
 
     integer(kind=i_def), intent(in), dimension(ndf_wth, seg_len) :: map_wth
     integer(kind=i_def), intent(in), dimension(ndf_w3, seg_len)  :: map_w3
@@ -897,18 +897,18 @@ subroutine mphys_code( nlayers, seg_len,            &
   end if
 
   ! Vertical integral of qw sink
-  if (.not. associated(conv_frac, empty_real_data)) then
+  if (.not. associated(conv_ppn_frac, empty_real_data)) then
     do i = 1, seg_len
-      conv_frac(map_2d(1,i)) = 0.0_r_def
+      conv_ppn_frac(map_2d(1,i)) = 0.0_r_def
     end do
     do k = 1, nlayers
       do i = 1, seg_len
         dqw = (dmv_wth(map_wth(1,i)+k)+dml_wth(map_wth(1,i)+k))*rhodz_dry(i,1,k)
-        conv_frac(map_2d(1,i)) = conv_frac(map_2d(1,i)) + max(-dqw, 0.0_r_def)
+        conv_ppn_frac(map_2d(1,i)) = conv_ppn_frac(map_2d(1,i)) + max(-dqw, 0.0_r_def)
       end do
     end do
     do i = 1, seg_len
-      conv_frac(map_2d(1,i)) = conv_frac(map_2d(1,i)) * recip_timestep
+      conv_ppn_frac(map_2d(1,i)) = conv_ppn_frac(map_2d(1,i)) * recip_timestep
     end do
   end if
 

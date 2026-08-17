@@ -259,7 +259,7 @@ contains
     type( field_type ), pointer :: precfrac
     type( field_type ), pointer :: ls_rain
     type( field_type ), pointer :: ls_snow
-    type( field_type ), pointer :: conv_frac
+    type( field_type ), pointer :: conv_ppn_frac
 
     type( field_type ), pointer :: height_w3
     type( field_type ), pointer :: height_wth
@@ -464,7 +464,7 @@ contains
     call microphysics_fields%get_field('precfrac', precfrac)
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
-    call microphysics_fields%get_field('conv_frac',conv_frac)
+    call convection_fields%get_field('conv_ppn_frac',conv_ppn_frac)
 
     height_wth => get_height_fv(config, mesh, Wtheta)
     height_w3  => get_height_fv(config, mesh, W3)
@@ -637,7 +637,7 @@ contains
                           pres_lowest_cv_base,                                &
                           pres_lowest_cv_top,                                 &
                           lowest_cca_2d,                                      &
-                          conv_frac,                                          &
+                          conv_ppn_frac,                                          &
                           entrain_up,                                         &   ! 3-D local variables
                           entrain_down,                                       &
                           detrain_up,                                         &
@@ -677,7 +677,7 @@ contains
                                   conv_rain_3d,          &
                                   conv_snow_3d,          &
                                   cca_2d,                &
-                                  conv_frac,             &
+                                  conv_ppn_frac,         &
                                   lowest_cv_base,        &
                                   lowest_cv_top,         &
                                   cv_base,               &
