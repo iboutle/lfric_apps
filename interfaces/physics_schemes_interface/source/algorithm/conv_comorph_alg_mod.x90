@@ -517,6 +517,7 @@ contains
                           zh, zh_nonloc, inv_depth, zhsc, bl_type_ind,        &
                           wvar, rhokm_bl, moist_flux, heat_flux, taux, tauy,  &
                           surf_interp, ustar, ls_rain, ls_snow,               &
+                          conv_ppn_frac,                                      &
                           dcfl_conv, dcff_conv, dbcf_conv,                    &
                           o3p,                                                &
                           o1d,                                                &
@@ -637,7 +638,6 @@ contains
                           pres_lowest_cv_base,                                &
                           pres_lowest_cv_top,                                 &
                           lowest_cca_2d,                                      &
-                          conv_ppn_frac,                                          &
                           entrain_up,                                         &   ! 3-D local variables
                           entrain_down,                                       &
                           detrain_up,                                         &

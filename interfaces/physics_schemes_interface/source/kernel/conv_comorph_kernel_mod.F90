@@ -102,6 +102,7 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ustar
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_rain_2d
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_snow_2d
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_ppn_frac (in: ls_qw_sink)
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dcfl_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dcff_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dbcf_conv
@@ -224,7 +225,6 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_base
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! pres_lowest_cv_top
          arg_type(GH_FIELD,  GH_REAL,    GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! lowest_cca_2d
-         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_ppn_frac (in: ls_qw_sink)
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_up
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! entrain_down
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! detrain_up
@@ -520,6 +520,7 @@ contains
                           ustar,                             &
                           ls_rain_2d,                        &
                           ls_snow_2d,                        &
+                          conv_ppn_frac,                     &
                           dcfl_conv,                         &
                           dcff_conv,                         &
                           dbcf_conv,                         &
@@ -642,7 +643,6 @@ contains
                           pres_lowest_cv_base,               &
                           pres_lowest_cv_top,                &
                           lowest_cca_2d,                     &
-                          conv_ppn_frac,                     &
                           entrain_up,                        &
                           entrain_down,                      &
                           detrain_up,                        &
@@ -880,10 +880,11 @@ contains
 
     real(kind=r_def), dimension(undf_w3), intent(inout) :: du_conv, dv_conv
 
-    real(kind=r_def), dimension(undf_2d), intent(in) :: zh_2d,                &
-                                                        zh_nonloc, inv_depth, &
-                                                        zhsc_2d, ustar,       &
-                                                        ls_rain_2d, ls_snow_2d
+    real(kind=r_def), dimension(undf_2d), intent(in) :: zh_2d,                 &
+                                                        zh_nonloc, inv_depth,  &
+                                                        zhsc_2d, ustar,        &
+                                                        ls_rain_2d, ls_snow_2d,&
+                                                        conv_ppn_frac
     integer(kind=i_def), dimension(undf_bl), intent(inout) :: bl_type_ind
     real(kind=r_def), dimension(undf_surf), intent(inout) :: surf_interp
 
@@ -1008,8 +1009,7 @@ contains
                                                 pres_cv_top(:),            &
                                                 pres_lowest_cv_base(:),    &
                                                 pres_lowest_cv_top(:),     &
-                                                lowest_cca_2d(:),          &
-                                                conv_ppn_frac(:)
+                                                lowest_cca_2d(:)
 
     real(kind=r_def), pointer, intent(inout) :: entrain_up(:),       &
                                                 entrain_down(:),     &
@@ -2514,29 +2514,27 @@ contains
         end do
       end if
 
-      if (.not. associated(conv_ppn_frac, empty_real_data) ) then
-        do i = 1, row_length
-          ! Cartesian domain, grid area constant with height
-          cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) &
-                     * (q_inc(i,1,1) + qcl_inc(i,1,1))
-          do k = 1, nlayers-1
-            cv_qw_sink = cv_qw_sink &
-                       - rho_dry_tq(i,1,k) * (z_rho(i,1,k+1) - z_rho(i,1,k)) &
-                       * (q_inc(i,1,k) + qcl_inc(i,1,k))
-          end do
-          ! Convert to tendency
-          cv_qw_sink = cv_qw_sink * recip_timestep
-
-          ! Calculate convective fraction
-          if (cv_qw_sink > 0.0_r_def) then
-            ! conv_ppn_frac holds the large-scale qw sink on input and is
-            ! updated in place to hold the convective fraction on output
-            conv_ppn_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + conv_ppn_frac(map_2d(1,i)))
-          else
-            conv_ppn_frac(map_2d(1,i)) = 0.0_r_def
-          end if
+      do i = 1, row_length
+        ! Cartesian domain, grid area constant with height
+        cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) &
+                   * (q_inc(i,1,1) + qcl_inc(i,1,1))
+        do k = 1, nlayers-1
+          cv_qw_sink = cv_qw_sink &
+                     - rho_dry_tq(i,1,k) * (z_rho(i,1,k+1) - z_rho(i,1,k)) &
+                     * (q_inc(i,1,k) + qcl_inc(i,1,k))
         end do
-      end if
+        ! Convert to tendency
+        cv_qw_sink = cv_qw_sink * recip_timestep
+
+        ! Calculate convective fraction
+        if (cv_qw_sink > 0.0_r_def) then
+          ! conv_ppn_frac holds the large-scale qw sink on input and is
+          ! updated in place to hold the convective fraction on output
+          conv_ppn_frac(map_2d(1,i)) = cv_qw_sink / (cv_qw_sink + conv_ppn_frac(map_2d(1,i)))
+        else
+          conv_ppn_frac(map_2d(1,i)) = 0.0_r_def
+        end if
+      end do
     end if ! outer_iterations
 
     ! update input fields
