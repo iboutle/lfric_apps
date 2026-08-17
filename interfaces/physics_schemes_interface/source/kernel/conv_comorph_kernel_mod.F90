@@ -102,7 +102,7 @@ module conv_comorph_kernel_mod
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ustar
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_rain_2d
          arg_type(GH_FIELD,  GH_REAL,    GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! ls_snow_2d
-         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_ppn_frac (in: ls_qw_sink)
+         arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),&! conv_ppn_frac
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dcfl_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dcff_conv
          arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, WTHETA),                   &! dbcf_conv
@@ -812,7 +812,7 @@ contains
     use set_constants_from_um_mod, only: set_constants_from_um
     use comorph_constants_mod, only: l_init_constants, l_turb_par_gen,         &
          l_cv_rain, l_cv_cf, l_cv_snow, l_cv_graup,                            &
-         i_convcloud, i_convcloud_liqonly
+         i_convcloud, i_convcloud_liqonly, l_spherical_coords
     use calc_conv_incs_mod, only: calc_conv_incs, i_call_save_before_conv,     &
          i_call_diff_to_get_incs
     use calc_qcf2_incs_mod, ONLY: calc_qcf2_incs, i_call_combine_in_qcf2,      &
@@ -1050,6 +1050,7 @@ contains
     real(r_um), dimension(row_length,rows,0:nlayers) ::                      &
          p_theta_levels, w, r_theta_levels, exner_theta_levels
     real(r_um), dimension(row_length,rows,nlayers+1) :: p_rho_levels
+    real(r_um), dimension(row_length,rows,nlayers-1) :: r_sq_fact
 
     ! single level real fields
     real(r_um), dimension(row_length,rows) :: zh
@@ -2514,14 +2515,24 @@ contains
         end do
       end if
 
+      if (l_spherical_coord) then
+        do i = 1, row_length
+          do k = 1, nlayers-1
+            ! Spherical geometry factor
+            r_sq_fact(i,1,k) = (r_theta_levels(i,1,k)/r_theta_levels(i,1,0))**2
+          end do
+        end do
+      else
+        r_sq_fact = 1.0_r_def
+      end if
       do i = 1, row_length
         ! Cartesian domain, grid area constant with height
-        cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) &
+        cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) * r_sq_fact &
                    * (q_inc(i,1,1) + qcl_inc(i,1,1))
         do k = 1, nlayers-1
           cv_qw_sink = cv_qw_sink &
                      - rho_dry_tq(i,1,k) * (z_rho(i,1,k+1) - z_rho(i,1,k)) &
-                     * (q_inc(i,1,k) + qcl_inc(i,1,k))
+                     * r_sq_fact * (q_inc(i,1,k) + qcl_inc(i,1,k))
         end do
         ! Convert to tendency
         cv_qw_sink = cv_qw_sink * recip_timestep
