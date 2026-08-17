@@ -50,7 +50,9 @@ module slow_physics_alg_mod
                                        convection_placement_slow,      &
                                        evap_condense_placement,        &
                                        evap_condense_placement_slow,   &
-                                       diab_theta_opt
+                                       diab_theta_opt,                 &
+                                       diab_theta_opt_slow,            &
+                                       diab_theta_opt_both
   use radiation_config_mod,      only: n_radstep, l_inc_radstep, &
                                        n_inc_radstep, &
                                        l_planet_grey_surface
@@ -1091,7 +1093,8 @@ contains
       call dtheta_cld%field_final()
     end if
 
-    if (diab_theta_opt == 1 .or. diab_theta_opt == 3) then
+    if (diab_theta_opt == diab_theta_opt_slow .or. &
+         diab_theta_opt == diab_theta_opt_both) then
       call dtheta%copy_field_properties(dtheta_wdiab)
       call invoke(setval_c(dtheta_wdiab, 0.0_r_def))
       call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta, dtheta))
