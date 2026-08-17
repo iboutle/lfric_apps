@@ -631,7 +631,8 @@ subroutine casim_code( nlayers,                     &
       end if ! not assoc. superc_rain
     end if ! not assoc. either superc species
 
-    ! Vertical integral of qw sink
+    ! Vertical integral of qw sink - written to conv_ppn_frac field for
+    ! further use in comorph_kernel
     if (.not. associated(conv_ppn_frac, empty_real_data)) then
       conv_ppn_frac(map_2d(1)) = 0.0_r_def
       do k = 1, nlayers

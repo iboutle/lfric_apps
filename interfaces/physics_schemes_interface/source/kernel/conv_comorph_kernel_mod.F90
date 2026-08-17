@@ -880,16 +880,16 @@ contains
 
     real(kind=r_def), dimension(undf_w3), intent(inout) :: du_conv, dv_conv
 
-    real(kind=r_def), dimension(undf_2d), intent(in) :: zh_2d,                 &
-                                                        zh_nonloc, inv_depth,  &
-                                                        zhsc_2d, ustar,        &
-                                                        ls_rain_2d, ls_snow_2d,&
-                                                        conv_ppn_frac
+    real(kind=r_def), dimension(undf_2d), intent(in) :: zh_2d,                &
+                                                        zh_nonloc, inv_depth, &
+                                                        zhsc_2d, ustar,       &
+                                                        ls_rain_2d, ls_snow_2d
     integer(kind=i_def), dimension(undf_bl), intent(inout) :: bl_type_ind
     real(kind=r_def), dimension(undf_surf), intent(inout) :: surf_interp
 
     real(kind=r_def), dimension(undf_2d), intent(inout) :: cape_diluted,  &
-                                                           cca_2d, dd_mf_cb
+                                                           cca_2d, dd_mf_cb, &
+                                                           conv_ppn_frac
     real(kind=r_def), intent(in out), dimension(undf_wth) :: o3p
     real(kind=r_def), intent(in out), dimension(undf_wth) :: o1d
     real(kind=r_def), intent(in out), dimension(undf_wth) :: o3

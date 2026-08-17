@@ -896,7 +896,8 @@ subroutine mphys_code( nlayers, seg_len,            &
     end do
   end if
 
-  ! Vertical integral of qw sink
+  ! Vertical integral of qw sink - written to conv_ppn_frac field for
+  ! further use in comorph_kernel
   if (.not. associated(conv_ppn_frac, empty_real_data)) then
     do i = 1, seg_len
       conv_ppn_frac(map_2d(1,i)) = 0.0_r_def

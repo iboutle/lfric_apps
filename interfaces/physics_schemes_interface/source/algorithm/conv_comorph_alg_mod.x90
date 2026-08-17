@@ -677,6 +677,8 @@ contains
                                   conv_rain_3d,          &
                                   conv_snow_3d,          &
                                   cca_2d,                &
+                                  ls_rain,               &
+                                  ls_snow,               &
                                   conv_ppn_frac,         &
                                   lowest_cv_base,        &
                                   lowest_cv_top,         &
