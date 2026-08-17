@@ -503,7 +503,6 @@ contains
     if (diab_theta_opt == 2 .or. diab_theta_opt == 3) then
       call dtheta%copy_field_properties(dtheta_wdiab)
       call invoke(setval_c(dtheta_wdiab, 0.0_r_def))
-      call derived_fields%get_field('theta_star', theta_star)
       call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta_star, dtheta))
       call invoke(setval_X(dtheta, dtheta_wdiab))
       call dtheta_wdiab%field_final()
