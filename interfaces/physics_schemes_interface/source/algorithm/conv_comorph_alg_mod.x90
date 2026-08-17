@@ -135,6 +135,7 @@ contains
     type( field_type ), pointer :: massflux_down
     type( field_type ), pointer :: cape_diluted
     type( field_type ), pointer :: pressure_inc_env
+    type( field_type ), pointer :: conv_ppn_frac
 
     type( field_type ), pointer :: cf_fro
     type( field_type ), pointer :: cf_liq
@@ -259,7 +260,6 @@ contains
     type( field_type ), pointer :: precfrac
     type( field_type ), pointer :: ls_rain
     type( field_type ), pointer :: ls_snow
-    type( field_type ), pointer :: conv_ppn_frac
 
     type( field_type ), pointer :: height_w3
     type( field_type ), pointer :: height_wth
@@ -337,6 +337,7 @@ contains
     call convection_fields%get_field('cv_base', cv_base)
     call convection_fields%get_field('cv_top', cv_top)
     call convection_fields%get_field('pressure_inc_env', pressure_inc_env)
+    call convection_fields%get_field('conv_ppn_frac',conv_ppn_frac)
 
     ! Unpack cloud fields
     call cloud_fields%get_field('frozen_fraction', cf_fro)
@@ -464,7 +465,6 @@ contains
     call microphysics_fields%get_field('precfrac', precfrac)
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
-    call convection_fields%get_field('conv_ppn_frac',conv_ppn_frac)
 
     height_wth => get_height_fv(config, mesh, Wtheta)
     height_w3  => get_height_fv(config, mesh, W3)
