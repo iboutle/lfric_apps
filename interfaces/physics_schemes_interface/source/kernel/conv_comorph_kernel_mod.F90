@@ -812,7 +812,7 @@ contains
     use set_constants_from_um_mod, only: set_constants_from_um
     use comorph_constants_mod, only: l_init_constants, l_turb_par_gen,         &
          l_cv_rain, l_cv_cf, l_cv_snow, l_cv_graup,                            &
-         i_convcloud, i_convcloud_liqonly, l_spherical_coords
+         i_convcloud, i_convcloud_liqonly, l_spherical_coord
     use calc_conv_incs_mod, only: calc_conv_incs, i_call_save_before_conv,     &
          i_call_diff_to_get_incs
     use calc_qcf2_incs_mod, ONLY: calc_qcf2_incs, i_call_combine_in_qcf2,      &
@@ -2527,12 +2527,12 @@ contains
       end if
       do i = 1, row_length
         ! Cartesian domain, grid area constant with height
-        cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) * r_sq_fact &
+        cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) * r_sq_fact(i,1,1) &
                    * (q_inc(i,1,1) + qcl_inc(i,1,1))
-        do k = 1, nlayers-1
+        do k = 2, nlayers-1
           cv_qw_sink = cv_qw_sink &
                      - rho_dry_tq(i,1,k) * (z_rho(i,1,k+1) - z_rho(i,1,k)) &
-                     * r_sq_fact * (q_inc(i,1,k) + qcl_inc(i,1,k))
+                     * r_sq_fact(i,1,k) * (q_inc(i,1,k) + qcl_inc(i,1,k))
         end do
         ! Convert to tendency
         cv_qw_sink = cv_qw_sink * recip_timestep
