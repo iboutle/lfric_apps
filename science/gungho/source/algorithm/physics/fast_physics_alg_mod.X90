@@ -363,8 +363,18 @@ contains
       ! Update fields and increments
       call convection_fields%get_field('dt_conv', dt_conv)
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
-      call invoke(X_divideby_Y(dtheta, dt_conv, exner_in_wth), &
-                  inc_X_plus_Y(theta_latest, dtheta), &
+      call invoke(X_divideby_Y(dtheta, dt_conv, exner_in_wth))
+      if (diab_theta_opt == diab_theta_opt_fast .or. &
+           diab_theta_opt == diab_theta_opt_both) then
+        call dtheta%copy_field_properties(dtheta_wdiab)
+        call invoke(setval_c(dtheta_wdiab, 0.0_r_def), &
+                    wdiab_theta_kernel_type(dtheta_wdiab, theta_latest, dtheta), &
+                    inc_X_minus_Y(dtheta_wdiab, dtheta), &
+                    inc_X_plus_Y(dtheta, dtheta_wdiab))
+        call dtheta_wdiab%write_field('dtheta_wdiab_fast')
+        call dtheta_wdiab%field_final()
+      end if
+      call invoke(inc_X_plus_Y(theta_latest, dtheta), &
                   inc_X_plus_Y(u_latest, du))
 
     end if
@@ -500,15 +510,6 @@ contains
     if (smagorinsky .and. smagorinsky_placement == smagorinsky_placement_fast) then
       call smagorinsky_alg(config, dtheta, du, mr, theta_star, u_star, &
                            derived_fields, cloud_fields, rho, exner, dt, clock)
-    end if
-
-    if (diab_theta_opt == diab_theta_opt_fast .or. &
-         diab_theta_opt == diab_theta_opt_both) then
-      call dtheta%copy_field_properties(dtheta_wdiab)
-      call invoke(setval_c(dtheta_wdiab, 0.0_r_def), &
-                  wdiab_theta_kernel_type(dtheta_wdiab, theta_star, dtheta), &
-                  setval_X(dtheta, dtheta_wdiab))
-      call dtheta_wdiab%field_final()
     end if
 
     call print_field_stats_alg(config, dtheta, LOG_LEVEL_INFO,            &
