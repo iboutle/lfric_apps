@@ -41,7 +41,7 @@ module fast_physics_alg_mod
                                   evap_condense_placement,                 &
                                   evap_condense_placement_fast,            &
                                   diab_theta_opt,                          &
-                                  diab_theta_opt_fast,                     &
+                                  diab_theta_opt_conv,                     &
                                   diab_theta_opt_both
 
   use formulation_config_mod,                               &
@@ -364,14 +364,14 @@ contains
       call convection_fields%get_field('dt_conv', dt_conv)
       call derived_fields%get_field('exner_in_wth', exner_in_wth)
       call invoke(X_divideby_Y(dtheta, dt_conv, exner_in_wth))
-      if (diab_theta_opt == diab_theta_opt_fast .or. &
+      if (diab_theta_opt == diab_theta_opt_conv .or. &
            diab_theta_opt == diab_theta_opt_both) then
         call dtheta%copy_field_properties(dtheta_wdiab)
         call invoke(setval_c(dtheta_wdiab, 0.0_r_def), &
                     wdiab_theta_kernel_type(dtheta_wdiab, theta_latest, dtheta), &
                     inc_X_minus_Y(dtheta_wdiab, dtheta), &
                     inc_X_plus_Y(dtheta, dtheta_wdiab))
-        call dtheta_wdiab%write_field('dtheta_wdiab_fast')
+        call dtheta_wdiab%write_field('dtheta_wdiab_conv')
         call dtheta_wdiab%field_final()
       end if
       call invoke(inc_X_plus_Y(theta_latest, dtheta), &

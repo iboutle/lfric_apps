@@ -55,8 +55,6 @@
   <field id="aam_in_w3" name="aam_in_w3" long_name="axial_angular_momentum_at_cell_centres" standard_name="axial_angular_momentum" unit="kg m2 s-1" grid_ref="half_level_face_grid" />
   <field id="ke_uv_in_w3" name="ke_uv_in_w3" long_name="horizontal_kinetic_energy_at_cell_centres" standard_name="horizontal_kinetic_energy" unit="J" grid_ref="half_level_face_grid" />
   <field id="ke_w_in_w3" name="ke_w_in_w3" long_name="vertical_kinetic_energy_at_cell_centres" standard_name="vertical_kinetic_energy" unit="J" grid_ref="half_level_face_grid" />
-  <field id="dtheta_wdiab_slow" name="dtheta_wdiab_slow" long_name="diabatic_mixing_increment_from_slow_physics" unit="K" grid_ref="full_level_face_grid" />
-  <field id="dtheta_wdiab_fast" name="dtheta_wdiab_fast" long_name="diabatic_mixing_increment_from_fast_physics" unit="K" grid_ref="full_level_face_grid" />
   <!-- chemistry diagnostics -->
   <field id="chemistry__emiss_c2h6" name="emissions_C2H6" long_name="C2H6 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
   <field id="chemistry__emiss_c3h8" name="emissions_C3H8" long_name="C3H8 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
@@ -349,6 +347,7 @@
   <field id="cloud__cloud_fraction_below_1000feet_asl" name="cloud_fraction_below_1000feet_asl" long_name="cloud_fraction_below_1000feet_asl" unit="1" domain_ref="face" />
   <!-- convection diagnostics -->
   <field id="convection__dth_conv_noshal" name="dth_conv_noshal" long_name="potential_temperature_increment_from_convection_excluding_shallow_convection" unit="K" grid_ref="full_level_face_grid" />
+  <field id="convection__dtheta_wdiab_conv" name="dtheta_wdiab_conv" long_name="diabatic_mixing_increment_from_convection" unit="K" grid_ref="full_level_face_grid" />
   <field id="convection__dt_conv" name="dt_conv" long_name="temperature_increment_from_convection" unit="K" grid_ref="full_level_face_grid" />
   <field id="convection__dmv_conv" name="dmv_conv" long_name="water_vapour_increment_from_convection" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="convection__dmv_conv_noshal" name="dmv_conv_noshal" long_name="water_vapour_increment_from_convection_excluding_shallow_convection" unit="kg kg-1" grid_ref="full_level_face_grid" />
@@ -410,6 +409,7 @@
   <field id="convection__pres_cv_top" name="pres_cv_top" long_name="pressure_at_convective_cloud_top" unit="Pa" domain_ref="face" />
   <!-- microphysics diagnostics -->
   <field id="microphysics__dtheta_mphys" name="dtheta_mphys" long_name="potential_temperature_increment_due_to_microphysics" unit="K" grid_ref="full_level_face_grid" />
+  <field id="microphysics__dtheta_wdiab_mphys" name="dtheta_wdiab_mphys" long_name="diabatic_mixing_increment_from_microphysics" unit="K" grid_ref="full_level_face_grid" />
   <field id="microphysics__dt_mphys" name="dt_mphys" long_name="temperature_increment_due_to_microphysics" unit="K" grid_ref="full_level_face_grid" />
   <field id="microphysics__dmv_mphys" name="dmv_mphys" long_name="water_vapour_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="microphysics__dmcl_mphys" name="dmcl_mphys" long_name="cloud_liquid__mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />

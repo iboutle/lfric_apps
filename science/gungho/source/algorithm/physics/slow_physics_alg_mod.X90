@@ -51,7 +51,7 @@ module slow_physics_alg_mod
                                        evap_condense_placement,        &
                                        evap_condense_placement_slow,   &
                                        diab_theta_opt,                 &
-                                       diab_theta_opt_slow,            &
+                                       diab_theta_opt_mphys,           &
                                        diab_theta_opt_both
   use radiation_config_mod,      only: n_radstep, l_inc_radstep, &
                                        n_inc_radstep, &
@@ -1021,14 +1021,14 @@ contains
     end if
 
     if (microphysics_done) then
-      if (diab_theta_opt == diab_theta_opt_slow .or. &
+      if (diab_theta_opt == diab_theta_opt_mphys .or. &
          diab_theta_opt == diab_theta_opt_both) then
         call dtheta%copy_field_properties(dtheta_wdiab)
         call invoke(setval_c(dtheta_wdiab, 0.0_r_def), &
                     wdiab_theta_kernel_type(dtheta_wdiab, theta, dtheta_mphys), &
                     inc_X_minus_Y(dtheta_wdiab, dtheta_mphys), &
                     inc_X_plus_Y(dtheta_mphys, dtheta_wdiab))
-        call dtheta_wdiab%write_field('dtheta_wdiab_slow')
+        call dtheta_wdiab%write_field('dtheta_wdiab_mphys')
         call dtheta_wdiab%field_final()
       end if
       call invoke(inc_X_plus_Y(dtheta, dtheta_mphys))
