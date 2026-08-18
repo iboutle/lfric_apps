@@ -371,7 +371,7 @@ contains
                     wdiab_theta_kernel_type(dtheta_wdiab, theta_latest, dtheta), &
                     inc_X_minus_Y(dtheta_wdiab, dtheta), &
                     inc_X_plus_Y(dtheta, dtheta_wdiab))
-        call dtheta_wdiab%write_field('dtheta_wdiab_conv')
+        call dtheta_wdiab%write_field('convection__dtheta_wdiab_conv')
         call dtheta_wdiab%field_final()
       end if
       call invoke(inc_X_plus_Y(theta_latest, dtheta), &
