@@ -505,9 +505,9 @@ contains
     if (diab_theta_opt == diab_theta_opt_fast .or. &
          diab_theta_opt == diab_theta_opt_both) then
       call dtheta%copy_field_properties(dtheta_wdiab)
-      call invoke(setval_c(dtheta_wdiab, 0.0_r_def))
-      call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta_star, dtheta))
-      call invoke(setval_X(dtheta, dtheta_wdiab))
+      call invoke(setval_c(dtheta_wdiab, 0.0_r_def), &
+                  wdiab_theta_kernel_type(dtheta_wdiab, theta_star, dtheta), &
+                  setval_X(dtheta, dtheta_wdiab))
       call dtheta_wdiab%field_final()
     end if
 
