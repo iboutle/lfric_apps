@@ -84,10 +84,10 @@ contains
     dtheta_in = (/ 0.0_r_def, 1.0_r_def, 1.0_r_def, 0.0_r_def, &
                    0.0_r_def, -1.0_r_def, 3.0_r_def, 0.0_r_def, &
                    -3.0_r_def, 1.0_r_def, 1.0_r_def, 0.0_r_def /)
-    answer = (/ 0.0_r_def, 1.0_r_def, 0.75_r_def, 0.25_r_def, &
-                -0.25_r_def, -0.75_r_def, 3.0_r_def, 0.0_r_def, &
-                -3.0_r_def, 0.75_r_def, 1.0_r_def, 0.25_r_def /)
-    
+    answer = (/ 0.0_r_def, 0.0_r_def, -0.25_r_def, 0.25_r_def, &
+                -0.25_r_def, 0.25_r_def, -1.5_r_def, 0.0_r_def, &
+                1.5_r_def, -0.25_r_def, 0.0_r_def, 0.25_r_def /)
+
     ! Call the kernel
     call wdiab_theta_code( nlayers,                               &
                            dtheta_out,                            &

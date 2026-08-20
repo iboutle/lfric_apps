@@ -78,16 +78,10 @@ subroutine wdiab_theta_code( nlayers,                               &
   integer(kind=i_def), parameter :: lev_pad = 1
 
   real(kind=r_def) :: lapse, mix_coeff
+  real(kind=r_def) :: flux(nlayers)
 
-  ! levels 0 and 1 output increment is just input increment but can mix
-  ! down into here
-  do k = 0, lev_pad
-    dtheta_out(map_wth(1)+k) = dtheta_in(map_wth(1)+k)
-  end do
-  ! top level output increment is just input increment but can mix up
-  ! into here
-  do k = nlayers-lev_pad+1, nlayers
-    dtheta_out(map_wth(1)+k) = dtheta_in(map_wth(1)+k)
+  do k = 1, nlayers
+    flux(k) = 0.0_r_def
   end do
 
   ! run from levels 2 to model_levels-1
@@ -106,9 +100,8 @@ subroutine wdiab_theta_code( nlayers,                               &
         mix_coeff = 0.5_r_def
       end if
 
-      ! calculate mixing increment at level above
-      dtheta_out(map_wth(1)+k+1) = dtheta_out(map_wth(1)+k+1) &
-                                      + mix_coeff * dtheta_in(map_wth(1)+k)
+      ! calculate flux into level above
+      flux(k+1) = flux(k+1) + mix_coeff * dtheta_in(map_wth(1)+k)
 
     ! if theta increment is a cooling
     else if (dtheta_in(map_wth(1)+k) < 0.0_r_def) then
@@ -123,21 +116,22 @@ subroutine wdiab_theta_code( nlayers,                               &
         mix_coeff = 0.5_r_def
       end if
 
-      ! calculate mixing increment at level below
-      dtheta_out(map_wth(1)+k-1) = dtheta_out(map_wth(1)+k-1) &
-                                      + mix_coeff * dtheta_in(map_wth(1)+k)
-
-    else
-
-      mix_coeff = 0.0_r_def
+      ! calculate flux into level below
+      flux(k) = flux(k) - mix_coeff * dtheta_in(map_wth(1)+k)
 
     end if
 
-    ! calculate mixing increment at current level
-    dtheta_out(map_wth(1)+k) = dtheta_out(map_wth(1)+k) &
-                                  + (1.0_r_def - mix_coeff) &
-                                  * dtheta_in(map_wth(1)+k)
+  end do
 
+  ! calculate mixing increment from flux
+  do k = 0, lev_pad
+    dtheta_out(map_wth(1)+k) = - flux(k+1)
+  end do
+  do k = 1+lev_pad, nlayers-lev_pad
+    dtheta_out(map_wth(1)+k) = flux(k) - flux(k+1)
+  end do
+  do k = nlayers-lev_pad+1, nlayers
+    dtheta_out(map_wth(1)+k) = flux(k)
   end do
 
 end subroutine wdiab_theta_code
