@@ -271,7 +271,7 @@
         <field id="cloud__cloud_amount_rnd" name="cloud_amount_rnd" long_name="combined_cloud_amount_random_overlap" unit="1" domain_ref="face" />
         <field id="cloud__cloud_amount_maxrnd" name="cloud_amount_maxrnd" long_name="combined_cloud_amount_maximum_random_overlap" unit="1" domain_ref="face" />
         <field id="cloud__ceilometer_cloud_amount_maxrnd" name="ceilometer_cloud_amount_maxrnd" long_name="ceilometrer_filtered_combined_cloud_amount_maximum_random_overlap" unit="1" domain_ref="face" />
-        <field id="cloud__cloud_base_altitude" name="cloud_base_altitude" long_name="cloud_base_altitude_asl_combined_cloud_amount_greater_than_2p5_okta" unit="kilofeet" domain_ref="face" />
+        <field id="cloud__cloud_base_2p5_okta" name="cloud_base_2p5_okta" long_name="cloud_base_altitude_asl_combined_cloud_amount_greater_than_2p5_okta" unit="kilofeet" domain_ref="face" />
         <field id="cloud__very_low_type_cloud_amount" name="very_low_type_cloud_amount" long_name="maximum_combined_cloud_amount_below_111m_asl" unit="1" domain_ref="face" />
         <field id="cloud__low_type_cloud_amount" name="low_type_cloud_amount" long_name="maximum_combined_cloud_amount_between_111_and_1949m_asl" unit="1" domain_ref="face" />
         <field id="cloud__medium_type_cloud_amount" name="medium_type_cloud_amount" long_name="maximum_combined_cloud_amount_between_1949_and_5574m_asl" unit="1" domain_ref="face" />
