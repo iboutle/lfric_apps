@@ -1,6 +1,6 @@
 <field_definition>
 <!-- Main diagnostic group -->
-<field_group id="diagnostic_fields" prec="8" operation="instant" enabled=".TRUE." >
+<field_group id="diagnostic_fields" prec="4" operation="instant" enabled=".TRUE." >
   <!-- gungho prognostic fields, included via lfric_dictionary and available as diagnostics -->
   <!-- field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" /-->
   <!-- field id="rho" name="rho" long_name="air_density" standard_name="air_density" unit="kg m-3" grid_ref="half_level_face_grid" /-->
