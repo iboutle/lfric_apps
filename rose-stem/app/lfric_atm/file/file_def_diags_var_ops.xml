@@ -6,7 +6,7 @@
     <field_group operation="instant" freq_op="1h">
       <field field_ref="u_in_w3"/>
       <field field_ref="v_in_w3"/>
-      <field field_ref="theta"/>
+      <field field_ref="theta_pk"/>
       <field field_ref="processed__qv"/>
       <field field_ref="processed__qcf"/>
       <field field_ref="orography"/>
@@ -33,7 +33,7 @@
     <field_group operation="instant" freq_op="9h">
       <field field_ref="u_in_w3" />
       <field field_ref="v_in_w3" />
-      <field field_ref="theta" />
+      <field field_ref="theta_pk" />
       <field field_ref="processed__qv" />
       <field field_ref="orography" />
       <field field_ref="w_in_wth" />
@@ -58,7 +58,7 @@
       <field field_ref="surface__tile_fraction"/>
       <field field_ref="u_in_w3"/>
       <field field_ref="v_in_w3"/>
-      <field field_ref="theta"/>
+      <field field_ref="theta_pk"/>
       <field field_ref="height_wth"/>
       <field field_ref="processed__qv"/>
       <field field_ref="processed__qcf"/>
