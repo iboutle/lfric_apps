@@ -1,3 +1,6 @@
+<!-- the precision is specified here to ensure any diagnostics inherited from
+     this file obtain this value, whilst the checkpoint files obey overriding
+     values from the field definitions and the model precision default -->
 <field_definition prec="4">
 <field_group id="lfric_dictionary" operation="instant">
   <!-- gungho fields -->
