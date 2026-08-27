@@ -53,7 +53,6 @@ module diagnostic_alg_mod
   public :: extract_w2h_diagnostic_alg
   public :: column_total_diagnostics_alg
   public :: calc_wbig_diagnostic_alg
-  public :: calc_uzig_diagnostic_alg
   public :: pressure_diag_alg
 
 contains
@@ -859,30 +858,6 @@ contains
     end if
 
   end subroutine calc_wbig_diagnostic_alg
-!=============================================================================!
-  subroutine calc_uzig_diagnostic_alg( u, mesh )
-
-    use calc_uzig_kernel_mod,             only: calc_uzig_kernel_type
-    use io_config_mod,                    only: write_diag, use_xios_io
-    use lfric_xios_write_mod,             only: write_field_generic
-    use field_parent_mod,                 only: write_interface
-
-    implicit none
-
-    ! Set up necessary fields
-    type(field_type), intent(in)          :: u
-    type(mesh_type),  intent(in), pointer :: mesh
-
-    type( field_type ) :: uzig
-
-    ! Create diagnostic if requested
-    if (init_diag(uzig, 'processed__uzig') .and. use_xios_io) then
-      call invoke( setval_c(uzig, 0.0_r_def), &
-                   calc_uzig_kernel_type(u, uzig) )
-      call uzig%write_field()
-    end if
-
-  end subroutine calc_uzig_diagnostic_alg
 !=============================================================================!
   !> @brief Calculate the pressure from the exner function and output it as
   !>        a diagnostic

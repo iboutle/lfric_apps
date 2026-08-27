@@ -16,7 +16,6 @@ module gungho_diagnostics_driver_mod
   use boundaries_config_mod,     only : limited_area, output_lbcs
   use diagnostic_alg_mod,        only : column_total_diagnostics_alg,          &
                                         calc_wbig_diagnostic_alg,              &
-                                        calc_uzig_diagnostic_alg,              &
                                         pressure_diag_alg
   use diagnostics_io_mod,        only : write_scalar_diagnostic,               &
                                         write_vector_diagnostic
@@ -113,7 +112,6 @@ contains
     type(field_type), pointer :: u_in_w2h
     type(field_type), pointer :: v_in_w2h
     type(field_type), pointer :: w_in_wth
-    type(field_type), pointer :: u_physics
     type(field_type), pointer :: ageofair
     type(field_type), pointer :: exner_in_wth
     type(field_type), pointer :: dA
@@ -320,9 +318,6 @@ contains
       ! Get w_in_wth for WBig calculation
       call derived_fields%get_field('w_in_wth', w_in_wth)
       call calc_wbig_diagnostic_alg(w_in_wth, mesh)
-      ! zig-zag horizontal wind
-      call derived_fields%get_field('u_physics', u_physics)
-      call calc_uzig_diagnostic_alg(u_physics, mesh)
 
       ! Pressure diagnostics
       call prognostic_fields%get_field('exner', exner)
