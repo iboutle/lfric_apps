@@ -370,7 +370,7 @@
   <!-- snow fields -->
   <field id="tile_snow_mass" name="tile_snow_mass" long_name="tile_snow_mass" unit="kg m-2" domain_ref="face" axis_ref="surface_tiles" />
   <field id="tile_snow_rgrain" name="tile_snow_rgrain" long_name="tile_snow_grain_size" unit="microns" domain_ref="face" axis_ref="surface_tiles" />
-  <field id="n_snow_layers" name="n_snow_layers" long_name="number_of_snow_layers" unit="1" domain_ref="face" axis_ref="surface_tiles" prec="2"/>
+  <field id="n_snow_layers" name="n_snow_layers" long_name="number_of_snow_layers" unit="1" domain_ref="face" axis_ref="surface_tiles" />
   <field id="snow_depth" name="snow_depth" long_name="snow_depth_on_tiles" unit="m" domain_ref="face" axis_ref="surface_tiles" />
   <field id="snowpack_density" name="snowpack_density" long_name="snowpack_density_on_tiles" unit="kg m-3" domain_ref="face" axis_ref="surface_tiles" />
   <field id="snow_under_canopy" name="snow_under_canopy" long_name="snow_under_canopy_on_tiles" unit="m" domain_ref="face" axis_ref="surface_tiles" />
