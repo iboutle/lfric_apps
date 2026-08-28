@@ -210,10 +210,10 @@ subroutine leonard_term_alg(config,                             &
     ! Flux of liquid + ice water potential temperature:
     !--------------------------------------------------------------------
                  ! Calculate thetaL =
-                 ! (theta - (lc/cp)*mcl [-(ls/cp)*msnow]) / exner
+                 ! theta - ((lc/cp)*mcl [-(ls/cp)*msnow]) / exner
                       X_times_Y(thetal, theta, exner_in_wth),           &
                  inc_X_minus_bY(thetal, lcrcp_def, mr(imr_cl)),         &
-                 inc_X_minus_by(thetal, lsrcp_def, mr_ice),             &
+                 inc_X_minus_bY(thetal, lsrcp_def, mr_ice),             &
                  inc_X_divideby_Y(thetal, exner_in_wth),                &
                  ! Call Leonard term code for scalars
                  leonard_term_th_kernel_type( thetal_inc_leonard,       &
