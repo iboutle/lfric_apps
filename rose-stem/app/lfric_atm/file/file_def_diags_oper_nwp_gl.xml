@@ -197,7 +197,7 @@
   <file id="lfric_gl_model_levs_diags_1hr" name="results/lfric_gl_model_levs_diags_1hr" output_freq="1h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <!-- Full model level diagnostics - not being interpolated to pressure levels -->
     <field_group operation="instant" freq_op="1h">
-      <field field_ref="theta_pk"/>
+      <field field_ref="theta"/>
       <field field_ref="processed__qv"/>
       <field field_ref="processed__qcl"/>
       <field field_ref="processed__qcf"/>
