@@ -1,0 +1,15 @@
+<!-- Grids for the u-dy803 level sets -->
+<grid_definition>
+  <grid id="half_level_9_face_zoom">
+    <domain domain_ref="face"/>
+    <axis axis_ref="half_level_9"/>
+  </grid>
+  <grid id="full_level_5_6_face_zoom">
+    <domain domain_ref="face"/>
+    <axis axis_ref="full_level_5_6"/>
+  </grid>
+  <grid id="full_level_1_70_face_zoom">
+    <domain domain_ref="face"/>
+    <axis axis_ref="full_level_1_70"/>
+  </grid>
+</grid_definition>

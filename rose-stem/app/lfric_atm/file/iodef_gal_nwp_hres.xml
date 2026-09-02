@@ -11,7 +11,7 @@
 
     <!-- Include axis definitions -->
     <axis_definition src="$METADATA/axis_def_main.xml"/>
-    <axis_definition src="./axis_def_plev.xml"/>
+    <axis_definition src="./axis_def_dy803.xml"/>
 
     <!-- Include domain definitions -->
     <domain_definition src="$METADATA/domain_def_main.xml"/>
@@ -20,6 +20,7 @@
     <grid_definition src="$METADATA/grid_def_main.xml"/>
     <grid_definition src="$METADATA/grid_def_aero_coarse.xml"/>
     <grid_definition src="$METADATA/grid_def_radaer_ctl.xml"/>
+    <grid_definition src="./grid_def_dy803.xml"/>
 
     <!-- Include field definitions -->
     <field_definition src="$METADATA/lfric_dictionary.xml"/>
@@ -31,10 +32,8 @@
     <file_definition src="./file_def_ancil_main.xml"/>
     <file_definition src="./file_def_ancil_gal.xml"/>
     <file_definition src="./file_def_ancil_hadisst.xml"/>
-    <file_definition src="./file_def_diags_idealised.xml"/>
-    <file_definition src="./file_def_diags_ver.xml"/>
-    <file_definition src="./file_def_diags_name.xml"/>
     <file_definition src="./file_def_initial_diags.xml"/>
+    <file_definition src="./file_def_dy803.xml"/>
 
     <!-- Local file definitions -->
     <file_definition type="one_file" time_counter="none">
