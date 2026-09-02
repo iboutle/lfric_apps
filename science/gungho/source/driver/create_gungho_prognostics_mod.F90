@@ -78,18 +78,16 @@ contains
     ord_v = element_order_v
 
     ! enable/disable legacy checkpointing
-    legacy = .true.
+    legacy = .false.
 
     call proc%apply(make_spec('theta', main%none, Wtheta, order_h=ord_h, &
                               order_v=ord_v, ckp=.true., legacy=legacy))
     call proc%apply(make_spec('u', main%none, W2, order_h=ord_h, order_v=ord_v,&
                               ckp=.true., legacy=legacy))
-    if (.not. legacy) then
-      call proc%apply(make_spec('h_u', main%none, W2H, order_h=ord_h, &
-                                order_v=ord_v, ckp=.true.))
-      call proc%apply(make_spec('v_u', main%none, W2V, order_h=ord_h, &
-                                order_v=ord_v, ckp=.true.))
-    end if
+    call proc%apply(make_spec('h_u', main%none, W2H, order_h=ord_h, &
+                              order_v=ord_v, ckp=.true., legacy=legacy))
+    call proc%apply(make_spec('v_u', main%none, W2V, order_h=ord_h, &
+                              order_v=ord_v, ckp=.true., legacy=legacy))
     call proc%apply(make_spec('rho', main%none, W3, order_h=ord_h, &
                               order_v=ord_v, ckp=.true., legacy=legacy))
     call proc%apply(make_spec('exner', main%none, W3, order_h=ord_h, &

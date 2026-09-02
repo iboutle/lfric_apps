@@ -34,6 +34,8 @@ lfric_core:
    ref: 2026.07.1
    source: git@github.com:iboutle/lfric_core.git
    ref: 6350fff94f5db41d93d926786b7501c3819f0323
+   source: git@github.com:EdHone/lfric_core.git
+   ref: vn3.2-layered-CP
 
 moci:
     source: git@github.com:MetOffice/moci.git
