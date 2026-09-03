@@ -728,12 +728,17 @@ contains
       end do
     end if
 
+    do i = 1, seg_len
+      do k = 1, nlayers
+        visc_m(i,1,k) = shear(map_wth(1,i) + k)
+      end do
+    end do
     if ( smagorinsky ) then
       do i = 1, seg_len
         delta_smag(i,1) = delta(map_wth(1,i))
         max_diff(i,1) = max_diff_smag(map_wth(1,i))
         do k = 1, nlayers
-          visc_m(i,1,k) = shear(map_wth(1,i) + k)
+!          visc_m(i,1,k) = shear(map_wth(1,i) + k)
           visc_h(i,1,k) = shear(map_wth(1,i) + k)
         end do
       end do

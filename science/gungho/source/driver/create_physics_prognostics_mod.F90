@@ -196,8 +196,7 @@ contains
          convection     == convection_um     .or.                              &
          smagorinsky ) then
 
-      call processor%apply(make_spec('shear', main%derived, Wtheta, &
-                                     empty = (.not. smagorinsky) ))
+      call processor%apply(make_spec('shear', main%derived, Wtheta))
       call processor%apply(make_spec('visc_h', main%derived, Wtheta, &
                                      empty = (.not. smagorinsky) ))
       call processor%apply(make_spec('visc_m', main%derived, Wtheta, &
