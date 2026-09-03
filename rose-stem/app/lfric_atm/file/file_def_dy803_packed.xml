@@ -1,38 +1,50 @@
+<!-- Packed copy of file_def_dy803.xml.  Every diagnostic that has a packed
+     alias in field_def_diags_packed.xml is written through that alias, i.e.
+     as a 16-bit integer with the scale_factor and add_offset agreed in
+     ps49_packing.xlsx, halving the volume of that field.  The alias carries
+     the name= of the field it wraps, so the variable names in the output
+     files are unchanged.
+
+     engl_pc, engl_pj and engl_pp_smc are copied through unpacked: their
+     contents are needed at full precision.
+
+     This file replaces file_def_dy803.xml rather than supplementing it -
+     the two define the same <file> ids and cannot both be read. -->
 <file_definition type="one_file" time_counter="none">
   <file id="en4denvar_cx" name="results/engl_pp_006" output_freq="3h" convention="UGRID" enabled=".TRUE.">
     <field_group id="en4denvar_cx_instant" operation="instant" freq_op="3h">
-      <field id="en4denvar_cx_bulk_fraction" field_ref="cloud__bulk_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="cloud__cloud_amount_maxrnd"/>
-      <field id="en4denvar_cx_frozen_fraction" field_ref="cloud__frozen_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field id="en4denvar_cx_liquid_fraction" field_ref="cloud__liquid_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="cloud__low_cloud_base_altitude"/>
-      <field field_ref="cloud__low_type_cloud_amount"/>
-      <field field_ref="cloud__medium_type_cloud_amount"/>
-      <field field_ref="orography"/>
-      <field field_ref="processed__pmsl"/>
+      <field id="en4denvar_cx_bulk_fraction" field_ref="cloud__bulk_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="cloud__cloud_amount_maxrnd_pk"/>
+      <field id="en4denvar_cx_frozen_fraction" field_ref="cloud__frozen_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field id="en4denvar_cx_liquid_fraction" field_ref="cloud__liquid_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="cloud__low_cloud_base_altitude_pk"/>
+      <field field_ref="cloud__low_type_cloud_amount_pk"/>
+      <field field_ref="cloud__medium_type_cloud_amount_pk"/>
+      <field field_ref="orography_pk"/>
+      <field field_ref="processed__pmsl_pk"/>
       <field field_ref="processed__pressure_in_w3"/>
-      <field field_ref="processed__pstar"/>
+      <field field_ref="processed__pstar_pk"/>
       <field id="en4denvar_cx_qcl" field_ref="processed__qcl" grid_ref="full_level_1_70_face_zoom"/>
       <field id="en4denvar_cx_qcf" field_ref="processed__qcf" grid_ref="full_level_1_70_face_zoom"/>
       <field id="en4denvar_cx_qv" field_ref="processed__qv" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="radiation__sw_down_surf"/>
-      <field field_ref="snow__grid_snow_mass"/>
-      <field field_ref="soil__soil_moisture"/>
-      <field field_ref="soil__soil_temperature"/>
-      <field field_ref="surface__grid_surface_temperature"/>
-      <field field_ref="surface__rh1p5m"/>
-      <field field_ref="surface__sea_ice_fraction"/>
-      <field field_ref="surface__t1p5m"/>
-      <field field_ref="surface__u10m"/>
-      <field field_ref="surface__ustar"/>
-      <field field_ref="surface__v10m"/>
-      <field field_ref="surface__visibility_no_precip"/>
-      <field id="en4denvar_cx_theta" field_ref="theta" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="turbulence__oblen"/>
-      <field field_ref="turbulence__rib"/>
-      <field field_ref="turbulence__zh"/>
-      <field field_ref="u_in_w3"/>
-      <field field_ref="v_in_w3"/>
+      <field field_ref="radiation__sw_down_surf_pk"/>
+      <field field_ref="snow__grid_snow_mass_pk"/>
+      <field field_ref="soil__soil_moisture_pk"/>
+      <field field_ref="soil__soil_temperature_pk"/>
+      <field field_ref="surface__grid_surface_temperature_pk"/>
+      <field field_ref="surface__rh1p5m_pk"/>
+      <field field_ref="surface__sea_ice_fraction_pk"/>
+      <field field_ref="surface__t1p5m_pk"/>
+      <field field_ref="surface__u10m_pk"/>
+      <field field_ref="surface__ustar_pk"/>
+      <field field_ref="surface__v10m_pk"/>
+      <field field_ref="surface__visibility_no_precip_pk"/>
+      <field id="en4denvar_cx_theta" field_ref="theta_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="turbulence__oblen_pk"/>
+      <field field_ref="turbulence__rib_pk"/>
+      <field field_ref="turbulence__zh_pk"/>
+      <field field_ref="u_in_w3_pk"/>
+      <field field_ref="v_in_w3_pk"/>
       <!-- Requested by u-dy803, not written: -->
       <!-- 0-30 LAND MASK (No halo) (LAND=TRUE) - no LFRic equivalent in the diagnostic map -->
       <!-- 0-431 Dust division 1 mass mixing ratio - no LFRic equivalent in the diagnostic map -->
@@ -54,50 +66,50 @@
   </file>
   <file id="pp3" name="results/engl_pd" output_freq="3h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <field_group id="pp3_instant" operation="instant" freq_op="3h">
-      <field field_ref="cloud__ceilometer_cloud_amount_maxrnd"/>
-      <field field_ref="cloud__cloud_amount_maxrnd"/>
-      <field field_ref="cloud__cloud_base_altitude"/>
-      <field field_ref="cloud__cloud_fraction_below_1000feet_asl"/>
-      <field field_ref="cloud__high_type_cloud_amount"/>
-      <field field_ref="cloud__low_type_cloud_amount"/>
-      <field field_ref="cloud__medium_type_cloud_amount"/>
-      <field field_ref="convection__cca_2d"/>
-      <field field_ref="convection__conv_rain"/>
-      <field field_ref="convection__conv_snow"/>
-      <field field_ref="microphysics__ls_rain"/>
-      <field field_ref="microphysics__ls_snow"/>
-      <field field_ref="orography"/>
+      <field field_ref="cloud__ceilometer_cloud_amount_maxrnd_pk"/>
+      <field field_ref="cloud__cloud_amount_maxrnd_pk"/>
+      <field field_ref="cloud__cloud_base_altitude_pk"/>
+      <field field_ref="cloud__cloud_fraction_below_1000feet_asl_pk"/>
+      <field field_ref="cloud__high_type_cloud_amount_pk"/>
+      <field field_ref="cloud__low_type_cloud_amount_pk"/>
+      <field field_ref="cloud__medium_type_cloud_amount_pk"/>
+      <field field_ref="convection__cca_2d_pk"/>
+      <field field_ref="convection__conv_rain_pk"/>
+      <field field_ref="convection__conv_snow_pk"/>
+      <field field_ref="microphysics__ls_rain_pk"/>
+      <field field_ref="microphysics__ls_snow_pk"/>
+      <field field_ref="orography_pk"/>
       <field id="pp3_plev_geopot" field_ref="plev__geopot" axis_ref="plev_9"/>
-      <field id="pp3_plev_rh_water" field_ref="plev__rh_water" axis_ref="plev_9"/>
-      <field id="pp3_plev_temp" field_ref="plev__temp" axis_ref="plev_9"/>
-      <field id="pp3_plev_thetaw" field_ref="plev__thetaw" axis_ref="plev_4"/>
-      <field id="pp3_plev_u" field_ref="plev__u" axis_ref="plev_9"/>
-      <field id="pp3_plev_u_clim" field_ref="plev__u_clim" axis_ref="plev_850"/>
-      <field id="pp3_plev_v" field_ref="plev__v" axis_ref="plev_9"/>
-      <field id="pp3_plev_v_clim" field_ref="plev__v_clim" axis_ref="plev_850"/>
-      <field id="pp3_plev_xi3" field_ref="plev__xi3" axis_ref="plev_850"/>
-      <field field_ref="processed__freeze_lev"/>
-      <field field_ref="processed__pmsl"/>
-      <field id="pp3_temperature" field_ref="processed__temperature" grid_ref="full_level_5_6_face_zoom"/>
-      <field field_ref="processed__total_prec"/>
-      <field field_ref="radiation__sw_down_surf"/>
-      <field field_ref="snow__grid_snow_mass"/>
-      <field field_ref="soil__soil_moisture"/>
-      <field field_ref="soil__soil_temperature"/>
-      <field field_ref="surface__dew_point"/>
-      <field field_ref="surface__fog_fraction"/>
-      <field field_ref="surface__grid_surface_temperature"/>
-      <field field_ref="surface__rh1p5m"/>
-      <field field_ref="surface__surface_taux"/>
-      <field field_ref="surface__surface_tauy"/>
-      <field field_ref="surface__t1p5m"/>
-      <field field_ref="surface__u10m"/>
-      <field field_ref="surface__v10m"/>
-      <field field_ref="surface__visibility_with_precip"/>
-      <field field_ref="surface__wind_gust"/>
-      <field field_ref="turbulence__zh"/>
-      <field id="pp3_u_in_w3" field_ref="u_in_w3" grid_ref="half_level_9_face_zoom"/>
-      <field id="pp3_v_in_w3" field_ref="v_in_w3" grid_ref="half_level_9_face_zoom"/>
+      <field id="pp3_plev_rh_water" field_ref="plev__rh_water_pk" axis_ref="plev_9"/>
+      <field id="pp3_plev_temp" field_ref="plev__temp_pk" axis_ref="plev_9"/>
+      <field id="pp3_plev_thetaw" field_ref="plev__thetaw_pk" axis_ref="plev_4"/>
+      <field id="pp3_plev_u" field_ref="plev__u_pk" axis_ref="plev_9"/>
+      <field id="pp3_plev_u_clim" field_ref="plev__u_clim_pk" axis_ref="plev_850"/>
+      <field id="pp3_plev_v" field_ref="plev__v_pk" axis_ref="plev_9"/>
+      <field id="pp3_plev_v_clim" field_ref="plev__v_clim_pk" axis_ref="plev_850"/>
+      <field id="pp3_plev_xi3" field_ref="plev__xi3_pk" axis_ref="plev_850"/>
+      <field field_ref="processed__freeze_lev_pk"/>
+      <field field_ref="processed__pmsl_pk"/>
+      <field id="pp3_temperature" field_ref="processed__temperature_pk" grid_ref="full_level_5_6_face_zoom"/>
+      <field field_ref="processed__total_prec_pk"/>
+      <field field_ref="radiation__sw_down_surf_pk"/>
+      <field field_ref="snow__grid_snow_mass_pk"/>
+      <field field_ref="soil__soil_moisture_pk"/>
+      <field field_ref="soil__soil_temperature_pk"/>
+      <field field_ref="surface__dew_point_pk"/>
+      <field field_ref="surface__fog_fraction_pk"/>
+      <field field_ref="surface__grid_surface_temperature_pk"/>
+      <field field_ref="surface__rh1p5m_pk"/>
+      <field field_ref="surface__surface_taux_pk"/>
+      <field field_ref="surface__surface_tauy_pk"/>
+      <field field_ref="surface__t1p5m_pk"/>
+      <field field_ref="surface__u10m_pk"/>
+      <field field_ref="surface__v10m_pk"/>
+      <field field_ref="surface__visibility_with_precip_pk"/>
+      <field field_ref="surface__wind_gust_pk"/>
+      <field field_ref="turbulence__zh_pk"/>
+      <field id="pp3_u_in_w3" field_ref="u_in_w3_pk" grid_ref="half_level_9_face_zoom"/>
+      <field id="pp3_v_in_w3" field_ref="v_in_w3_pk" grid_ref="half_level_9_face_zoom"/>
       <!-- Requested by u-dy803, not written: -->
       <!-- 0-30 LAND MASK (No halo) (LAND=TRUE) - no LFRic equivalent in the diagnostic map -->
       <!-- 5-233 UNDILUTE CAPE J/KG - maps to convection__cape_undilute, which is not in the lfric_atm metadata -->
@@ -107,70 +119,70 @@
       <!-- 30-456 FILTERED VORTICITY 850 - no LFRic equivalent in the diagnostic map -->
     </field_group>
     <field_group id="pp3_accumulate" operation="accumulate">
-      <field field_ref="convection__conv_rain_acc"/>
-      <field field_ref="convection__conv_snow_acc"/>
-      <field field_ref="microphysics__ls_rain_acc"/>
-      <field field_ref="microphysics__ls_snow_acc"/>
-      <field field_ref="processed__total_prec_acc"/>
-      <field field_ref="radiation__lw_down_surf"/>
-      <field field_ref="surface__grid_sensible_heat"/>
+      <field field_ref="convection__conv_rain_acc_pk"/>
+      <field field_ref="convection__conv_snow_acc_pk"/>
+      <field field_ref="microphysics__ls_rain_acc_pk"/>
+      <field field_ref="microphysics__ls_snow_acc_pk"/>
+      <field field_ref="processed__total_prec_acc_pk"/>
+      <field field_ref="radiation__lw_down_surf_pk"/>
+      <field field_ref="surface__grid_sensible_heat_pk"/>
     </field_group>
     <field_group id="pp3_accumulate_rts" operation="accumulate" freq_op="1h" freq_offset="0ts">
-      <field field_ref="radiation__lw_up_toa_rts"/>
+      <field field_ref="radiation__lw_up_toa_rts_pk"/>
     </field_group>
     <field_group id="pp3_maximum" operation="maximum">
-      <field field_ref="convection__conv_rain" name="conv_rain_max"/>
-      <field field_ref="convection__conv_snow" name="conv_snow_max"/>
-      <field field_ref="microphysics__ls_rain" name="ls_rain_max"/>
-      <field field_ref="microphysics__ls_snow" name="ls_snow_max"/>
-      <field field_ref="surface__t1p5m" name="t1p5m_max"/>
-      <field field_ref="surface__wind_gust" name="wind_gust_max"/>
+      <field field_ref="convection__conv_rain_pk" name="conv_rain_max"/>
+      <field field_ref="convection__conv_snow_pk" name="conv_snow_max"/>
+      <field field_ref="microphysics__ls_rain_pk" name="ls_rain_max"/>
+      <field field_ref="microphysics__ls_snow_pk" name="ls_snow_max"/>
+      <field field_ref="surface__t1p5m_pk" name="t1p5m_max"/>
+      <field field_ref="surface__wind_gust_pk" name="wind_gust_max"/>
     </field_group>
     <field_group id="pp3_minimum" operation="minimum">
-      <field field_ref="surface__t1p5m" name="t1p5m_min"/>
+      <field field_ref="surface__t1p5m_pk" name="t1p5m_min"/>
     </field_group>
   </file>
   <file id="pp4" name="results/engl_pe" output_freq="6h" split_freq="27h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <field_group id="pp4_instant" operation="instant" freq_op="6h">
-      <field id="pp4_area_fraction" field_ref="cloud__area_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field id="pp4_frozen_fraction" field_ref="cloud__frozen_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field id="pp4_liquid_fraction" field_ref="cloud__liquid_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="orography"/>
+      <field id="pp4_area_fraction" field_ref="cloud__area_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field id="pp4_frozen_fraction" field_ref="cloud__frozen_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field id="pp4_liquid_fraction" field_ref="cloud__liquid_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="orography_pk"/>
       <field id="pp4_pressure_in_wth" field_ref="processed__pressure_in_wth" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="processed__pstar"/>
+      <field field_ref="processed__pstar_pk"/>
       <field id="pp4_qcl" field_ref="processed__qcl" grid_ref="full_level_1_70_face_zoom"/>
       <field id="pp4_qcf" field_ref="processed__qcf" grid_ref="full_level_1_70_face_zoom"/>
       <field id="pp4_qv" field_ref="processed__qv" grid_ref="full_level_1_70_face_zoom"/>
-      <field id="pp4_temperature" field_ref="processed__temperature" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="snow__grid_snow_mass"/>
-      <field field_ref="surface__grid_surface_temperature"/>
-      <field field_ref="surface__sea_ice_fraction"/>
+      <field id="pp4_temperature" field_ref="processed__temperature_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="snow__grid_snow_mass_pk"/>
+      <field field_ref="surface__grid_surface_temperature_pk"/>
+      <field field_ref="surface__sea_ice_fraction_pk"/>
     </field_group>
   </file>
   <file id="pp5" name="results/engl_pf" output_freq="3h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <field_group id="pp5_instant" operation="instant" freq_op="3h">
-      <field field_ref="aerosol__murk"/>
-      <field id="pp5_area_fraction" field_ref="cloud__area_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field id="pp5_bulk_fraction" field_ref="cloud__bulk_fraction" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="convection__pres_cv_base"/>
-      <field field_ref="convection__pres_cv_top"/>
-      <field field_ref="exner"/>
-      <field field_ref="orography"/>
+      <field field_ref="aerosol__murk_pk"/>
+      <field id="pp5_area_fraction" field_ref="cloud__area_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field id="pp5_bulk_fraction" field_ref="cloud__bulk_fraction_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="convection__pres_cv_base_pk"/>
+      <field field_ref="convection__pres_cv_top_pk"/>
+      <field field_ref="exner_pk"/>
+      <field field_ref="orography_pk"/>
       <field field_ref="processed__pressure_in_w3"/>
       <field id="pp5_pressure_in_wth" field_ref="processed__pressure_in_wth" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="processed__pstar"/>
+      <field field_ref="processed__pstar_pk"/>
       <field field_ref="processed__qcl"/>
       <field field_ref="processed__qcf"/>
       <field field_ref="processed__qv"/>
       <field field_ref="processed__r2rho"/>
-      <field id="pp5_temperature" field_ref="processed__temperature" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="radiation__sw_diffuse_surf"/>
-      <field field_ref="radiation__sw_direct_surf"/>
-      <field field_ref="surface__grid_sensible_heat"/>
-      <field field_ref="theta"/>
-      <field field_ref="u_in_w3"/>
-      <field field_ref="v_in_w3"/>
-      <field field_ref="w_in_wth"/>
+      <field id="pp5_temperature" field_ref="processed__temperature_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="radiation__sw_diffuse_surf_pk"/>
+      <field field_ref="radiation__sw_direct_surf_pk"/>
+      <field field_ref="surface__grid_sensible_heat_pk"/>
+      <field field_ref="theta_pk"/>
+      <field field_ref="u_in_w3_pk"/>
+      <field field_ref="v_in_w3_pk"/>
+      <field field_ref="w_in_wth_pk"/>
       <!-- Requested by u-dy803, not written: -->
       <!-- 1-213 UPWARDS UV FLUX ON LEVELS - maps to radiation__up_uv_flux_rts, which is not in the lfric_atm metadata -->
       <!-- 1-214 DOWNWARDS UV FLUX ON LEVELS - maps to radiation__down_uv_flux_rts, which is not in the lfric_atm metadata -->
@@ -178,9 +190,9 @@
   </file>
   <file id="pp6" name="results/engl_pg" output_freq="1h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <field_group id="pp6_instant" operation="instant" freq_op="1h">
-      <field field_ref="processed__pmsl"/>
-      <field field_ref="surface__u10m"/>
-      <field field_ref="surface__v10m"/>
+      <field field_ref="processed__pmsl_pk"/>
+      <field field_ref="surface__u10m_pk"/>
+      <field field_ref="surface__v10m_pk"/>
     </field_group>
   </file>
   <file id="pp7" name="results/engl_ph" output_freq="3h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
@@ -190,44 +202,44 @@
       <!-- 3-345 10m SPEC HUM OVER SEA/SEAICE KG/KG - maps to surface__q10m_ssi, which is not in the lfric_atm metadata -->
     </field_group>
     <field_group id="pp7_average" operation="average">
-      <field field_ref="processed__total_prec"/>
-      <field field_ref="processed__total_snow"/>
-      <field field_ref="radiation__lw_down_surf"/>
-      <field field_ref="radiation__sw_down_surf"/>
+      <field field_ref="processed__total_prec_pk"/>
+      <field field_ref="processed__total_snow_pk"/>
+      <field field_ref="radiation__lw_down_surf_pk"/>
+      <field field_ref="radiation__sw_down_surf_pk"/>
     </field_group>
   </file>
   <file id="pp8" name="results/engl_pi" output_freq="3h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
     <field_group id="pp8_instant" operation="instant" freq_op="3h">
-      <field field_ref="processed__pmsl"/>
-      <field field_ref="processed__pstar"/>
-      <field field_ref="soil__soil_moisture"/>
-      <field field_ref="surface__canopy_height"/>
-      <field id="pp8_canopy_water_content" field_ref="surface__canopy_water" axis_ref="surface_tile_1"/>
-      <field id="pp8_gc_tile" field_ref="surface__gc_tile" axis_ref="surface_tile_1"/>
-      <field field_ref="surface__t1p5m"/>
+      <field field_ref="processed__pmsl_pk"/>
+      <field field_ref="processed__pstar_pk"/>
+      <field field_ref="soil__soil_moisture_pk"/>
+      <field field_ref="surface__canopy_height_pk"/>
+      <field id="pp8_canopy_water_content" field_ref="surface__canopy_water_pk" axis_ref="surface_tile_1"/>
+      <field id="pp8_gc_tile" field_ref="surface__gc_tile_pk" axis_ref="surface_tile_1"/>
+      <field field_ref="surface__t1p5m_pk"/>
       <field field_ref="surface__z0m_eff"/>
-      <field field_ref="turbulence__zh"/>
+      <field field_ref="turbulence__zh_pk"/>
     </field_group>
     <field_group id="pp8_average" operation="average">
-      <field field_ref="cloud__high_type_cloud_amount"/>
-      <field field_ref="cloud__low_type_cloud_amount"/>
-      <field field_ref="cloud__medium_type_cloud_amount"/>
-      <field field_ref="convection__conv_rain"/>
-      <field field_ref="convection__conv_snow"/>
-      <field field_ref="convection__lowest_cca_2d"/>
-      <field field_ref="microphysics__ls_rain"/>
-      <field field_ref="microphysics__ls_snow"/>
+      <field field_ref="cloud__high_type_cloud_amount_pk"/>
+      <field field_ref="cloud__low_type_cloud_amount_pk"/>
+      <field field_ref="cloud__medium_type_cloud_amount_pk"/>
+      <field field_ref="convection__conv_rain_pk"/>
+      <field field_ref="convection__conv_snow_pk"/>
+      <field field_ref="convection__lowest_cca_2d_pk"/>
+      <field field_ref="microphysics__ls_rain_pk"/>
+      <field field_ref="microphysics__ls_snow_pk"/>
       <field field_ref="processed__qcl"/>
       <field field_ref="processed__qcf"/>
-      <field field_ref="surface__grid_sensible_heat"/>
-      <field field_ref="surface__surface_taux"/>
-      <field field_ref="surface__surface_tauy"/>
+      <field field_ref="surface__grid_sensible_heat_pk"/>
+      <field field_ref="surface__surface_taux_pk"/>
+      <field field_ref="surface__surface_tauy_pk"/>
     </field_group>
     <field_group id="pp8_maximum" operation="maximum">
-      <field field_ref="convection__pres_lowest_cv_base"/>
+      <field field_ref="convection__pres_lowest_cv_base_pk"/>
     </field_group>
     <field_group id="pp8_minimum" operation="minimum">
-      <field field_ref="convection__pres_lowest_cv_top"/>
+      <field field_ref="convection__pres_lowest_cv_top_pk"/>
     </field_group>
   </file>
   <file id="pp9" name="results/engl_pj" output_freq="3h" split_freq="3h" split_end_offset="0h" split_freq_format="%y%mo%d%h" convention="UGRID" enabled=".TRUE.">
@@ -275,15 +287,15 @@
   </file>
   <file id="ppscreen" name="results/engl_t6" output_freq="6h" convention="UGRID" enabled=".TRUE.">
     <field_group id="ppscreen_instant" operation="instant" freq_op="6h">
-      <field field_ref="cloud__bulk_fraction"/>
-      <field field_ref="orography"/>
+      <field field_ref="cloud__bulk_fraction_pk"/>
+      <field field_ref="orography_pk"/>
       <field field_ref="processed__pressure_in_w3"/>
       <field field_ref="processed__qv"/>
       <field field_ref="processed__r2rho"/>
-      <field field_ref="theta"/>
-      <field field_ref="u_in_w3"/>
-      <field field_ref="v_in_w3"/>
-      <field field_ref="w_in_wth"/>
+      <field field_ref="theta_pk"/>
+      <field field_ref="u_in_w3_pk"/>
+      <field field_ref="v_in_w3_pk"/>
+      <field field_ref="w_in_wth_pk"/>
     </field_group>
   </file>
   <file id="ppsmc" name="results/engl_pp_smc" output_freq="6h" convention="UGRID" enabled=".TRUE.">
@@ -322,23 +334,23 @@
   </file>
   <file id="screen_cx" name="results/engl_pp_006_screen" output_freq="1h" convention="UGRID" enabled=".TRUE.">
     <field_group id="screen_cx_instant" operation="instant" freq_op="1h">
-      <field field_ref="cloud__cloud_amount_maxrnd"/>
-      <field field_ref="orography"/>
-      <field field_ref="processed__pmsl"/>
+      <field field_ref="cloud__cloud_amount_maxrnd_pk"/>
+      <field field_ref="orography_pk"/>
+      <field field_ref="processed__pmsl_pk"/>
       <field field_ref="processed__pressure_in_w3"/>
-      <field field_ref="processed__pstar"/>
+      <field field_ref="processed__pstar_pk"/>
       <field id="screen_cx_qcl" field_ref="processed__qcl" grid_ref="full_level_1_70_face_zoom"/>
       <field id="screen_cx_qv" field_ref="processed__qv" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="surface__grid_surface_temperature"/>
-      <field field_ref="surface__rh1p5m"/>
-      <field field_ref="surface__sea_ice_fraction"/>
-      <field field_ref="surface__t1p5m"/>
-      <field field_ref="surface__u10m"/>
-      <field field_ref="surface__v10m"/>
-      <field field_ref="surface__visibility_no_precip"/>
-      <field id="screen_cx_theta" field_ref="theta" grid_ref="full_level_1_70_face_zoom"/>
-      <field field_ref="u_in_w3"/>
-      <field field_ref="v_in_w3"/>
+      <field field_ref="surface__grid_surface_temperature_pk"/>
+      <field field_ref="surface__rh1p5m_pk"/>
+      <field field_ref="surface__sea_ice_fraction_pk"/>
+      <field field_ref="surface__t1p5m_pk"/>
+      <field field_ref="surface__u10m_pk"/>
+      <field field_ref="surface__v10m_pk"/>
+      <field field_ref="surface__visibility_no_precip_pk"/>
+      <field id="screen_cx_theta" field_ref="theta_pk" grid_ref="full_level_1_70_face_zoom"/>
+      <field field_ref="u_in_w3_pk"/>
+      <field field_ref="v_in_w3_pk"/>
     </field_group>
   </file>
 </file_definition>

@@ -494,7 +494,7 @@
         "opt_confs": ["um_dump"],
         "resolution": "C896_MG",
         "DT": 240,
-        "tsteps": 120,
+        "tsteps": 135,
         "wallclock": 15,
         "mpi_parts": 4704,
         "xios_nodes": 5,

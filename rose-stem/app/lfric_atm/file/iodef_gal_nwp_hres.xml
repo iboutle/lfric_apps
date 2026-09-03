@@ -25,6 +25,7 @@
     <!-- Include field definitions -->
     <field_definition src="$METADATA/lfric_dictionary.xml"/>
     <field_definition src="$METADATA/field_def_diags.xml"/>
+    <field_definition src="$METADATA/field_def_diags_packed.xml"/>
     <field_definition src="$METADATA/field_def_initial_diags.xml"/>
 
     <!-- Include file definitions -->
