@@ -40,6 +40,7 @@ contains
   !> @param[inout] gross_prim_prod    Gross Primary Productivity
   !> @param[inout] soil_respiration   Soil heterotrophic respiration
   !> @param[inout] chr10m             10m transfer coefficient
+  !> @param[in]    mesh               3D mesh field
   subroutine initialise_diags_for_jules_exp(z0h_eff, gross_prim_prod, &
                                             soil_respiration, chr10m, mesh)
 
