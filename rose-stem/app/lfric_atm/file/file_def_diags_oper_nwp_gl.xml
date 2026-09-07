@@ -28,6 +28,8 @@
       <field field_ref="surface__visibility_with_precip"/>
       <field field_ref="surface__visibility_with_precip_ssi"/>
       <field field_ref="surface__visibility_with_precip_land"/>
+      <field field_ref="surface__visibility_with_dust"/>
+      <field field_ref="surface__visibility_with_precip_dust"/>
       <field field_ref="surface__canopy_height"/>
       <field field_ref="surface__canopy_water"/>
       <field field_ref="surface__u10m_neut"/>
@@ -51,6 +53,7 @@
       <field field_ref="convection__pres_lowest_cv_base"/>
       <field field_ref="convection__pres_lowest_cv_top"/>
       <field field_ref="convection__cca_2d"/>
+      <field field_ref="aviation__snow_probability"/>
       <field field_ref="cloud__very_low_type_cloud_amount"/>
       <field field_ref="cloud__low_type_cloud_amount"/>
       <field field_ref="cloud__medium_type_cloud_amount"/>
@@ -145,6 +148,10 @@
       <field field_ref="surface__grid_canopy_water"/> 
       <field field_ref="cloud__cloud_amount_rnd"/> 
       <field field_ref="turbulence__thermal_speed"/>
+      <field field_ref="aviation__geopot_thickness_850"/>
+      <field field_ref="aviation__geopot_thickness_500"/>
+      <field field_ref="convection__conv_cloud_base_icao_height"/>
+      <field field_ref="convection__conv_cloud_top_icao_height"/>
     </field_group>     
     
     <field_group operation="average" freq_op="3h" prec="4">  
