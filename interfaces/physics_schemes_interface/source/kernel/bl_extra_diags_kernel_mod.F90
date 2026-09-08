@@ -373,8 +373,10 @@ contains
       qcl1p5m_loc(1,1) = qcl1p5m(map_2d(1))
     end if
 
-    if (.not. associated(visibility_with_precip, empty_real_data) .or.       &
-        .not. associated(vis_with_precip_land, empty_real_data)   .or.       &
+    if (.not. associated(visibility_with_precip, empty_real_data)      .or.   &
+        .not. associated(visibility_with_dust, empty_real_data)        .or.   &
+        .not. associated(visibility_with_precip_dust, empty_real_data) .or.   &
+        .not. associated(vis_with_precip_land, empty_real_data)        .or.   &
         .not. associated(vis_with_precip_ssi, empty_real_data)) then
       
       ! map additional input fields required for visibility with precipitation
@@ -416,46 +418,48 @@ contains
                   calc_prob_of_vis, rhcrit(1), murk_visibility, 1,           &
                   ! output
                   vis_no_precip )
-      visibility_no_precip(map_2d(1)) = vis_no_precip(1,1)
+    end if
+    if (.not. associated(visibility_no_precip, empty_real_data)) &
+         visibility_no_precip(map_2d(1)) = vis_no_precip(1,1)
 
-      ! Visibility at 1.5 m including precipitation
-      if ( .not. associated(visibility_with_precip, empty_real_data) .or.    &
-         .not. associated(visibility_with_dust, empty_real_data)   .or.      &
+    ! Visibility at 1.5 m including precipitation
+    if ( .not. associated(visibility_with_precip, empty_real_data) .or.    &
+         .not. associated(visibility_with_dust, empty_real_data)   .or.    &
          .not. associated(visibility_with_precip_dust, empty_real_data) ) then
 
-        call beta_precip( ls_rain, ls_snow,                                    &
-                          conv_rain, conv_snow, qcf1, qrain1,                  &
-                          rho1, t1p5m_loc, p_star, snownumber, rainnumber,     &
-                          plsp,cca_2d,pct,avg,                                 &
-                          1, 1, 1,                                             &
-                          beta_ls_rain, beta_ls_snow,                          &
-                          beta_c_rain, beta_c_snow )
-        call vis_precip( vis_no_precip,                                        &
-                         plsp,cca_2d,pct,                                      &
-                         beta_ls_rain, beta_ls_snow,                           &
-                         beta_c_rain, beta_c_snow,                             &
-                         1, 1, 1,                                              &
-                         vis,vis_ls_precip,vis_c_precip,                       &
-                         icode )
-        visibility_with_precip(map_2d(1)) = vis(1,1)
+      call beta_precip( ls_rain, ls_snow,                                    &
+                        conv_rain, conv_snow, qcf1, qrain1,                  &
+                        rho1, t1p5m_loc, p_star, snownumber, rainnumber,     &
+                        plsp,cca_2d,pct,avg,                                 &
+                        1, 1, 1,                                             &
+                        beta_ls_rain, beta_ls_snow,                          &
+                        beta_c_rain, beta_c_snow )
+      call vis_precip( vis_no_precip,                                        &
+                       plsp,cca_2d,pct,                                      &
+                       beta_ls_rain, beta_ls_snow,                           &
+                       beta_c_rain, beta_c_snow,                             &
+                       1, 1, 1,                                              &
+                       vis,vis_ls_precip,vis_c_precip,                       &
+                       icode )
+    end if
+    if (.not. associated(visibility_with_precip, empty_real_data)) &
+         visibility_with_precip(map_2d(1)) = vis(1,1)
 
-      end if ! vis with precip
-
-      ! Visibility at 1.5m with dust
-      if ( .not. associated(visibility_with_dust, empty_real_data) .or.       &
-           .not. associated(visibility_with_precip_dust, empty_real_data)) then
-        call vis_dust( vis,                                                    &
-                       t1p5m,                                                  &
-                       p_star,                                                 &
-                       acc_ins_du,                                             &
-                       cor_ins_du,                                             &
-                       vis_with_dust,                                          &
-                       vis_with_precip_dust)
-        visibility_with_dust(map_2d(1)) = vis_with_dust(1,1)
-        visibility_with_precip_dust(map_2d(1)) = vis_with_precip_dust(1,1)
-      end if ! vis with dust
-
-    end if ! any vis
+    ! Visibility at 1.5m with dust
+    if ( .not. associated(visibility_with_dust, empty_real_data) .or.       &
+         .not. associated(visibility_with_precip_dust, empty_real_data)) then
+      call vis_dust( vis,                                                    &
+                     t1p5m,                                                  &
+                     p_star,                                                 &
+                     acc_ins_du,                                             &
+                     cor_ins_du,                                             &
+                     vis_with_dust,                                          &
+                     vis_with_precip_dust)
+    end if
+    if (.not. associated(visibility_with_dust, empty_real_data)) &
+         visibility_with_dust(map_2d(1)) = vis_with_dust(1,1)
+    if (.not. associated(visibility_with_precip_dust, empty_real_data)) &
+         visibility_with_precip_dust(map_2d(1)) = vis_with_precip_dust(1,1)
 
     ! fog fraction
     if ( .not. associated(fog_fraction, empty_real_data) .or.                  &
