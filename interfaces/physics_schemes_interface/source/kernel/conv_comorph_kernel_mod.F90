@@ -2523,10 +2523,10 @@ contains
           end do
         end do
       else
+        ! Cartesian domain, grid area constant with height
         r_sq_fact = 1.0_r_def
       end if
       do i = 1, row_length
-        ! Cartesian domain, grid area constant with height
         cv_qw_sink = -rho_dry_tq(i,1,1) * z_rho(i,1,2) * r_sq_fact(i,1,1) &
                    * (q_inc(i,1,1) + qcl_inc(i,1,1))
         do k = 2, nlayers-1
