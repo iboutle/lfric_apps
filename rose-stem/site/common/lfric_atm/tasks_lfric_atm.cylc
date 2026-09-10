@@ -1227,7 +1227,31 @@
         "coupled": true,
         "wallclock": 10,
         "plot_str": "plot_map.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
-        "app_name": "lfric_atm_coupled"
+        "app_name": "lfric_atm_coupled",
+        "xios_info_level": 1,
+        "xios_print_file": ".true.",
+        "restart_write": true,
+    }) %}
+
+{% elif task_ns.conf_name == "clim_gc6-C48_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["coupled","climate","um_dump"],
+        "resolution": "C48_MG",
+        "DT": 1800,
+        "tsteps": 24,
+        "mpi_parts": 24,
+        "threads": 1,
+        "kgo_checks": ["checksum"],
+        "xios_nodes": 1,
+        "mpi_parts_xios": 6,
+        "coupled": true,
+        "wallclock": 10,
+        "plot_str": "plot_map.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
+        "app_name": "lfric_atm_coupled",
+        "xios_info_level": 1,
+        "xios_print_file": ".true.",
+        "restart_write": true,
     }) %}
 
 {% elif task_ns.conf_name == "canned" %}
