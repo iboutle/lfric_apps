@@ -553,11 +553,15 @@ subroutine create_model_data( modeldb,           &
   !> @param[in]    twod_mesh The current 2d mesh
   !> @param[in]    aerosol_mesh      Aerosol 3d mesh
   !> @param[in]    aerosol_twod_mesh Aerosol 2d mesh
-  subroutine create_physics_model_data( modeldb,      &
-                                        mesh,         &
-                                        twod_mesh,    &
-                                        aerosol_mesh, &
-                                        aerosol_twod_mesh )
+  !> @param[in]    easyaerosol_mesh      EasyAerosol 3d mesh
+  !> @param[in]    easyaerosol_twod_mesh EasyAerosol 2d mesh
+  subroutine create_physics_model_data( modeldb,             &
+                                        mesh,                &
+                                        twod_mesh,           &
+                                        aerosol_mesh,        &
+                                        aerosol_twod_mesh,   &
+                                        easyaerosol_mesh,    &
+                                        easyaerosol_twod_mesh )
 
     implicit none
 
@@ -566,6 +570,8 @@ subroutine create_model_data( modeldb,           &
     type( mesh_type ),    intent(in), pointer :: twod_mesh
     type( mesh_type ),    intent(in), pointer :: aerosol_mesh
     type( mesh_type ),    intent(in), pointer :: aerosol_twod_mesh
+    type( mesh_type ),    intent(in), pointer :: easyaerosol_mesh
+    type( mesh_type ),    intent(in), pointer :: easyaerosol_twod_mesh
 
     type(field_collection_type), pointer :: depository
     type(field_collection_type), pointer :: fd_fields
@@ -595,6 +601,8 @@ subroutine create_model_data( modeldb,           &
                                  mesh, twod_mesh ,                &
                                  aerosol_mesh,                    &
                                  aerosol_twod_mesh,               &
+                                 easyaerosol_mesh,                &
+                                 easyaerosol_twod_mesh,           &
                                  model_axes%ancil_times_list )
         case ( ancil_option_idealised )
           call create_fd_ancils_idealised( depository, &

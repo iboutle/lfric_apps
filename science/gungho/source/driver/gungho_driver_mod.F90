@@ -50,7 +50,8 @@ module gungho_driver_mod
                                           ancil_option,             &
                                           ancil_option_updating,    &
                                           coarse_aerosol_ancil,     &
-                                          coarse_ozone_ancil
+                                          coarse_ozone_ancil,       &
+                                          coarse_easyaerosol_ancil
   use init_gungho_lbcs_alg_mod,    only : update_lbcs_file_alg
   use log_mod,                     only : log_event,           &
                                           log_level_always,    &
@@ -135,12 +136,14 @@ contains
 
     type(gungho_time_axes_type)     :: model_axes
 
-    type(mesh_type),        pointer :: mesh              => null()
-    type(mesh_type),        pointer :: twod_mesh         => null()
-    type(mesh_type),        pointer :: aerosol_mesh      => null()
-    type(mesh_type),        pointer :: aerosol_twod_mesh => null()
-    type(mesh_type),        pointer :: nudging_mesh      => null()
-    type(mesh_type),        pointer :: nudging_twod_mesh => null()
+    type(mesh_type),        pointer :: mesh                  => null()
+    type(mesh_type),        pointer :: twod_mesh             => null()
+    type(mesh_type),        pointer :: aerosol_mesh          => null()
+    type(mesh_type),        pointer :: aerosol_twod_mesh     => null()
+    type(mesh_type),        pointer :: easyaerosol_mesh      => null()
+    type(mesh_type),        pointer :: easyaerosol_twod_mesh => null()
+    type(mesh_type),        pointer :: nudging_mesh          => null()
+    type(mesh_type),        pointer :: nudging_twod_mesh     => null()
 
     type(io_value_type) :: temp_corr_io_value
     type(integer_io_value_type) :: random_seed_io_value
@@ -153,6 +156,7 @@ contains
     logical(l_def) :: use_multires_coupling
     logical(l_def) :: coarse_nudging
     character(str_def) :: aerosol_mesh_name
+    character(str_def) :: easyaerosol_mesh_name
     character(str_def) :: nudging_mesh_name
 
 #ifdef UM_PHYSICS
@@ -192,6 +196,17 @@ contains
     else
       aerosol_mesh => mesh
       aerosol_twod_mesh => twod_mesh
+    end if
+
+    ! If EasyAerosol data is on a different mesh, get this. EasyAerosol ancils
+    ! may use a mesh of their own, independent of the other aerosol ancils
+    if ( use_multires_coupling .and. coarse_easyaerosol_ancil ) then
+      easyaerosol_mesh_name = modeldb%config%multires_coupling%easyaerosol_mesh_name()
+      easyaerosol_mesh => mesh_collection%get_mesh(trim(adjustl(easyaerosol_mesh_name)))
+      easyaerosol_twod_mesh => mesh_collection%get_mesh(easyaerosol_mesh, TWOD)
+    else
+      easyaerosol_mesh => mesh
+      easyaerosol_twod_mesh => twod_mesh
     end if
 
     ! If nudging is on a different mesh, get this
@@ -258,7 +273,8 @@ contains
                             nudging_mesh, nudging_twod_mesh )
     call create_physics_model_data( modeldb, &
                             mesh, twod_mesh, &
-                            aerosol_mesh, aerosol_twod_mesh )
+                            aerosol_mesh, aerosol_twod_mesh, &
+                            easyaerosol_mesh, easyaerosol_twod_mesh )
 
     ! Set up io for multifile reading
     if ( multifile_io ) then

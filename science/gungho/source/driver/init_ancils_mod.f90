@@ -105,8 +105,12 @@ contains
   !> @param[in] twod_mesh         The current 2d mesh
   !> @param[in] aerosol_mesh      Aerosol 3d mesh
   !> @param[in] aerosol_twod_mesh Aerosol 2d mesh
+  !> @param[in] easyaerosol_mesh      EasyAerosol 3d mesh
+  !> @param[in] easyaerosol_twod_mesh EasyAerosol 2d mesh
   subroutine create_fd_ancils( depository, ancil_fields, mesh, &
-                               twod_mesh, aerosol_mesh, aerosol_twod_mesh, ancil_times_list )
+                               twod_mesh, aerosol_mesh, aerosol_twod_mesh, &
+                               easyaerosol_mesh, easyaerosol_twod_mesh,    &
+                               ancil_times_list )
 
     implicit none
 
@@ -117,6 +121,8 @@ contains
     type( mesh_type ), intent(in), pointer :: twod_mesh
     type( mesh_type ), intent(in), pointer :: aerosol_mesh
     type( mesh_type ), intent(in), pointer :: aerosol_twod_mesh
+    type( mesh_type ), intent(in), pointer :: easyaerosol_mesh
+    type( mesh_type ), intent(in), pointer :: easyaerosol_twod_mesh
 
     type(linked_list_type), intent(out) :: ancil_times_list
 
@@ -685,7 +691,9 @@ contains
                                        pop_freq="five_days")
        call setup_ancil_field("cloud_drop_no_conc", depository, ancil_fields,  &
                            mesh, twod_mesh,                                    &
-                           time_axis=cloud_drop_no_conc_time_axis)   ! 3-D
+                           time_axis=cloud_drop_no_conc_time_axis,             &
+                           alt_mesh=easyaerosol_mesh,                          &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(cloud_drop_no_conc_time_axis)
     endif ! easyaerosol_cdnc
 
@@ -698,7 +706,9 @@ contains
        call setup_ancil_field("easy_asymmetry_sw", depository, ancil_fields,   &
                            mesh, twod_mesh,                                    &
                            ndata=n_sw_band, ndata_first=.true.,&
-                           time_axis=easy_asymmetry_sw_time_axis)   ! 3-D
+                           time_axis=easy_asymmetry_sw_time_axis,              &
+                           alt_mesh=easyaerosol_mesh,                         &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_asymmetry_sw_time_axis)
 
     ! SW ABSORPTION
@@ -709,7 +719,9 @@ contains
        call setup_ancil_field("easy_absorption_sw", depository, ancil_fields,  &
                            mesh, twod_mesh,                                    &
                            ndata=n_sw_band, ndata_first=.true.,                &
-                           time_axis=easy_absorption_sw_time_axis)   ! 3-D
+                           time_axis=easy_absorption_sw_time_axis,             &
+                           alt_mesh=easyaerosol_mesh,                         &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_absorption_sw_time_axis)
 
     ! SW EXTINCTION
@@ -720,7 +732,9 @@ contains
        call setup_ancil_field("easy_extinction_sw", depository, ancil_fields,  &
                            mesh, twod_mesh,                                    &
                            ndata=n_sw_band, ndata_first=.true.,&
-                           time_axis=easy_extinction_sw_time_axis)   ! 3-D
+                           time_axis=easy_extinction_sw_time_axis,             &
+                           alt_mesh=easyaerosol_mesh,                        &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_extinction_sw_time_axis)
     endif ! easyaerosol_sw
 
@@ -733,7 +747,9 @@ contains
        call setup_ancil_field("easy_asymmetry_lw", depository, ancil_fields,   &
                            mesh, twod_mesh,                                    &
                            ndata=n_lw_band, ndata_first=.true.,&
-                           time_axis=easy_asymmetry_lw_time_axis)   ! 3-D
+                           time_axis=easy_asymmetry_lw_time_axis,              &
+                           alt_mesh=easyaerosol_mesh,                         &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_asymmetry_lw_time_axis)
 
     ! LW ABSORPTION
@@ -744,7 +760,9 @@ contains
        call setup_ancil_field("easy_absorption_lw", depository, ancil_fields,   &
                            mesh, twod_mesh,                                    &
                            ndata=n_lw_band, ndata_first=.true.,&
-                           time_axis=easy_absorption_lw_time_axis)   ! 3-D
+                           time_axis=easy_absorption_lw_time_axis,             &
+                           alt_mesh=easyaerosol_mesh,                         &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_absorption_lw_time_axis)
        call easy_extinction_lw_time_axis%initialise("easy_extinction_lw_time", &
                                        file_id="easy_extinction_lw_ancil", &
@@ -755,7 +773,9 @@ contains
        call setup_ancil_field("easy_extinction_lw", depository, ancil_fields,   &
                            mesh, twod_mesh,                                    &
                            ndata=n_lw_band, ndata_first=.true.,&
-                           time_axis=easy_extinction_lw_time_axis)   ! 3-D
+                           time_axis=easy_extinction_lw_time_axis,             &
+                           alt_mesh=easyaerosol_mesh,                         &
+                           alt_twod_mesh=easyaerosol_twod_mesh)   ! 3-D
        call ancil_times_list%insert_item(easy_extinction_lw_time_axis)
     endif ! easyaerosol_lw
 
