@@ -136,14 +136,14 @@ contains
 
     type(gungho_time_axes_type)     :: model_axes
 
-    type(mesh_type),        pointer :: mesh                  => null()
-    type(mesh_type),        pointer :: twod_mesh             => null()
-    type(mesh_type),        pointer :: aerosol_mesh          => null()
-    type(mesh_type),        pointer :: aerosol_twod_mesh     => null()
-    type(mesh_type),        pointer :: easyaerosol_mesh      => null()
-    type(mesh_type),        pointer :: easyaerosol_twod_mesh => null()
-    type(mesh_type),        pointer :: nudging_mesh          => null()
-    type(mesh_type),        pointer :: nudging_twod_mesh     => null()
+    type(mesh_type),        pointer :: mesh
+    type(mesh_type),        pointer :: twod_mesh
+    type(mesh_type),        pointer :: aerosol_mesh
+    type(mesh_type),        pointer :: aerosol_twod_mesh
+    type(mesh_type),        pointer :: easyaerosol_mesh
+    type(mesh_type),        pointer :: easyaerosol_twod_mesh
+    type(mesh_type),        pointer :: nudging_mesh
+    type(mesh_type),        pointer :: nudging_twod_mesh
 
     type(io_value_type) :: temp_corr_io_value
     type(integer_io_value_type) :: random_seed_io_value
