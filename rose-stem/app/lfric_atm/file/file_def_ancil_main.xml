@@ -364,43 +364,43 @@
   <file id="cloud_drop_no_conc_ancil" name="cloud_drop_no_conc_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="cloud_drop_no_conc_ancil_field_group" >
     <field id="cloud_drop_no_conc_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="cloud_drop_no_conc_data" name="cloud_drop_no_conc" long_name="cloud_droplet_number_concentration" unit="m-3" operation="instant" grid_ref="3D_monthly_grid"/>
+    <field id="cloud_drop_no_conc_data" name="cloud_drop_no_conc" long_name="cloud_droplet_number_concentration" unit="m-3" operation="instant" grid_ref="easyaerosol_3D_monthly_grid"/>
    </field_group>
   </file>
   <file id="easy_asymmetry_sw_ancil" name="easy_asymmetry_sw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_asymmetry_sw_ancil_field_group" >
     <field id="easy_asymmetry_sw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_asymmetry_sw_data" name="easy_asymmetry_sw" long_name="asymmetry parameter of EasyAerosol" unit="1" operation="instant" grid_ref="full_level_face_grid_sw_bands_monthly"/>
+    <field id="easy_asymmetry_sw_data" name="easy_asymmetry_sw" long_name="asymmetry parameter of EasyAerosol" unit="1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_sw_bands_monthly"/>
    </field_group>
   </file>
   <file id="easy_asymmetry_lw_ancil" name="easy_asymmetry_lw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_asymmetry_lw_ancil_field_group" >
     <field id="easy_asymmetry_lw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_asymmetry_lw_data" name="easy_asymmetry_lw" long_name="asymmetry parameter of EasyAerosol" unit="1" operation="instant" grid_ref="full_level_face_grid_lw_bands_monthly"/>
+    <field id="easy_asymmetry_lw_data" name="easy_asymmetry_lw" long_name="asymmetry parameter of EasyAerosol" unit="1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_lw_bands_monthly"/>
    </field_group>
   </file>
   <file id="easy_absorption_sw_ancil" name="easy_absorption_sw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_absorption_sw_ancil_field_group" >
     <field id="easy_absorption_sw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_absorption_sw_data" name="easy_absorption_sw" long_name="absorption coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="full_level_face_grid_sw_bands_monthly"/>
+    <field id="easy_absorption_sw_data" name="easy_absorption_sw" long_name="absorption coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_sw_bands_monthly"/>
    </field_group>
   </file>
   <file id="easy_absorption_lw_ancil" name="easy_absorption_lw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_absorption_lw_ancil_field_group" >
     <field id="easy_absorption_lw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_absorption_lw_data" name="easy_absorption_lw" long_name="absorption coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="full_level_face_grid_lw_bands_monthly"/>
+    <field id="easy_absorption_lw_data" name="easy_absorption_lw" long_name="absorption coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_lw_bands_monthly"/>
    </field_group>
   </file>
   <file id="easy_extinction_sw_ancil" name="easy_extinction_sw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_extinction_sw_ancil_field_group" >
     <field id="easy_extinction_sw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_extinction_sw_data" name="easy_extinction_sw" long_name="extinction coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="full_level_face_grid_sw_bands_monthly"/>
+    <field id="easy_extinction_sw_data" name="easy_extinction_sw" long_name="extinction coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_sw_bands_monthly"/>
    </field_group>
   </file>
   <file id="easy_extinction_lw_ancil" name="easy_extinction_lw_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
    <field_group id="easy_extinction_lw_ancil_field_group" >
     <field id="easy_extinction_lw_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
-    <field id="easy_extinction_lw_data" name="easy_extinction_lw" long_name="extinction coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="full_level_face_grid_lw_bands_monthly"/>
+    <field id="easy_extinction_lw_data" name="easy_extinction_lw" long_name="extinction coefficient of EasyAerosol" unit="m-1" operation="instant" grid_ref="easyaerosol_full_level_face_grid_lw_bands_monthly"/>
    </field_group>
   </file>
 
