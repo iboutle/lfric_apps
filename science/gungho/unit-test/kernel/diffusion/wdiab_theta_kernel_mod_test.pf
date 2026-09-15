@@ -119,7 +119,13 @@ contains
                            dtheta_in,                             &
                            ndf_wth,                               &
                            undf_wth,                              &
-                           map_wth )
+                           map_wth,                               &
+                           ndf_w2,                                &
+                           undf_w2,                               &
+                           map_w2,                                &
+                           ndf_w2sh,                              &
+                           undf_w2sh,                             &
+                           map_w2sh)
 
     do k = 0, nlayers
       @assertEqual(answer(map_wth(1)+k), dtheta_out(map_wth(1)+k), tol)
@@ -129,6 +135,9 @@ contains
     deallocate(theta)
     deallocate(dtheta_in)
     deallocate(answer)
+    deallocate(rho)
+    deallocate(dA)
+    deallocate(dAsh)
 
   end subroutine test_all
 
