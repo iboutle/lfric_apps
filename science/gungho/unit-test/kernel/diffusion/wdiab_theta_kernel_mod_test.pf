@@ -94,6 +94,8 @@ contains
     allocate(rho(undf_wth))
     allocate(dtheta_in(undf_wth))
     allocate(answer(undf_wth))
+    allocate(dA(undf_w2))
+    allocate(dAsh(undf_w2sh))
 
     dtheta_out = 0.0_r_def
     rho = 1.0_r_def
