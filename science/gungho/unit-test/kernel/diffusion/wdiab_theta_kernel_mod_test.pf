@@ -54,10 +54,17 @@ contains
 
     integer(i_def) :: nlayers
     integer(i_def) :: ndf_wth, undf_wth
+    integer(i_def) :: ndf_w2, undf_w2
+    integer(i_def) :: ndf_w2sh, undf_w2sh
     integer(i_def), allocatable :: map_wth(:)
+    integer(i_def), allocatable :: map_w2(:)
+    integer(i_def), allocatable :: map_w2sh(:)
 
     real(r_def), allocatable :: dtheta_out(:)
     real(r_def), allocatable :: theta(:)
+    real(r_def), allocatable :: rho(:)
+    real(r_def), allocatable :: dA(:)
+    real(r_def), allocatable :: dAsh(:)
     real(r_def), allocatable :: dtheta_in(:)
     real(r_def), allocatable :: answer(:)
 
@@ -70,14 +77,28 @@ contains
     ndf_wth = 2_i_def
     allocate(map_wth(ndf_wth))
     map_wth(1) = 1_i_def
+
+    ndf_w2 = 6_i_def
+    undf_w2 = 4_i_def*nlayers+nlayers+1
+    allocate(map_w2(ndf_w2))
+    map_w2(5) = 4_i_def*nlayers+1
+
+    ndf_w2sh = 6_i_def
+    undf_w2sh = 4_i_def*(nlayers+1)+(nlayers+1)+1
+    allocate(map_w2sh(ndf_w2sh))
+    map_w2sh(5) = 4_i_def*(nlayers+1)+1
     
     ! Create the data
     allocate(dtheta_out(undf_wth))
     allocate(theta(undf_wth))
+    allocate(rho(undf_wth))
     allocate(dtheta_in(undf_wth))
     allocate(answer(undf_wth))
 
     dtheta_out = 0.0_r_def
+    rho = 1.0_r_def
+    dA = 1.0_r_def
+    dAsh = 1.0_r_def
     theta = (/ 300.0_r_def, 300.0_r_def, 300.0_r_def, 304.0_r_def, &
                308.0_r_def, 312.0_r_def, 316.0_r_def, 320.0_r_def, &
                324.0_r_def, 328.0_r_def, 332.0_r_def, 336.0_r_def /)
@@ -92,6 +113,9 @@ contains
     call wdiab_theta_code( nlayers,                               &
                            dtheta_out,                            &
                            theta,                                 &
+                           rho,                                   &
+                           dA,                                    &
+                           dAsh,                                  &
                            dtheta_in,                             &
                            ndf_wth,                               &
                            undf_wth,                              &
