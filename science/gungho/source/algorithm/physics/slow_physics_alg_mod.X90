@@ -83,7 +83,7 @@ module slow_physics_alg_mod
   use moist_dyn_mod,             only: num_moist_factors
   use sci_enforce_lower_bound_kernel_mod, &
                                  only: enforce_lower_bound_kernel_type
-  use sci_geometric_constants_mod,   only: get_da_at_w2
+  use sci_geometric_constants_mod,   only: get_detj_at_w3_fv
   use moisture_conservation_alg_mod, &
                                  only: moisture_conservation_alg
   use fs_continuity_mod,         only: W3, Wtheta
@@ -256,7 +256,7 @@ contains
     type( field_type ) :: dtheta_encorr
     ! ... for diabatic theta mixing
     type( field_type ) :: dtheta_wdiab
-    type( field_type ), pointer :: dA, dAsh
+    type( field_type ), pointer :: detJ
     type( mesh_type ),  pointer :: shifted_mesh
     ! ...for microphysics
     type( field_type ), pointer :: dtheta_mphys => null()
@@ -1029,10 +1029,9 @@ contains
         call dtheta%copy_field_properties(dtheta_wdiab)
         call derived_fields%get_field('rho_in_wth', rho_in_wth)
         shifted_mesh => mesh_collection%get_mesh(mesh, SHIFTED)
-        dA => get_da_at_w2(mesh)
-        dAsh => get_da_at_w2(shifted_mesh)
+        detJ => get_detj_at_w3_fv(shifted_mesh)
         call invoke(wdiab_theta_kernel_type(dtheta_wdiab, theta, rho_in_wth, &
-                                            dA, dAsh, dtheta_mphys),         &
+                                            detJ, dtheta_mphys),             &
                     inc_X_plus_Y(dtheta_mphys, dtheta_wdiab))
         call dtheta_wdiab%write_field('microphysics__dtheta_wdiab_mphys')
         call dtheta_wdiab%field_final()
