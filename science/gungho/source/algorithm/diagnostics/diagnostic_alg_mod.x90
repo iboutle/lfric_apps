@@ -584,9 +584,7 @@ contains
 !=============================================================================!
   !> @brief Calculate column totals of dry and wet fields.
   !> @details Calculates column totals for wet + dry air, dry air only and each
-  !!          of the different moisture spieces represented by LFRic. Also
-  !!          calculates the dry mass weighted column integrals of eastward
-  !!          and northward water vapour flux (STASH 30428/30429).
+  !!          of the different moisture spieces represented by LFRic.
   !> @param[in] config
   !> @param[in] rho_field  3D dry density field
   !> @param[in] mr         Bundle of moisture mixing ratios (nummr is index for speices X)
