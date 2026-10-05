@@ -66,7 +66,7 @@ use fields_type_mod, only: i_temperature, i_q_vap, i_q_cl, i_q_cf,             &
                            i_qc_first, i_qc_last,                              &
                            i_cf_liq, i_cf_bulk,                                &
                            i_wind_u, i_wind_v, i_wind_w, i_tracers,            &
-                           n_fields, field_names, field_positive
+                           n_fields, field_names, field_min, field_max
 use cmpr_type_mod, only: cmpr_type
 
 use linear_qs_mod, only: linear_qs_set_ref,                                    &
@@ -157,7 +157,7 @@ real(kind=real_cvprec), intent(in) :: par_radius(n_points)
 ! Super-array containing environment fields at k; properties
 ! of source air for precip which falls into the parcel
 real(kind=real_cvprec), intent(in) :: env_k_fields                             &
-                                      ( n_points_env, n_fields )
+                                      ( n_points_env, n_fields_tot )
 
 ! Environment dry static stability
 real(kind=real_cvprec), intent(in) :: Nsq_dry(n_points)
@@ -257,6 +257,9 @@ real(kind=real_cvprec) :: linear_qs_super                                      &
 ! Super-array to store precip fall fluxes
 real(kind=real_cvprec) :: flux_cond( n_points, n_cond_species )
 
+! Condensate number concentrations
+real(kind=real_cvprec) :: n_cond( n_points, n_cond_species )
+
 ! Total heat capacity for phase-change
 real(kind=real_cvprec) :: cp_tot(n_points)
 ! Total water mixing ratio
@@ -289,9 +292,6 @@ logical :: l_fall_in
 ! Flag passed into sat_adjust to tell it not to update
 ! q_vap and q_cl when calculating a saturated reference T
 logical, parameter :: l_update_q_false = .false.
-
-! Flag passed into check_bad_values to indicate whether fields must be positive
-logical :: l_positive
 
 ! Flag for parcel mean ascent with an accompanying core
 logical :: l_mean_with_core
@@ -364,24 +364,19 @@ if ( i_check_bad_values_cmpr > i_check_bad_none ) then
                  trim(adjustl(call_string))   // "; "                       // &
                  "par_next_fields"
   do i_field = 1, n_fields_tot
-    call check_bad_values_cmpr( cmpr, k,                                       &
-                                par_next_fields(:,i_field),                    &
-                                where_string,                                  &
-                                field_names(i_field),                          &
-                                field_positive(i_field) )
+    call check_bad_values_cmpr( cmpr, k, par_next_fields(:,i_field),           &
+                                where_string, field_names(i_field),            &
+                                field_min=field_min(i_field),                  &
+                                field_max=field_max(i_field) )
   end do
   if ( present( res_source_fields ) ) then
     ! Check resolved-scale source-terms
     where_string = "Start of parcel_dyn call for "                          // &
                    trim(adjustl(call_string))   // "; "                     // &
                    "res_source_fields"
-    l_positive = .false.  ! Source terms may be positive or negative
     do i_field = 1, n_fields_tot
-      call check_bad_values_cmpr( cmpr, k,                                     &
-                                  res_source_fields(:,i_field),                &
-                                  where_string,                                &
-                                  field_names(i_field),                        &
-                                  l_positive )
+      call check_bad_values_cmpr( cmpr, k, res_source_fields(:,i_field),       &
+                                  where_string, field_names(i_field) )
     end do
   end if
 end if
@@ -549,7 +544,7 @@ if ( l_diags ) then
                    par_next_fields(:,i_temperature),                           &
                    par_next_fields(:,i_q_vap),                                 &
                    par_next_fields(:,i_qc_first:i_qc_last),                    &
-                   flux_cond, cmpr, k, call_string, l_diags,                   &
+                   flux_cond, n_cond, cmpr, k, call_string, l_diags,           &
                    plume_model_diags % moist_proc,                             &
                    n_points_diag, n_diags_super, diags_super )
 else
@@ -567,7 +562,7 @@ else
                    par_next_fields(:,i_temperature),                           &
                    par_next_fields(:,i_q_vap),                                 &
                    par_next_fields(:,i_qc_first:i_qc_last),                    &
-                   flux_cond, cmpr, k, call_string, l_diags,                   &
+                   flux_cond, n_cond, cmpr, k, call_string, l_diags,           &
                    moist_proc_diags_dummy,                                     &
                    1, 1, diags_super_dummy )
 end if
@@ -618,9 +613,8 @@ end if  ! ( i_call == i_call_genesis )
 
 ! Update in-parcel cloud-fractions and precipitation fraction
 if ( l_cv_cloudfrac ) then
-  call set_par_cloudfrac( n_points, n_points_next,                             &
-                          par_next_fields(:,i_q_cl),                           &
-                          par_next_fields(:,i_q_cf),                           &
+  call set_par_cloudfrac( n_points, n_points_next, n_points_next,              &
+                          par_next_fields(:,i_qc_first:i_qc_last),             &
                           par_next_fields(:,i_cf_liq:i_cf_bulk) )
 end if
 
@@ -651,9 +645,15 @@ end if
 ! Apply any in-parcel source terms for tracers
 ! (e.g. in-plume scavenging of aerosols by precipitation)
 if ( l_tracer ) then
-  call tracer_source( n_points, n_points_next,                                 &
-                      massflux_d, dq_prec, par_next_fields(:,1:n_fields),      &
-                      par_next_fields(:,i_tracers(1):i_tracers(n_tracers)) )
+  call tracer_source( n_points, n_points_env, n_points_next, n_points_res,     &
+                      l_res_source, massflux_d, dq_prec,                       &
+                      n_cond, flux_cond, dt_over_rhod_lz,                      &
+                      env_k_fields(:,1:n_fields),                              &
+                      env_k_fields(:,i_tracers(1):i_tracers(n_tracers)),       &
+                      par_next_fields(:,1:n_fields),                           &
+                      par_next_fields(:,i_tracers(1):i_tracers(n_tracers)),    &
+                      res_source_tracers=res_source_fields                     &
+                                     (:,i_tracers(1):i_tracers(n_tracers)) )
 end if
 
 
@@ -708,7 +708,6 @@ if ( .not. i_call == i_call_det ) then
   call calc_sat_height(                                                        &
          n_points, n_points_sublevs, l_mean_with_core, l_down, j_buoy,         &
          prev_ss, next_ss, prev_tvl, next_tvl,                                 &
-         par_prev_fields(:,i_q_cl), par_next_fields(:,i_q_cl),                 &
          i_next, i_sat, sublevs,                                               &
          i_core_sat=i_core_sat )
 
@@ -773,24 +772,19 @@ if ( i_check_bad_values_cmpr > i_check_bad_none ) then
                  trim(adjustl(call_string))   // "; "                       // &
                  "par_next_fields"
   do i_field = 1, n_fields_tot
-    call check_bad_values_cmpr( cmpr, k,                                       &
-                                par_next_fields(:,i_field),                    &
-                                where_string,                                  &
-                                field_names(i_field),                          &
-                                field_positive(i_field) )
+    call check_bad_values_cmpr( cmpr, k, par_next_fields(:,i_field),           &
+                                where_string, field_names(i_field),            &
+                                field_min=field_min(i_field),                  &
+                                field_max=field_max(i_field) )
   end do
   if ( present( res_source_fields ) ) then
     ! Check resolved-scale source-terms
     where_string = "End of parcel_dyn call for "                            // &
                    trim(adjustl(call_string))   // "; "                     // &
                    "res_source_fields"
-    l_positive = .false.  ! Source terms may be positive or negative
     do i_field = 1, n_fields_tot
-      call check_bad_values_cmpr( cmpr, k,                                     &
-                                  res_source_fields(:,i_field),                &
-                                  where_string,                                &
-                                  field_names(i_field),                        &
-                                  l_positive )
+      call check_bad_values_cmpr( cmpr, k, res_source_fields(:,i_field),       &
+                                  where_string, field_names(i_field) )
     end do
   end if
 end if

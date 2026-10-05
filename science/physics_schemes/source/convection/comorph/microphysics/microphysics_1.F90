@@ -45,13 +45,13 @@ subroutine microphysics_1( n_points, n_points_super,  nc, index_ic,            &
                            ref_temp, qsat_liq_ref, dqsatdT_liq,                &
                            delta_t, vert_len, rho_dry, rho_wet,                &
                            cp_tot, temperature, q_vap, q_cond,                 &
-                           q_loc_cond, wf_cond, kq_cond, kt_cond,              &
+                           q_loc_cond, wf_cond, kq_cond, kt_cond, n_cond,      &
                            dq_frz_cond, l_diags, moist_proc_diags,             &
                            n_points_diag, n_diags, diags_super )
 
 use comorph_constants_mod, only: real_cvprec, cond_params, zero,               &
-                     n_cond_species,                                           &
-                     n_cond_species_liq, n_cond_species_ice
+                                 n_cond_species,                               &
+                                 n_cond_species_liq, n_cond_species_ice
 use moist_proc_diags_type_mod, only: moist_proc_diags_type
 
 use activate_cond_mod, only: activate_cond
@@ -124,6 +124,10 @@ real(kind=real_cvprec), intent(out) :: kq_cond                                 &
 real(kind=real_cvprec), intent(out) :: kt_cond                                 &
                                    ( n_points, n_cond_species )
 
+! Hydrometeor number concentration per unit dry-mass
+real(kind=real_cvprec), intent(out) :: n_cond                                 &
+                                   ( n_points, n_cond_species )
+
 ! Total amount of freezing onto each ice hydrometeor species
 ! (includes homogeneous and heterogeneous freezing and riming)
 ! Needed for the hydrometeor surface heat budget, important for
@@ -147,10 +151,6 @@ real(kind=real_cvprec), intent(in out) :: diags_super                          &
 ! Store for delta_t / vert_len, used in implicit fall-out
 ! calculations in calc_cond_properties
 real(kind=real_cvprec) :: dt_over_lz(n_points)
-
-! Number concentration per unit dry-mass
-real(kind=real_cvprec) :: n_cond                                               &
-                          ( n_points, n_cond_species )
 
 ! Particle radii of each hydrometeor species / m
 real(kind=real_cvprec) :: r_cond                                               &
@@ -215,24 +215,17 @@ if ( maxval(nc) > 0 ) then
         call ice_nucleation( n_points,                                         &
                              nc(i_liq), index_ic(:,i_liq),                     &
                              nc(i_ice), index_ic(:,i_ice),                     &
-                             delta_t, ref_temp,                                &
-                             q_cond(:,i_liq), q_cond(:,i_ice),                 &
+                             ref_temp, q_cond(:,i_liq), q_cond(:,i_ice),       &
                              temperature, cp_tot,                              &
                              dq_frz_cond(:,i_ice), l_diags,                    &
                              i_liq, i_ice, moist_proc_diags,                   &
                              n_points_diag, n_diags, diags_super )
-        ! Note: currently using q_cond to calculate the
-        ! heterogeneous freezing rate in here, but q_cond maybe
-        ! more of a numerical rather than physical quantity at
-        ! this point, as fall-in has been added to q_cond but
-        ! fall-out has not.  This should be fine provided that
-        ! the heter freeze rate comes out very small and is
-        ! dwarfed by other ice formation processes.  But if
-        ! we wish to use a heter freeze formulation where the
-        ! actual rate of heter freeze is significant, we'll
-        ! need to move heter freeze to after calc_cond_properties
-        ! and compute the rate using q_loc_cond (which accounts
-        ! for fall-out) instead.
+        ! Note: q_cond maybe more of a numerical rather than physical quantity
+        ! at this point, as fall-in has been added to q_cond but fall-out
+        ! has not.  Therefore, q_cond should not be used to estimate the
+        ! heterogeneous freezing rate here.  Currently heterogeneous nucleation
+        ! is just acting to "seed" negligibly small ice concentrations,
+        ! to allow vapour deposition and riming to actually grow the ice.
 
       end if
     end do  ! i_liq = 1, n_cond_species_liq
@@ -253,32 +246,21 @@ if ( maxval(nc) > 0 ) then
 
   ! Loop over all condensed water species
   do i_cond = 1, n_cond_species
+    ! Note we still need to call calc_cond_properties_cmpr even if
+    ! no points have nonzero mass of this species, just to set the
+    ! required fields to zero.
 
-    ! Initialise outputs to zero
-    do ic = 1, n_points
-      q_loc_cond(ic,i_cond) = zero
-      n_cond(ic,i_cond)     = zero
-      r_cond(ic,i_cond)     = zero
-      wf_cond(ic,i_cond)    = zero
-      kq_cond(ic,i_cond)    = zero
-      kt_cond(ic,i_cond)    = zero
-    end do
+    ! Routine implicitly solves the fall-speed / fall-out
+    ! and number concentration / particle radius relationship,
+    ! and calculates moisture and heat exchange coefficients
+    call calc_cond_properties_cmpr(                                            &
+           n_points, nc(i_cond), index_ic(:,i_cond),                           &
+           cond_params(i_cond)%pt, ref_temp, q_cond(:,i_cond),                 &
+           rho_dry, rho_wet, dt_over_lz,                                       &
+           q_loc_cond(:,i_cond), n_cond(:,i_cond),                             &
+           r_cond(:,i_cond), wf_cond(:,i_cond),                                &
+           kq_cond(:,i_cond), kt_cond(:,i_cond) )
 
-    ! If any points
-    if ( nc(i_cond) > 0 ) then
-
-      ! Routine implicitly solves the fall-speed / fall-out
-      ! and number concentration / particle radius relationship,
-      ! and calculates moisture and heat exchange coefficients
-      call calc_cond_properties_cmpr(                                          &
-             n_points, nc(i_cond), index_ic(:,i_cond),                         &
-             cond_params(i_cond)%pt, ref_temp, q_cond(:,i_cond),               &
-             rho_dry, rho_wet, dt_over_lz,                                     &
-             q_loc_cond(:,i_cond), n_cond(:,i_cond),                           &
-             r_cond(:,i_cond), wf_cond(:,i_cond),                              &
-             kq_cond(:,i_cond), kt_cond(:,i_cond) )
-
-    end if
   end do
 
 
@@ -295,6 +277,15 @@ if ( maxval(nc) > 0 ) then
                       dq_frz_cond, kq_cond, kt_cond, l_diags,                  &
                       moist_proc_diags, n_points_diag, n_diags, diags_super )
 
+else  ! ( MAXVAL(nc) > 0 )
+  ! If no condensate, still need to set output n_cond to zero
+  ! (other outputs can be left unset as not used, but n_cond might be used)
+
+  do i_cond = 1, n_cond_species
+    do ic = 1, n_points
+      n_cond(ic,i_cond) = zero
+    end do
+  end do
 
 end if  ! ( MAXVAL(nc) > 0 )
 

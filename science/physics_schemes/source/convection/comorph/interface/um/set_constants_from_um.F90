@@ -37,10 +37,10 @@ use gen_phys_inputs_mod, only: l_mr_physics
 use mphys_inputs_mod, only: l_mcr_precfrac, l_subgrid_graupel_frac
 
 use comorph_um_namelist_mod, only:                                             &
-                      par_radius_knob,                                         &
                       par_radius_evol_method_um => par_radius_evol_method,     &
                       n_dndraft_types_um        => n_dndraft_types,            &
                       l_core_ent_cmr_um         => l_core_ent_cmr,             &
+                      l_cv_snow_um              => l_cv_snow,                  &
                       core_ent_fac_um           => core_ent_fac,               &
                       par_gen_pert_fac_um       => par_gen_pert_fac,           &
                       par_gen_rhpert_um         => par_gen_rhpert,             &
@@ -53,22 +53,25 @@ use comorph_um_namelist_mod, only:                                             &
                       par_gen_mass_fac_um       => par_gen_mass_fac,           &
                       wind_w_fac_um             => wind_w_fac,                 &
                       wind_w_buoy_fac_um        => wind_w_buoy_fac,            &
-                      ass_min_radius_um         => ass_min_radius,             &
                       par_gen_core_fac_um       => par_gen_core_fac,           &
                       ent_coef_um               => ent_coef,                   &
                       overlap_power_um          => overlap_power,              &
+                      min_cmr_um                => min_cmr,                    &
+                      max_cmr_um                => max_cmr,                    &
                       rho_rim_um                => rho_rim,                    &
                       hetnuc_temp_um            => hetnuc_temp,                &
+                      cf_area_coef_um           => cf_area_coef,               &
                       drag_coef_cond_um         => drag_coef_cond,             &
                       vent_factor_um            => vent_factor,                &
                       col_eff_coef_um           => col_eff_coef,               &
-                      r_fac_tdep_n
+                      tdep_n_cl, tdep_n_cf,                                    &
+                      nconc_cl, nconc_cf, nconc_rain, nconc_snow, nconc_graup
 
 ! comorph settings and constants set by this routine
 use comorph_constants_mod, only: real_cvprec, nx_full, ny_full,                &
                                  k_bot_conv, k_top_conv, k_top_init,           &
                                  n_tracers, n_dndraft_types,                   &
-                                 l_cv_cloudfrac, l_tracer_scav,                &
+                                 l_cv_snow, l_cv_cloudfrac, l_tracer_scav,     &
                                  l_calc_cape, l_calc_mfw_cape, l_calc_ccb_cct, &
                                  l_spherical_coord, l_approx_dry_adiabat,      &
                                  comorph_timestep,                             &
@@ -81,13 +84,14 @@ use comorph_constants_mod, only: real_cvprec, nx_full, ny_full,                &
                                  i_sg_homog, i_sg_frac_liq, i_sg_frac_ice,     &
                                  i_sg_frac_prec, tracer_positive,              &
                                  par_gen_pert_fac, par_gen_rhpert,             &
-                                 par_gen_radius_fac, par_radius_evol_method,   &
+                                 par_radius_evol_method,                       &
                                  l_core_ent_cmr, core_ent_fac, cf_conv_fac,    &
                                  autoc_opt, coef_auto, q_cl_auto,              &
                                  drag_coef_par, rho_rim,                       &
                                  par_gen_mass_fac, wind_w_fac, wind_w_buoy_fac,&
-                                 ass_min_radius, par_gen_core_fac, ent_coef,   &
-                                 overlap_power, fac_tdep_n, hetnuc_temp,       &
+                                 par_gen_core_fac, ent_coef,                   &
+                                 overlap_power, min_cmr, max_cmr,              &
+                                 hetnuc_temp,                                  &
                                  drag_coef_cond, vent_factor, col_eff_coef
 
 implicit none
@@ -116,6 +120,9 @@ k_bot_conv = 1
 k_top_conv = n_conv_levels
 k_top_init = bl_levels - 1
 n_tracers = ntra_fld
+
+! Set switch for comorph 2nd ice category from the namelist
+l_cv_snow = l_cv_snow_um
 
 ! For now, force CoMorph's cloud-fraction switch to be
 ! consistent with whether or not PC2 is on in the host-model.
@@ -239,9 +246,6 @@ end if
 ! Number of downdraughts types
 n_dndraft_types = n_dndraft_types_um
 
-! Scale default parcel radius factor by tuning knob from the namelist
-par_gen_radius_fac = par_gen_radius_fac * real( par_radius_knob, real_cvprec )
-
 ! Switch controlling how parcel radius evolves with height in the plume
 par_radius_evol_method = par_radius_evol_method_um
 
@@ -279,9 +283,6 @@ wind_w_fac       = real(wind_w_fac_um, real_cvprec )
 ! Tuning constant for buoyancy-dependent convective fraction
 wind_w_buoy_fac  = real(wind_w_buoy_fac_um, real_cvprec )
 
-! Minimum parcel initial radius
-ass_min_radius   = real(ass_min_radius_um, real_cvprec )
-
 ! Scaling factor for par_gen core perturbations relative to
 ! the parcel mean properties (used if l_par_core = .TRUE.)
 par_gen_core_fac = real(par_gen_core_fac_um, real_cvprec )
@@ -294,17 +295,33 @@ ent_coef         = real(ent_coef_um, real_cvprec )
 ! inside the parcel
 overlap_power    = real(overlap_power_um, real_cvprec )
 
+! Max and min limits on core-mean-ratio
+min_cmr          = real(min_cmr_um, real_cvprec )
+max_cmr          = real(max_cmr_um, real_cvprec )
+
 ! Density of rimed ice (used for graupel)
 rho_rim  = real(rho_rim_um, real_cvprec )
 
+! Temperature-dependent liquid-cloud number concentration slope
+if ( abs(tdep_n_cl) > 0.0 ) then
+  params_cl % fac_tdep_n = one/real( tdep_n_cl, real_cvprec )
+else  ! Disable T-dependence if T-scale is zero
+  params_cl % fac_tdep_n = zero
+end if
+
 ! Temperature-dependent ice number concentration slope
-! The number concentration n(T) will be given by:
-! n(T) = n0 exp( fac_tdep_n ( T - Tmelt ) )
-! ( but limited above Tmelt and below T_homnuc)
-fac_tdep_n  = -one/real( r_fac_tdep_n, real_cvprec )
+if ( abs(tdep_n_cf) > 0.0 ) then
+  params_cf % fac_tdep_n = -one/real( tdep_n_cf, real_cvprec )
+else  ! Disable T-dependence if T-scale is zero
+  params_cf % fac_tdep_n = zero
+end if
 
 ! Heterogeneous nucleation temeprature / K
 hetnuc_temp = real(hetnuc_temp_um, real_cvprec )
+
+! Ice crystal non-spherical area factor.
+params_cf   % area_coef = real(cf_area_coef_um, real_cvprec )
+params_snow % area_coef = real(cf_area_coef_um, real_cvprec )
 
 ! Asymptotic drag coefficient for a sphere at high Reynolds
 ! number limit
@@ -317,6 +334,13 @@ vent_factor = real(vent_factor_um, real_cvprec )
 ! Coefficient for reduction of collection efficiency by
 ! deflection flow around hydrometeors
 col_eff_coef = real(col_eff_coef_um, real_cvprec )
+
+! Set prescribed number concentrations from namelist
+params_cl % n    = real( nconc_cl,    real_cvprec )
+params_cf % n    = real( nconc_cf,    real_cvprec )
+params_rain % n  = real( nconc_rain,  real_cvprec )
+params_snow % n  = real( nconc_snow,  real_cvprec )
+params_graup % n = real( nconc_graup, real_cvprec )
 
 ! Set threshold for using indirect indexing versus straight do-loops
 ! over all points in various calculations inside comorph.

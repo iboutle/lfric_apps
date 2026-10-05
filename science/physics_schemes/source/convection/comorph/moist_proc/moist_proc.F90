@@ -23,7 +23,7 @@ subroutine moist_proc( n_points, n_points_super, linear_qs,                    &
                        fallin_wind_w, fallin_temp,                             &
                        wind_u, wind_v, wind_w,                                 &
                        temperature, q_vap, q_cond,                             &
-                       flux_cond, cmpr, k, call_string, l_diags,               &
+                       flux_cond, n_cond, cmpr, k, call_string, l_diags,       &
                        moist_proc_diags, n_points_diag, n_diags, diags_super )
 
 use comorph_constants_mod, only: real_cvprec, zero, one, cond_params,          &
@@ -33,6 +33,8 @@ use comorph_constants_mod, only: real_cvprec, zero, one, cond_params,          &
 use linear_qs_mod, only: n_linear_qs_fields, i_ref_temp,                       &
                          i_qsat_liq_ref, i_dqsatdT_liq
 use cmpr_type_mod, only: cmpr_type
+use fields_type_mod, only: field_min, field_max,                               &
+                           i_temperature, i_q_vap, i_qc_first
 
 use moist_proc_conservation_mod, only: moist_proc_conservation
 use set_cp_tot_mod, only: set_cp_tot
@@ -158,6 +160,10 @@ real(kind=real_cvprec), intent(in out) :: q_cond                               &
 real(kind=real_cvprec), intent(in out) :: flux_cond                            &
                                    ( n_points, n_cond_species )
 
+! Hydrometeor number concentration per unit dry-mass
+real(kind=real_cvprec), intent(out) :: n_cond                                  &
+                                   ( n_points, n_cond_species )
+
 ! Stuff used to make error messages more informative:
 ! Structure storing compression indices of the current points
 type(cmpr_type), intent(in) :: cmpr
@@ -212,11 +218,13 @@ real(kind=real_cvprec) :: dq_frz_cond                                          &
 ! this gets incremented by phase-changes
 real(kind=real_cvprec) :: cp_tot(n_points)
 
+! Total water mixing ratio q_vap + sum q_cond
+real(kind=real_cvprec) :: q_tot(n_points)
+
 ! Dry-density
 real(kind=real_cvprec) :: rho_dry(n_points)
 
 ! Wet density
-! (also used to store total-water q_vap + sum q_cond)
 real(kind=real_cvprec) :: rho_wet(n_points)
 
 ! Work array used for conservation checks
@@ -230,8 +238,6 @@ integer :: nc( n_cond_species )
 
 ! Name of a field (for error message)
 character(len=name_length) :: field_name
-! Flag for whether field is positive-only
-logical :: l_positive
 ! Description of where we are in the code, for error messages
 character(len=name_length) :: where_string
 
@@ -241,20 +247,21 @@ integer :: ic, ic2, i_cond, i_super
 
 ! Check inputs for bad values (NaN, Inf, etc)
 if ( i_check_bad_values_cmpr > i_check_bad_none ) then
-  where_string = "Start of moist_proc call for "              //               &
-                 trim(adjustl(call_string))
-  l_positive = .true.
+  where_string = "Start of moist_proc call for " // trim(adjustl(call_string))
   field_name = "temperature"
-  call check_bad_values_cmpr( cmpr, k, temperature,                            &
-         where_string, field_name, l_positive )
+  call check_bad_values_cmpr( cmpr, k, temperature, where_string, field_name,  &
+                              field_min=field_min(i_temperature),              &
+                              field_max=field_max(i_temperature) )
   field_name = "q_vap"
-  call check_bad_values_cmpr( cmpr, k, q_vap,                                  &
-         where_string, field_name, l_positive )
+  call check_bad_values_cmpr( cmpr, k, q_vap, where_string, field_name,        &
+                              field_min=field_min(i_q_vap),                    &
+                              field_max=field_max(i_q_vap) )
   do i_cond = 1, n_cond_species
-    field_name = "q_" //                                                       &
-                 trim(adjustl( cond_params(i_cond)%pt % cond_name ))
+    field_name = "q_" // trim(adjustl( cond_params(i_cond)%pt % cond_name ))
     call check_bad_values_cmpr( cmpr, k, q_cond(:,i_cond),                     &
-           where_string, field_name, l_positive )
+                                where_string, field_name,                      &
+                                field_min=field_min(i_qc_first-1+i_cond),      &
+                                field_max=field_max(i_qc_first-1+i_cond) )
   end do
 end if
 
@@ -277,9 +284,18 @@ end if
 call set_cp_tot( n_points, n_points_super,                                     &
                  q_vap, q_cond, cp_tot )
 
-! Set total-water mixing-ratio (stored in rho_wet)
+! Set total-water mixing-ratio
 call calc_q_tot( n_points, n_points_super,                                     &
-                 q_vap, q_cond, rho_wet )
+                 q_vap, q_cond, q_tot )
+
+! Calculate air dry-density
+call calc_rho_dry( n_points, temperature, q_vap, pressure,                     &
+                   rho_dry )
+
+! Calculate rho_wet
+do ic = 1, n_points
+  rho_wet(ic) = rho_dry(ic) * ( one + q_tot(ic) )
+end do
 
 
 !----------------------------------------------------------------
@@ -308,10 +324,11 @@ do i_cond = 1, n_cond_species
                   dt_over_rhod_lz, flux_cond(:,i_cond),                        &
                   fallin_wind_u, fallin_wind_v, fallin_wind_w,                 &
                   fallin_temp,                                                 &
-                  cp_tot, rho_wet, wind_u, wind_v, wind_w,                     &
+                  cp_tot, q_tot, wind_u, wind_v, wind_w,                       &
                   temperature, q_cond(:,i_cond),                               &
                   l_diags, i_cond, moist_proc_diags,                           &
                   n_points_diag, n_diags, diags_super )
+    ! This routine resets flux_cond to zero ready for storing the fall-out flux
 
   end if
 
@@ -335,16 +352,6 @@ do i_cond = 1, n_cond_species
   end do
 end do
 
-! Calculate air dry-density
-call calc_rho_dry( n_points, temperature, q_vap, pressure,                     &
-                   rho_dry )
-
-! Complete calculation of rho_wet (currently stores q_tot;
-! dry-mass to wet-mass conversion factor = 1 + q_tot)
-do ic = 1, n_points
-  rho_wet(ic) = rho_dry(ic) * ( one + rho_wet(ic) )
-end do
-
 ! Call microphysics routine:
 ! Back-Of-The-Envelope Microphysics Scheme (BOTEMS)
 call microphysics_1( n_points, n_points_super, nc, index_ic,                   &
@@ -353,13 +360,13 @@ call microphysics_1( n_points, n_points_super, nc, index_ic,                   &
                      linear_qs(:,i_dqsatdT_liq),                               &
                      delta_t, vert_len, rho_dry, rho_wet,                      &
                      cp_tot, temperature, q_vap, q_cond,                       &
-                     q_loc_cond, wf_cond, kq_cond, kt_cond,                    &
+                     q_loc_cond, wf_cond, kq_cond, kt_cond, n_cond,            &
                      dq_frz_cond, l_diags, moist_proc_diags,                   &
                      n_points_diag, n_diags, diags_super )
 
 ! Note: the above call to microphysics_1 needs to be done even
 ! if all the condensed water species are currently zero
-! everywhere, as the test for activation of new condesation
+! everywhere, as the test for activation of new condensation
 ! is done inside microphysics_1.
 
 ! If any condensed water species are non-zero anywhere
@@ -481,20 +488,21 @@ end if
 
 ! Check outputs for bad values (NaN, Inf, etc)
 if ( i_check_bad_values_cmpr > i_check_bad_none ) then
-  where_string = "End of moist_proc call for "                //               &
-                 trim(adjustl(call_string))
-  l_positive = .true.
+  where_string = "End of moist_proc call for " // trim(adjustl(call_string))
   field_name = "temperature"
-  call check_bad_values_cmpr( cmpr, k, temperature,                            &
-         where_string, field_name, l_positive )
+  call check_bad_values_cmpr( cmpr, k, temperature, where_string, field_name,  &
+                              field_min=field_min(i_temperature),              &
+                              field_max=field_max(i_temperature) )
   field_name = "q_vap"
-  call check_bad_values_cmpr( cmpr, k, q_vap,                                  &
-         where_string, field_name, l_positive )
+  call check_bad_values_cmpr( cmpr, k, q_vap, where_string, field_name,        &
+                              field_min=field_min(i_q_vap),                    &
+                              field_max=field_max(i_q_vap) )
   do i_cond = 1, n_cond_species
-    field_name = "q_" //                                                       &
-                 trim(adjustl( cond_params(i_cond)%pt % cond_name ))
+    field_name = "q_" // trim(adjustl( cond_params(i_cond)%pt % cond_name ))
     call check_bad_values_cmpr( cmpr, k, q_cond(:,i_cond),                     &
-           where_string, field_name, l_positive )
+                                where_string, field_name,                      &
+                                field_min=field_min(i_qc_first-1+i_cond),      &
+                                field_max=field_max(i_qc_first-1+i_cond) )
   end do
 end if
 

@@ -3,6 +3,9 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Met Office Claude Code Enterprise.
+!-----------------------------------------------------------------------------
 !> @brief Interface to CASIM microphysics scheme.
 
 module casim_kernel_mod
@@ -19,7 +22,7 @@ use kernel_mod,        only: kernel_type
 use empty_data_mod,    only: empty_real_data
 use aerosol_config_mod, only: murk_prognostic
 use microphysics_config_mod, only: casim_cdnc_opt, casim_cdnc_opt_external, &
-                                   casim_cdnc_opt_fixed
+                                   casim_cdnc_opt_fixed, casim_inhom_rain
 
 implicit none
 
@@ -33,7 +36,7 @@ private
 
 type, public, extends(kernel_type) :: casim_kernel_type
   private
-  type(arg_type) :: meta_args(40) = (/                                      &
+  type(arg_type) :: meta_args(49) = (/                                      &
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mv_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ml_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mi_wth
@@ -42,6 +45,9 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ms_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cfl_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! cff_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! bcf_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! precfrac
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! sigma_ml
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! nl_mphys
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! nr_mphys
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! ni_mphys
@@ -52,6 +58,9 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! exner_in_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  W3),                           & ! wetrho_in_w3
        arg_type(GH_FIELD, GH_REAL, GH_READ,  W3),                           & ! dry_rho_in_w3
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! dry_rho_in_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  W3),                           & ! u_in_w3
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  W3),                           & ! v_in_w3
        arg_type(GH_FIELD, GH_REAL, GH_READ,  W3),                           & ! height_w3
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! height_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dmv_wth
@@ -60,6 +69,9 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dmr_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dmg_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dms_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! dcfl_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! dcff_wth
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA),                  & ! dbcf_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_rain_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_snow_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_graup_2d
@@ -101,6 +113,8 @@ contains
 !> @param[in]     ms_wth              Snow mass mixing ratio
 !> @param[in]     cfl_wth             Liquid cloud fraction
 !> @param[in]     cff_wth             Ice cloud fraction
+!> @param[in]     bcf_wth             Bulk cloud fraction
+!> @param[in,out] precfrac            Prognostic precip fraction
 !> @param[in,out] nl_mphys            CASIM cloud-droplet number concentration
 !> @param[in,out] nr_mphys            CASIM rain-drop number concentration
 !> @param[in,out] ni_mphys            CASIM cloud-ice number concentration
@@ -111,6 +125,9 @@ contains
 !> @param[in]     exner_in_wth        Exner pressure in potential temperature space
 !> @param[in]     wetrho_in_w3        Wet density in density space
 !> @param[in]     dry_rho_in_w3       Dry density in density space
+!> @param[in]     dry_rho_in_wth      Dry density in potential temperature space
+!> @param[in]     u_in_w3             'Zonal' wind in density space
+!> @param[in]     v_in_w3             'Meridional' wind in density space
 !> @param[in]     height_w3           Height of density space levels above surface
 !> @param[in]     height_wth          Height of theta levels above surface
 !> @param[in,out] dmv_wth             Increment to vapour mass mixing ratio
@@ -119,6 +136,9 @@ contains
 !> @param[in,out] dmr_wth             Increment to rain mass mixing ratio
 !> @param[in,out] dmg_wth             Increment to graupel mass mixing ratio
 !> @param[in,out] dms_wth             Increment to snow mass mixing ratio
+!> @param[in,out] dcfl_wth            Increment to liquid cloud fraction
+!> @param[in,out] dcff_wth            Increment to ice cloud fraction
+!> @param[in,out] dbcf_wth            Increment to bulk cloud fraction
 !> @param[in,out] ls_rain_2d          Large scale rain from twod_fields
 !> @param[in,out] ls_snow_2d          Large scale snow from twod_fields
 !> @param[in,out] ls_graup_2d         Large scale graupel from twod_fields
@@ -156,16 +176,20 @@ contains
 subroutine casim_code( nlayers,                     &
                        mv_wth,   ml_wth,   mi_wth,  &
                        mr_wth,   mg_wth,   ms_wth,  &
-                       cfl_wth,  cff_wth,           &
+                       cfl_wth,  cff_wth,  bcf_wth, &
+                       precfrac, sigma_ml,          &
                        nl_mphys, nr_mphys,          &
                        ni_mphys, ns_mphys, ng_mphys,&
                        w_phys,                      &
                        theta_in_wth,                &
                        exner_in_wth, wetrho_in_w3,  &
                        dry_rho_in_w3,               &
+                       dry_rho_in_wth,              &
+                       u_in_w3, v_in_w3,            &
                        height_w3, height_wth,       &
                        dmv_wth,  dml_wth,  dmi_wth, &
                        dmr_wth,  dmg_wth,  dms_wth, &
+                       dcfl_wth, dcff_wth, dbcf_wth,&
                        ls_rain_2d, ls_snow_2d,      &
                        ls_graup_2d, lsca_2d,        &
                        ls_rain_3d, ls_snow_3d,      &
@@ -191,19 +215,30 @@ subroutine casim_code( nlayers,                     &
 
     use planet_constants_mod,       only: p_zero, kappa, planet_radius
     use water_constants_mod,        only: tm
+    use fsd_parameters_mod,         only: fsd_eff_lam
+    use rad_input_mod,              only: two_d_fsd_factor
 
     use micro_main,                 only: shipway_microphysics
     use casim_switches,             only: its, ite, jts, jte, kts, kte, &
                                           ils, ile, jls, jle
+    use mphys_inputs_mod,           only: l_mcr_precfrac
     use generic_diagnostic_variables,                                  &
                                     only: allocate_diagnostic_space,   &
                                           deallocate_diagnostic_space, &
                                           casdiags
     use number_droplet_mod,         only: min_cdnc_sea_ice
+    use casim_calc_cfrain_mod,      only: casim_calc_cfrain
+    use casim_update_precfrac_mod,  only: casim_update_precfrac
     use mphys_air_density_mod,      only: mphys_air_density
     use mphys_radar_mod,            only: ref_lim
     use variable_precision,         only: wp
-    use thresholds,            only: ql_tidy
+    use thresholds,                 only: ql_tidy, qi_tidy, cfliq_small
+
+    ! Needed for the PC2 cloud fraction response to the CASIM increments
+    use cderived_mod,               only: delta_lambda, delta_phi
+    use cloud_inputs_mod,           only: i_cld_vn, cff_spread_rate
+    use pc2_constants_mod,          only: i_cld_pc2
+    use qsat_mod,                   only: qsat_mix
 
     implicit none
 
@@ -220,14 +255,20 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), intent(in),  dimension(undf_wth) :: ms_wth
     real(kind=r_def), intent(in),  dimension(undf_wth) :: cfl_wth
     real(kind=r_def), intent(in),  dimension(undf_wth) :: cff_wth
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: bcf_wth
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: precfrac
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: sigma_ml
+
     real(kind=r_def), intent(in),  dimension(undf_wth) :: w_phys
     real(kind=r_def), intent(in),  dimension(undf_wth) :: theta_in_wth
     real(kind=r_def), intent(in),  dimension(undf_wth) :: exner_in_wth
     real(kind=r_def), intent(in),  dimension(undf_wth) :: height_wth
     real(kind=r_def), intent(in),  dimension(undf_w3)  :: wetrho_in_w3
     real(kind=r_def), intent(in),  dimension(undf_w3)  :: dry_rho_in_w3
+    real(kind=r_def), intent(in),  dimension(undf_w3)  :: u_in_w3
+    real(kind=r_def), intent(in),  dimension(undf_w3)  :: v_in_w3
     real(kind=r_def), intent(in),  dimension(undf_w3)  :: height_w3
-
+    real(kind=r_def), intent(in),  dimension(undf_wth) :: dry_rho_in_wth
     real(kind=r_def), intent(inout), dimension(undf_wth) :: nl_mphys
     real(kind=r_def), intent(inout), dimension(undf_wth) :: nr_mphys
     real(kind=r_def), intent(inout), dimension(undf_wth) :: ni_mphys
@@ -239,6 +280,9 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dmr_wth
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dmg_wth
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dms_wth
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: dcfl_wth
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: dcff_wth
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: dbcf_wth
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_rain_2d
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_snow_2d
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_graup_2d
@@ -278,11 +322,11 @@ subroutine casim_code( nlayers,                     &
          rho_casim, w_casim, tke_casim,                                        &
          dz_casim,                                                             &
          cfliq_casim, cfice_casim, cfsnow_casim,                               &
-         cfrain_casim, cfgr_casim,                                             &
+         cfrain_casim, cfgr_casim, precfrac_casim,                             &
          dqv_casim, dqc_casim,  dqr_casim, dnc_casim,                          &
          dnr_casim, dm3r_casim, dqi_casim, dqs_casim,                          &
          dqg_casim, dni_casim, dns_casim,  dng_casim,                          &
-         dm3s_casim, dm3g_casim, dth_casim,                                    &
+         dm3s_casim, dm3g_casim, dth_casim, dcfliq_casim, dcfice_casim,        &
          daitken_sol_mass, daitken_sol_number,                                 &
          daccum_sol_mass, daccum_sol_number,                                   &
          dcoarse_sol_mass, dcoarse_sol_number,                                 &
@@ -293,6 +337,9 @@ subroutine casim_code( nlayers,                     &
          daccum_dust_number,   dact_sol_number_casim,                          &
          dact_insol_number_casim
 
+    ! Variables for passing subgrid cloud and rain inhomogeneity into CASIM
+    real(wp), dimension(nlayers) :: fsd_l, fsd_r
+    real(wp) :: x_in_km
 
     ! Local variables for the kernel
     real(r_um), parameter :: alt_1km = 1000.0_r_um ! metres
@@ -314,18 +361,62 @@ subroutine casim_code( nlayers,                     &
     logical :: supercooled_layer(nlayers)
 
     !-------------------------------------------------------------------------
+    ! PC2 cloud fraction response to the CASIM increments
+    !-------------------------------------------------------------------------
+    ! Use the PC2 shear method to generate an ice cloud fraction increment
+    ! (the same increment code as in lsp_fall).
+    logical, parameter :: l_use_pc2_iceshear = .true.
+    ! Use Wood and Field (2000, JAS) to provide an initial increment to the ice
+    ! cloud fraction if the current fraction is zero but ice or snow is present.
+    logical, parameter :: l_use_wf2000_inc = .true.
+
+    ! Relative humidity limits for the Wood and Field cloud fraction: the upper
+    ! limit is the point at which the cloud fraction reaches one, the lower is
+    ! the onset of cloud fraction formation.
+    real(r_def), parameter :: rh_cfrac_upper = 1.15_r_def
+    real(r_def), parameter :: rh_cfrac_lower = 0.95_r_def
+    real(r_def), parameter :: rcp_rhcfrac_upper_lower =                        &
+                                  1.0_r_def / (rh_cfrac_upper - rh_cfrac_lower)
+
+    ! The horizontal grid is quasi-uniform, so the metric term that the UM
+    ! applies when converting a grid spacing in radians to a length is one.
+    real(r_def), parameter :: fv_cos_theta_latitude = 1.0_r_def
+
+    real(r_def) :: mwfv          ! Mass weighted fallspeed from the level above
+    real(r_def) :: ice_above     ! Frozen water content of the level above
+    real(r_def) :: frac_dep      ! Fraction of the layer depth fallen through
+    real(r_def) :: overhang      ! Ice cloud overhang between levels
+    real(r_def) :: dudz, dvdz    ! Wind differences across the layer
+    real(r_def) :: shear         ! Magnitude of the vertical wind shear
+    real(r_def) :: horiz_scale   ! Horizontal grid box scale
+    real(r_def) :: lateral_disp  ! Lateral displacement of the falling ice
+    real(r_def) :: cff_perimeter ! Perimeter of the ice cloud edge
+    real(r_def) :: deltacff      ! Change in ice cloud fraction
+    real(r_def) :: deltacf       ! Change in bulk cloud fraction
+    real(r_def) :: x_cff         ! Frozen plus vapour content over saturation
+    real(r_def) :: qsi           ! Saturation mixing ratio with respect to ice
+    real(r_def) :: t_pc2         ! Temperature after the CASIM increments
+
+    real(r_def), dimension(nlayers) :: cff_work_pc2, cfl_work_pc2, cf_work_pc2
+
+    logical :: l_pc2_response   ! PC2 is the active cloud scheme
+
+    !-------------------------------------------------------------------------
     ! End of Declarations
     !-------------------------------------------------------------------------
 
+    l_pc2_response = ( i_cld_vn == i_cld_pc2 )
+
     ! Configure optional diagnostics
-    casdiags % l_graupfall_3d = ls_graup_3d_flag
+    casdiags % l_graupfall_3d = ls_graup_3d_flag .or. l_mcr_precfrac
 
     ! Set CDNC for radiation here as we need the start of timestep value
     if (casim_cdnc_opt == casim_cdnc_opt_fixed) then
       do k = 0, nlayers
         if (cfl_wth(map_wth(1) + k) > 0.001_r_def) then
-          cloud_drop_no_conc(map_wth(1) + k) = max(nl_mphys(map_wth(1) + k) / &
-                                                   cfl_wth(map_wth(1) + k), &
+          cloud_drop_no_conc(map_wth(1) + k) = max(nl_mphys(map_wth(1) + k) * &
+                                              dry_rho_in_wth(map_wth(1) + k)/ &
+                                                   cfl_wth(map_wth(1) + k),   &
                                                    min_cdnc_sea_ice)
         else
           cloud_drop_no_conc(map_wth(1) + k) = min_cdnc_sea_ice
@@ -338,7 +429,9 @@ subroutine casim_code( nlayers,                     &
       ! after that has happened, hence why it needs to happen here.
       do k = 1, nlayers
         if (ml_wth(map_wth(1) + k) > ql_tidy) then
-          nl_mphys( map_wth(1) + k) = cloud_drop_no_conc(map_wth(1) + k) * cfl_wth(map_wth(1) + k)
+          nl_mphys( map_wth(1) + k) = cloud_drop_no_conc(map_wth(1) + k)  &
+                                      * cfl_wth(map_wth(1) + k)           &
+                                      / dry_rho_in_wth(map_wth(1) + k)
         else
           nl_mphys( map_wth(1) + k) = 0.0_r_def
         end if
@@ -456,12 +549,52 @@ subroutine casim_code( nlayers,                     &
 
     cfrain_casim(nlayers,:,:)=0.0_wp
     cfgr_casim(nlayers,:,:)=0.0_wp
-    do k =  nlayers-1, 1, -1
-      !make cfrain the max of cfl in column
-      cfrain_casim(k,1,1)=max(cfrain_casim(k+1,1,1),cfliq_casim(k,1,1),cfsnow_casim(k,1,1))
-      !make graupel fraction
-      cfgr_casim(k,1,1)=cfrain_casim(k,1,1)
-    end do
+
+    if ( l_mcr_precfrac ) then
+      ! If using prognostic precip fraction, use a blend of the existing
+      ! value of the prognostic and the current cloud-fraction,
+      ! smoothly extrapolated downwards
+      do k = 1, nlayers
+        precfrac_casim(k,1,1) = precfrac(map_wth(1) + k)
+      end do
+      call casim_calc_cfrain( nlayers, dz_casim, rho_casim,                    &
+                              qc_casim, qi_casim, qs_casim, qr_casim, qg_casim,&
+                              cfliq_casim, cfice_casim, precfrac_casim,        &
+                              cfrain_casim, cfgr_casim )
+    else
+      ! Otherwise just copy max cloud-fraction in the column downwards
+      do k =  nlayers-1, 1, -1
+        !make cfrain the max of cfl in column
+        cfrain_casim(k,1,1) = max( cfrain_casim(k+1,1,1),                      &
+                                   cfliq_casim(k,1,1),                         &
+                                   cfsnow_casim(k,1,1) )
+        !make graupel fraction
+        cfgr_casim(k,1,1)=cfrain_casim(k,1,1)
+      end do
+    end if
+
+    if ( casim_inhom_rain ) then
+      ! If enhancing warm rain to account for sub-grid inhomogeneity,
+      ! Set the fractional standard deviation of liquid-cloud and rain
+      ! needed for that calculation inside CASIM
+      x_in_km = fsd_eff_lam * planet_radius * 0.001_wp
+      do k = 1, nlayers
+        ! Copy liquid-cloud FSD from input array
+        fsd_l(k) = sigma_ml(map_wth(1) + k)
+        ! Calculate ice-cloud FSD as is done in Wilson-Ballard
+        fsd_r(k) = (1.1_wp-0.8_wp*cfrain_casim(k,1,1))                         &
+                 *(((x_in_km*cfrain_casim(k,1,1))**0.333_wp)                   &
+                 *((0.11_wp*x_in_km*cfrain_casim(k,1,1))                       &
+                 **1.14_wp+1.0_wp)**(-0.22_wp))
+        fsd_r(k) = fsd_r(k)*two_d_fsd_factor
+      end do
+    else
+      ! Set to zero if not used
+      do k = 1, nlayers
+        fsd_l(k) = 0.0_wp
+        fsd_r(k) = 0.0_wp
+      end do
+    end if
 
     ! Set up diagnostic flags for CASIM
     l_refl_tot = .not. associated(refl_tot, empty_real_data)
@@ -497,7 +630,7 @@ subroutine casim_code( nlayers,                     &
                             rho_casim, w_casim, tke_casim,                    &
                             dz_casim,                                         &
                             cfliq_casim, cfice_casim, cfsnow_casim,           &
-                            cfrain_casim, cfgr_casim,                         &
+                            cfrain_casim, cfgr_casim, fsd_l, fsd_r,           &
     !!                input variables above  || in/out variables below
                             dqv_casim, dqc_casim,  dqr_casim, dnc_casim,      &
                             dnr_casim, dm3r_casim, dqi_casim, dqs_casim,      &
@@ -559,6 +692,164 @@ subroutine casim_code( nlayers,                     &
     ns_mphys( map_wth(1) + 0) = ns_mphys( map_wth(1) + 1)
     ng_mphys( map_wth(1) + 0) = ng_mphys( map_wth(1) + 1)
 
+    !-------------------------------------------------------------------------
+    ! Calculation of increments to the PC2 cloud scheme
+    !-------------------------------------------------------------------------
+    ! Note that the UM species qcf, qcf2 and qgraup map onto the LFRic snow,
+    ! ice and graupel mixing ratios respectively.
+    if (l_pc2_response) then
+
+      !---------------------------------------------------------------------
+      ! Increment ice cloud fractions
+      !---------------------------------------------------------------------
+      if (l_use_pc2_iceshear) then
+        ! use the same method as in lsp_fall to compute an
+        ! ice cloud fraction increment based on wind shear
+
+        do k = nlayers-1, 1, -1  ! start 1 level below the top
+
+          ice_above = ms_wth(map_wth(1) + k+1) + mi_wth(map_wth(1) + k+1) +    &
+                      dms_wth(map_wth(1) + k+1) + dmi_wth(map_wth(1) + k+1)
+
+          ! mwfv is fallspeed from above.
+          if (ice_above > qi_tidy) then
+            mwfv = casdiags % snowonly_3d(1,1,k+1) / ice_above
+          else
+            mwfv = 0.0_r_def
+          end if
+          frac_dep = mwfv * timestep / deltaz(1,1,k)
+
+          ! Ensure frac_dep is positive and <=1
+          frac_dep = min(max(frac_dep, 0.0_r_def), 1.0_r_def)
+
+          !--------------------------------------------------------------
+          ! Calculate the amount of cloud overhang between levels
+          !--------------------------------------------------------------
+          overhang = max(cff_wth(map_wth(1) + k+1) +  &
+                         dcff_wth(map_wth(1) + k+1) - &
+                         cff_wth(map_wth(1) + k),     &
+                         0.0_r_def)
+
+          ! using real shear method from lsp_fall_ice
+          ! Increase the overhang depending on the vertical
+          ! shear of the model wind.
+
+          ! Magnitude of vertical shear of the horizontal wind.
+          ! |dU/dz| = SQRT( dudz^2 + dvdz^2 )
+          dudz = ( u_in_w3(map_w3(1) + k) - u_in_w3(map_w3(1) + k-1) )
+          dvdz = ( v_in_w3(map_w3(1) + k) - v_in_w3(map_w3(1) + k-1) )
+          shear = sqrt( (dudz*dudz) + (dvdz*dvdz) )
+
+          ! The horizontal scale is taken as the square root
+          ! of the area of the grid box.
+          horiz_scale = sqrt (   r_theta_levels(1,1,k) * delta_lambda          &
+                               * r_theta_levels(1,1,k) * delta_phi             &
+                               * fv_cos_theta_latitude     )
+
+          ! Calculate the horizontal distance (in metres) the ice
+          ! has moved across
+          lateral_disp = shear * timestep
+
+          ! Convert the lateral displacement of the falling ice
+          ! cloud fraction to an increase in ice cloud fraction
+          ! overhang by considering the size of the grid-box.
+          overhang = overhang + ( lateral_disp / horiz_scale )
+
+          !--------------------------------------------------------------
+          ! Calculate change in ice cloud fraction
+          !--------------------------------------------------------------
+          ! The overhanging cloud gets advected down a
+          ! certain fraction of the depth of the layer. Now assume the
+          ! cloud fills the whole depth of the layer and
+          ! reduce the lateral extent while conserving cloud volume.
+          deltacff = min(frac_dep * overhang, &
+                         1.0_r_def - cff_wth(map_wth(1) + k))
+
+          ! Augment the change in ice cloud fraction to account
+          ! for the lateral spreading out of ice cloud (e.g. cirrus).
+          ! This will increase CFF while keeping IWC the same.
+          !
+          ! Cloud can only spread out from its edges, so work out the
+          ! perimeter of the cloud edge as a function of cloud fraction.
+          cff_perimeter = ( 2.0_r_def * cff_wth(map_wth(1) + k) )              &
+                        - ( 2.0_r_def * cff_wth(map_wth(1) + k)                &
+                                      * cff_wth(map_wth(1) + k) )
+
+          deltacff = deltacff + (cff_spread_rate * cff_perimeter * timestep)
+          deltacff = min(deltacff, 1.0_r_def - cff_wth(map_wth(1) + k))
+
+          if (cff_wth(map_wth(1) + k) < 1.0_r_def) then
+            !------------------------------------------------------------
+            ! Total cloud fraction will be increased, assuming minimum
+            ! overlap
+            !------------------------------------------------------------
+            deltacf = min(deltacff, 1.0_r_def - bcf_wth(map_wth(1) + k))
+          else
+            deltacf = 0.0_r_def
+          end if
+
+          dcff_wth(map_wth(1) + k) = dcff_wth(map_wth(1) + k) + deltacff
+          dbcf_wth(map_wth(1) + k) = dbcf_wth(map_wth(1) + k) + deltacf
+
+        end do ! k
+      end if ! l_use_pc2_iceshear
+
+      if (l_use_wf2000_inc) then
+        ! if ice cloud fraction is zero and there is
+        ! ice then compute an increment
+
+        do k = 1, nlayers
+
+          t_pc2 = exner_in_wth(map_wth(1) + k) *                               &
+                  ( theta_in_wth(map_wth(1) + k) + theta_inc(map_wth(1) + k) )
+
+          ! LFRic runs with mixing ratio physics throughout
+          call qsat_mix( qsi, t_pc2, real(p_casim(k,1,1), r_def) )
+
+          cff_work_pc2(k) = cff_wth(map_wth(1) + k) + dcff_wth(map_wth(1) + k)
+          cfl_work_pc2(k) = cfl_wth(map_wth(1) + k) + dcfl_wth(map_wth(1) + k)
+          cf_work_pc2(k)  = bcf_wth(map_wth(1) + k) + dbcf_wth(map_wth(1) + k)
+
+          ! Work out ice increments
+          if ( ms_wth(map_wth(1) + k) + mi_wth(map_wth(1) + k) +               &
+               dms_wth(map_wth(1) + k) + dmi_wth(map_wth(1) + k)               &
+               > qi_tidy ) then
+
+            if (cff_work_pc2(k) < cfliq_small) then
+              ! if no ice cloud fraction then make some.
+              x_cff = ( ms_wth(map_wth(1) + k) + mi_wth(map_wth(1) + k) +      &
+                        dms_wth(map_wth(1) + k) + dmi_wth(map_wth(1) + k) +    &
+                        mv_wth(map_wth(1) + k) + dmv_wth(map_wth(1) + k) ) / qsi
+
+              if (x_cff <= rh_cfrac_lower) cff_work_pc2(k) = 0.0_r_def
+              if ((x_cff > rh_cfrac_lower) .and. (x_cff < rh_cfrac_upper))     &
+                  cff_work_pc2(k) = (x_cff - rh_cfrac_lower)                   &
+                                    * rcp_rhcfrac_upper_lower
+              if (x_cff >= rh_cfrac_upper) cff_work_pc2(k) = 1.0_r_def
+
+            end if  ! no ice cloud fraction present - make some
+          else
+            cff_work_pc2(k) = 0.0_r_def
+          end if
+
+          ! Finalise PC2 increments
+          cf_work_pc2(k) = min(1.0_r_def, cfl_work_pc2(k) + cff_work_pc2(k))
+
+          dcff_wth(map_wth(1) + k) = cff_work_pc2(k) - cff_wth(map_wth(1) + k)
+          dcfl_wth(map_wth(1) + k) = cfl_work_pc2(k) - cfl_wth(map_wth(1) + k)
+          dbcf_wth(map_wth(1) + k) = cf_work_pc2(k)  - bcf_wth(map_wth(1) + k)
+
+        end do ! k
+      end if  ! l_use_wf2000_inc
+
+      ! Increment level 0 the same as level 1
+      !  (as done for the other increments above)
+      dcfl_wth(map_wth(1) + 0) = dcfl_wth(map_wth(1) + 1)
+      dcff_wth(map_wth(1) + 0) = dcff_wth(map_wth(1) + 1)
+      dbcf_wth(map_wth(1) + 0) = dbcf_wth(map_wth(1) + 1)
+
+    end if  ! l_pc2_response
+
     ! Copy ls_rain, ls_snow and ls_graup
     ls_rain_2d(map_2d(1))  = casdiags % SurfaceRainR(1,1)
     ls_snow_2d(map_2d(1))  = casdiags % SurfaceSnowR(1,1)
@@ -576,6 +867,28 @@ subroutine casim_code( nlayers,                     &
     ! Copy lsca_2d - like mphys_kernel_mod, use rain fraction
     ! from lowest model level
     lsca_2d(map_2d(1)) = cfrain_casim(1,1,1)
+
+    if (l_mcr_precfrac) then
+      ! Update prognostic precip fraction based on the precip mass
+      ! increments from CASIM...
+      do k = 1, nlayers
+        ! Copy cloud-fraction increments into local arrays
+        dcfliq_casim(k,1,1) = dcfl_wth(map_wth(1) + k)
+        dcfice_casim(k,1,1) = dcff_wth(map_wth(1) + k)
+      end do
+      call casim_update_precfrac( nlayers, dz_casim, rho_casim,                &
+                                  casdiags%rainfall_3d, casdiags%graupfall_3d, &
+                                  qc_casim, qi_casim, qs_casim,                &
+                                  qr_casim, qg_casim,                          &
+                                  cfliq_casim, cfice_casim, precfrac_casim,    &
+                                  dqc_casim, dqi_casim, dqs_casim,             &
+                                  dqr_casim, dqg_casim,                        &
+                                  dcfliq_casim, dcfice_casim )
+      do k = 1, nlayers
+        ! Copy updated precip fraction to output
+        precfrac(map_wth(1) + k) = precfrac_casim(k,1,1)
+      end do
+    end if
 
     if (l_refl_1km) then
       do k = 1, nlayers
