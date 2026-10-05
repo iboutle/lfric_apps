@@ -1275,7 +1275,7 @@ contains
         i_pc2_checks_cld_frac_method = 2
         i_pc2_conv_coupling          = 3
         i_pc2_erosion_method         = pc2eros_hybrid_sidesonly
-        l_ensure_min_in_cloud_qcf    = .false.
+        l_ensure_min_in_cloud_qcf    = .true.
         l_ensure_max_in_cloud_pc2    = l_ensure_max_in_cloud_pc2_in
         select case(pc2_erosion_numerics)
           case(pc2_erosion_numerics_explicit)
