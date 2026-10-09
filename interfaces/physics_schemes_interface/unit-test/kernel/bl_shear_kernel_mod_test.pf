@@ -1,0 +1,106 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2026 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> Test the boundary layer shear kernel
+!>
+module bl_shear_kernel_mod_test
+
+  use funit
+  use constants_mod, only : r_def, i_def, eps
+
+  implicit none
+
+  private
+  public :: test_bl_shear
+
+  @TestCase
+  type, extends(TestCase), public :: bl_shear_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_bl_shear
+  end type bl_shear_test_type
+
+  integer(i_def), parameter :: nlayers  = 3_i_def
+  integer(i_def), parameter :: ndf_wth  = 1_i_def
+  integer(i_def), parameter :: undf_wth = nlayers + 1_i_def
+  integer(i_def), parameter :: ndf_w2   = 6_i_def
+  ! 4 horizontal dofs with nlayers values, 1 shared vertical column of nlayers+1
+  integer(i_def), parameter :: undf_w2  = 4_i_def*nlayers + nlayers + 1_i_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(bl_shear_test_type), intent(inout) :: this
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(bl_shear_test_type), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_bl_shear( this )
+
+    use bl_shear_kernel_mod, only : bl_shear_code
+
+    implicit none
+
+    class(bl_shear_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-12_r_def
+    real(r_def), parameter :: coeff(4) = (/ 1.0_r_def, -2.0_r_def, &
+                                            3.0_r_def, -4.0_r_def /)
+
+    integer(i_def) :: map_wth(ndf_wth), map_w2(ndf_w2)
+    real(r_def)    :: shear(undf_wth), dz_wth(undf_wth), answer(undf_wth)
+    real(r_def)    :: u_physics(undf_w2)
+    integer(i_def) :: df, k
+
+    map_wth = (/ 1_i_def /)
+    map_w2  = (/ 1_i_def, 1_i_def +   nlayers, 1_i_def + 2*nlayers, &
+                 1_i_def + 3*nlayers, 1_i_def + 4*nlayers,          &
+                 2_i_def + 4*nlayers /)
+
+    ! u = coeff(df) * k**2, so du = coeff(df) * (2k-1) between layers k-1, k
+    u_physics = 0.0_r_def
+    do df = 1, 4
+      do k = 0, nlayers - 1
+        u_physics(map_w2(df) + k) = coeff(df) * real(k*k, r_def)
+      end do
+    end do
+
+    dz_wth = (/ 1.0_r_def, 1.0_r_def, 2.0_r_def, 3.0_r_def /)
+    shear  = -999.0_r_def
+
+    ! sum(coeff**2)/2 = 15
+    answer(1) = 0.0_r_def
+    answer(2) = sqrt(15.0_r_def / 1.0_r_def + eps)
+    answer(3) = sqrt(9.0_r_def * 15.0_r_def / 4.0_r_def + eps)
+    answer(4) = 0.0_r_def
+
+    call bl_shear_code( nlayers,                    &
+                        shear,                      &
+                        u_physics,                  &
+                        dz_wth,                     &
+                        ndf_wth, undf_wth, map_wth, &
+                        ndf_w2, undf_w2, map_w2 )
+
+    @assertEqual(answer, shear, tol)
+
+  end subroutine test_bl_shear
+
+end module bl_shear_kernel_mod_test

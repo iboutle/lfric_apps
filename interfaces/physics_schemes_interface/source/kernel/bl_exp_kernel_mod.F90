@@ -374,7 +374,7 @@ contains
     ! UM modules containing switches or global constants
     !---------------------------------------
     use atm_fields_bounds_mod, only: pdims
-    use bl_option_mod, only: alpha_cd, l_noice_in_turb, l_use_surf_in_ri
+    use bl_option_mod, only: alpha_cd, l_noice_in_turb, l_use_surf_in_ri, native_shear
     use cv_run_mod, only: i_convection_vn, i_convection_vn_6a,               &
                           cldbase_opt_dp, cldbase_opt_md
     use nlsizes_namelist_mod, only: bl_levels
@@ -728,17 +728,18 @@ contains
       end do
     end if
 
-    do i = 1, seg_len
-      do k = 1, nlayers
-        visc_m(i,1,k) = shear(map_wth(1,i) + k)
+    if (smagorinsky .or. native_shear) then
+      do i = 1, seg_len
+        do k = 1, nlayers
+          visc_m(i,1,k) = shear(map_wth(1,i) + k)
+        end do
       end do
-    end do
+    end if
     if ( smagorinsky ) then
       do i = 1, seg_len
         delta_smag(i,1) = delta(map_wth(1,i))
         max_diff(i,1) = max_diff_smag(map_wth(1,i))
         do k = 1, nlayers
-!          visc_m(i,1,k) = shear(map_wth(1,i) + k)
           visc_h(i,1,k) = shear(map_wth(1,i) + k)
         end do
       end do

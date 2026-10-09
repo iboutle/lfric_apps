@@ -111,6 +111,8 @@ logical :: l_bl_mix_qcf = .false.
 !    ni_imp_ctl (non-conservative)
 logical :: l_reset_neg_q=.false.
 
+logical :: native_shear = .true.
+
 ! 09 Switch for free atmospheric mixing options
 integer :: local_fa= imdi
 ! to_sharp_across_1km (=1) => smoothly switch to sharpest across 1km AGL

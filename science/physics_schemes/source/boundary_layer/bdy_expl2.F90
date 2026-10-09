@@ -84,7 +84,7 @@ use bl_option_mod, only:                                                       &
     blend_except_cu, blend_cth_shcu_only, sg_shear, sg_shear_enh_lambda,       &
     max_tke, tke_diag_fac, improved_tke_diag, smooth_to_bdys,                  &
     i_interp_local, i_interp_local_gradients, i_interp_local_cf_dbdz,          &
-    shallow_cu_maxtop, sc_cftol, near_neut_z_on_l, zero, one, one_half
+    shallow_cu_maxtop, sc_cftol, near_neut_z_on_l, zero, one, one_half, native_shear
 use cloud_inputs_mod, only: i_rhcpt, forced_cu, i_cld_vn, i_pc2_init_method,   &
     ez_max_bm, i_bm_ez_opt, i_bm_ez_subcrit, i_bm_ez_entpar
 use cderived_mod, only: delta_lambda, delta_phi
@@ -1206,42 +1206,42 @@ end select  ! (i_interp_local)
 ! Calculate modulus of shear on theta-levels
 ! dvdzm(k) is on theta-level(k-1)
 !--------------------------------------------------
-! if (.not. l_subfilter_vert) then
+if (.not. l_subfilter_vert .and. .not. native_shear) then
 
-! !$OMP do SCHEDULE(STATIC)
-!   do k = 2, bl_levels
-!     do j = pdims%j_start, pdims%j_end
-!       do i = pdims%i_start, pdims%i_end
-!         dzu = u_p(i,j,k) - u_p(i,j,k-1)
-!         dzv = v_p(i,j,k) - v_p(i,j,k-1)
-!         dvdzm(i,j,k) = max( 1.0e-12_r_bl,                                      &
-!                             sqrt(dzu*dzu + dzv*dzv) * rdz(i,j,k) )
-!       end do
-!     end do
-!   end do
-! !$OMP end do
+!$OMP do SCHEDULE(STATIC)
+  do k = 2, bl_levels
+    do j = pdims%j_start, pdims%j_end
+      do i = pdims%i_start, pdims%i_end
+        dzu = u_p(i,j,k) - u_p(i,j,k-1)
+        dzv = v_p(i,j,k) - v_p(i,j,k-1)
+        dvdzm(i,j,k) = max( 1.0e-12_r_bl,                                      &
+                            sqrt(dzu*dzu + dzv*dzv) * rdz(i,j,k) )
+      end do
+    end do
+  end do
+!$OMP end do
 
-! else
+else
 
-!   if ( model_type == mt_single_column ) then
-!     ! visc_m, visc_h need to be the 1D shear(k) on theta-level(k)
+  if ( model_type == mt_single_column ) then
+    ! visc_m, visc_h need to be the 1D shear(k) on theta-level(k)
 
-! !$OMP do SCHEDULE(STATIC)
-!     do k = 2, bl_levels
-!       do j = pdims%j_start, pdims%j_end
-!         do i = pdims%i_start, pdims%i_end
-!           dzu = u_p(i,j,k) - u_p(i,j,k-1)
-!           dzv = v_p(i,j,k) - v_p(i,j,k-1)
-!           dvdzm(i,j,k) = max( 1.0e-12_r_bl,                                    &
-!                               sqrt(dzu*dzu + dzv*dzv) * rdz(i,j,k) )
-!           visc_m(i,j,k-1) = dvdzm(i,j,k)
-!           visc_h(i,j,k-1) = dvdzm(i,j,k)
-!         end do
-!       end do
-!     end do
-! !$OMP end do
+!$OMP do SCHEDULE(STATIC)
+    do k = 2, bl_levels
+      do j = pdims%j_start, pdims%j_end
+        do i = pdims%i_start, pdims%i_end
+          dzu = u_p(i,j,k) - u_p(i,j,k-1)
+          dzv = v_p(i,j,k) - v_p(i,j,k-1)
+          dvdzm(i,j,k) = max( 1.0e-12_r_bl,                                    &
+                              sqrt(dzu*dzu + dzv*dzv) * rdz(i,j,k) )
+          visc_m(i,j,k-1) = dvdzm(i,j,k)
+          visc_h(i,j,k-1) = dvdzm(i,j,k)
+        end do
+      end do
+    end do
+!$OMP end do
 
-!   else
+  else
 
     ! On entry, visc_m is 3D shear(k) on theta-level(k)
 
@@ -1254,9 +1254,9 @@ end select  ! (i_interp_local)
       end do
     end do
 !$OMP end do
-!  end if  ! test on SCM
+  end if  ! test on SCM
 
-!end if  ! test on l_subfilter_vert
+end if  ! test on l_subfilter_vert
 
 if (l_subfilter_horiz .or. l_subfilter_vert) then
   if (smag_l_calc == smag_l_calc_use_geo) then

@@ -27,7 +27,7 @@ module bl_exp_alg_mod
                                            get_rdz_w3, get_dtrdz_wth
   use map_fd_to_prognostics_alg_mod, only: set_wind
   use jules_surface_config_mod,      only: formdrag, formdrag_dist_drag
-  use bl_option_mod,                 only: l_calc_tau_at_p
+  use bl_option_mod,                 only: l_calc_tau_at_p, native_shear
   use microphysics_config_mod,       only: microphysics_casim
   use bl_option_mod,                 only: l_noice_in_turb
   use um_sizes_init_mod,             only: um_sizes_init
@@ -84,6 +84,7 @@ contains
     use bl_exp_kernel_mod, only: bl_exp_kernel_type
     use interp_bl_kernel_mod, only: interp_bl_kernel_type
     use bl_exp_du_kernel_mod, only: bl_exp_du_kernel_type
+    use bl_shear_kernel_mod, only: bl_shear_kernel_type
     use planet_constants_mod, only: lcrcp_def, lsrcp_def
 
     implicit none
@@ -220,6 +221,7 @@ contains
                           zht, oblen
     type( field_type) :: rdz_wth, taux_land, tauy_land, taux_ssi, tauy_ssi
     type( field_type ) :: mr_ice
+    type( field_type ), target :: shear_loc
 
     integer(i_def) :: ncells
     integer(tik)   :: id
@@ -238,7 +240,9 @@ contains
     call derived_fields%get_field('v_in_w3', v_in_w3)
     call derived_fields%get_field('w_in_wth', w_in_wth)
     call derived_fields%get_field('velocity_w2v', velocity_w2v)
-    call derived_fields%get_field('shear', shear)
+    if (.not. native_shear) then
+      call derived_fields%get_field('shear', shear)
+    end if
     call derived_fields%get_field('visc_h', visc_h)
     call derived_fields%get_field('visc_m', visc_m)
     call derived_fields%get_field('u_physics', u_physics)
@@ -376,6 +380,12 @@ contains
                   inc_X_minus_bY(dtl_mphys, lsrcp_def, dmr_mphys(imr_ci)),         &
                   inc_X_plus_Y(dmt_mphys, dmr_mphys(imr_s)),                   &
                   inc_X_plus_Y(dmt_mphys, dmr_mphys(imr_ci)) )
+    end if
+
+    if (native_shear) then
+      call theta%copy_field_properties(shear_loc)
+      call invoke(bl_shear_kernel_type(shear_loc, u_physics, dz_wth))
+      shear => shear_loc
     end if
 
     ! Switch UM to running i-first on whole domain
