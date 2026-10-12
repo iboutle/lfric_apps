@@ -334,8 +334,8 @@ subroutine smagorinsky_alg( config, dtheta_io, du_io, mr, theta, u,   &
         call derived_fields%get_field('theta_star', theta_star)
         call invoke( X_plus_Y(theta_b4smag, theta_star, dtheta_io) )
       else
-        ! Just add incoming inc to incoming theta
-        call invoke( X_plus_Y(theta_b4smag, theta, dtheta_io) )
+        ! Incoming field is latest field
+        call invoke( setval_X(theta_b4smag, theta) )
       end if
 
       ! Set cloud fraction forcing to 0
