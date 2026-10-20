@@ -15,8 +15,16 @@
 {% else %}
     {% set continuation = false %}
 {% endif %}
+{% set short_family = task_family | replace("lfric_atm_", "")
+                                  | replace("coupled-", "")
+                                  | replace("MG_", "")
+                                  | replace("fast-debug", "fd")
+                                  | replace("full-debug", "dbg")
+                                  | replace("production", "prod")
+                                  | replace("32bit", "32")
+                                  | replace("64bit", "64") %}
 {% set history_dir = "$CYLC_WORKFLOW_SHARE_DIR/data/"~
-                      task_values["datam"]~"_"~task_family %}
+                      task_values["datam"]~"_"~short_family %}
 {% if crun_segment %}
     {% set history_dir = history_dir~"_crun" %}
 {% endif %}
@@ -93,7 +101,7 @@
             OCEAN_EXEC = $OCEAN_MAKE_DIR/build-ocean/bin/nemo-si3.exe
             RIVER_MAKE_DIR = {{task_values["river_make_dir"]}}
             RIVER_EXEC = $RIVER_MAKE_DIR/build/bin/river.exe
-            RUNID = {{task_family}}
+            RUNID = {{short_family}}
             UM_ANCIL_TRIP_SEQ_DIR = task_values["um_ancil_trip_seq_dir"]
             UM_ANCIL_TRIP_STOR_DIR = task_values["um_ancil_trip_stor_dir"]
             UM_ANCIL_TRIP_NUMBER = task_values["um_ancil_trip_number"]

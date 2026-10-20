@@ -10,7 +10,7 @@
 {% endif %}
 
 {% if "datam" not in task_dict %}
-    {% do task_dict.update({"datam": "History_Data"}) %}
+    {% do task_dict.update({"datam": "Hist"}) %}
 {% endif %}
 
 {% if "diag_mean_period" not in task_dict %}
