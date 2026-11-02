@@ -59,4 +59,18 @@ class vn32_tXXX(MacroUpgrade):
             ("wetness_under_soil", "1.0"),
         ]:
             self.add_setting(config, ["namelist:ideal_surface", name], value)
+        """Add the albedo weights used with site forcing, the minimum LAI of
+        snow-covered canopies and the soil thermal conductivity model, with
+        the values previously used"""
+        self.add_setting(
+            config, ["namelist:jules_radiation", "wght_alb"], "0.0,0.5,0.0,0.5"
+        )
+        self.add_setting(
+            config,
+            ["namelist:jules_snow", "lai_alb_lim_sn"],
+            "1.0,1.0,0.1,0.1,0.1",
+        )
+        self.add_setting(
+            config, ["namelist:jules_soil", "soilhc_method"], "'johansen'"
+        )
         return config, self.reports

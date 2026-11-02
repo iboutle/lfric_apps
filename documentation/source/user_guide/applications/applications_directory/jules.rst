@@ -47,8 +47,8 @@ Two namelists switch the forcing on:
 The forcing file
 ~~~~~~~~~~~~~~~~
 
-The forcing file is a NetCDF file with one point, using the dimensions
-``(time, land)``. It must contain the following variables:
+The forcing file is a NetCDF file with one point. By default it uses the
+dimensions ``(time, land)`` and must contain the following variables:
 
 =========  ==================================  ==============
 Variable   Description                         Units
@@ -63,14 +63,25 @@ Variable   Description                         Units
 =========  ==================================  ==============
 
 It must also have a CF ``time`` coordinate variable with units of the form
-``seconds since <date>``. The ``time`` dimension must be fixed, not
-unlimited, because its length sets the size of the XIOS time axis. That
-length is read when the model starts
+``seconds since <date>``. The length of the ``time`` dimension sets the size
+of the XIOS time axis, and is read when the model starts
 (``get_jules_forcing_dim`` in ``time_dimensions_mod``). The file does not
 need any UGRID mesh information.
 
-The XIOS file definition is in ``iodef.xml``. It reads the variables onto an
-axis-only grid (``jules_forcing_grid``), which avoids needing a mesh:
+The variable names and dimensions are set by the XIOS file definition, so
+other formats can be read without converting them. For example,
+``file_def_jules_forcing_plumber.xml`` in the rose-stem app reads PLUMBER2
+(FLUXNET) met files directly: their variables are on ``(time, y, x)``, and
+surface pressure and precipitation are called ``Psurf`` and ``Precip``.
+
+The XIOS file definition is in ``file_def_jules_forcing.xml``, included by
+``iodef.xml``. In the rose-stem app this file is installed from
+``file_def_jules_forcing_cardington.xml``, or from
+``file_def_jules_forcing_plumber.xml`` by the AR-SLu optional
+configuration; the canned example includes
+``file_def_jules_forcing_cardington.xml`` directly. It reads the variables
+onto an axis-only grid (``jules_forcing_grid``), which avoids needing a
+mesh:
 
 .. code-block:: xml
 
@@ -94,6 +105,47 @@ model fields are held in the ``jules_forcing_fields`` collection, which
    The ``output_freq`` of the ``jules_forcing`` file must equal the data
    interval of the forcing file. It must also equal the model timestep.
    The data is not interpolated in time.
+
+Site ancillaries
+~~~~~~~~~~~~~~~~
+
+Time-varying leaf area index, as prescribed in standalone JULES, is read
+through the ancillary system with ``ancil_option='site'`` in the
+``initialization`` namelist. This reads only the leaf area index from the
+plant functional type ancillary, ``plant_func_ancil_path`` (relative to
+``ancil_directory``, or an absolute path), and updates it as the run
+progresses. Unlike the ``fixed`` and ``updating`` options, the data is not
+interpolated in time: each value is held until the next data time, as for
+the ``'nf'`` option of standalone JULES (``create_fd_ancils`` in
+``init_ancils_mod``). The canopy height is not read, and stays at its
+``ideal_surface`` value, as in standalone JULES without TRIFFID.
+
+The ancillary file does not need any mesh information. In ``iodef.xml``
+the ``plant_func_ancil`` file reads the variable ``lai_pft`` on
+``(pft, time, x, y)`` onto the axis-only grid ``site_pft_grid``. The
+``time`` dimension sets the size of the XIOS axis ``site_ancil_time_axis``.
+As for the forcing, the file's ``output_freq`` must equal the timestep.
+
+A standalone JULES prescribed leaf area index file is close to this, but
+has its dimensions in the order ``(time, pft, x, y)`` and no time values.
+It can be converted with the NCO and netCDF tools, setting the times from
+the ``data_start`` and ``data_period`` of the standalone run:
+
+.. code-block:: bash
+
+   ncap2 -O -s 'time=array(0.0,1800.0,$time);
+                time@units="seconds since 2010-01-01 00:00:00";
+                time@calendar="gregorian"' lai.nc lai_time.nc
+   ncpdq -O -a pft,time lai_time.nc lai_pft_time.nc
+   nccopy -u lai_pft_time.nc lai_lfric.nc
+
+``ncpdq`` puts the plant type outermost, as LFRic expects for multi-valued
+time-varying data, and ``nccopy -u`` makes all the dimensions fixed.
+
+If the file only has records at the times when the leaf area index
+changes, it needs a final record after the last timestep of the run.
+Otherwise, once the last data time has passed, the time axis wraps round to
+the first record and cycles through the data.
 
 Timing
 ~~~~~~
@@ -135,14 +187,18 @@ Radiation
 
 No radiation scheme is run. Instead, ``jules_forcing_init`` (called from
 ``gungho_model_mod``) sets the SW bands normally read by ``socrates_init``.
-It sets one broadband band (wavelength limits of -1, which is
-``spec_band_bb`` in standalone JULES), with ``sw_weight_blue`` set to
-``visible_fraction``. With this setup, the existing ``sw_rad_tile`` call in
-``rad_tile_alg`` calculates broadband tile albedos weighted equally between
-visible and near-infrared. These are the default ``wght_alb`` values in
-standalone JULES. After ``rad_tile_alg``, ``jules_forcing_sw_up_kernel`` sets
-the upward SW flux on each tile to the diffuse albedo multiplied by
-``SWdown``.
+It sets two broadband bands (wavelength limits of -1, which is
+``spec_band_bb`` in standalone JULES). The first band has a
+``sw_weight_blue`` of 1 and the second 0. With this setup, the existing
+``sw_rad_tile`` call in ``rad_tile_alg`` gives the visible direct and
+diffuse tile albedos in the first band, and the near-infrared ones in the
+second. After ``rad_tile_alg``, ``jules_forcing_sw_up_kernel`` sets the
+upward SW flux on each tile to ``SWdown`` multiplied by a weighted sum of the
+four albedos, as standalone JULES does. The weights are set by
+``wght_alb`` in the ``jules_radiation`` namelist, in the standalone order:
+visible direct, visible diffuse, near-infrared direct, near-infrared
+diffuse. The standalone default of ``0.0,0.5,0.0,0.5`` uses only the diffuse
+albedos, weighted equally.
 
 The downward LW comes straight from the forcing. The tile emissivities come
 from the existing LW tile calculation.
@@ -170,7 +226,28 @@ previously hard-coded:
 
 The ``vn32`` upgrade macros in ``jules-lsm`` and ``lfric-gungho`` set the
 new items to the old hard-coded values. This leaves existing configurations
-unchanged.
+unchanged. The same applies to these JULES settings, which were hard-coded
+before and are now in the namelists of all applications using JULES:
+
+* ``lai_alb_lim_sn`` in ``jules_snow``, the minimum leaf area index of
+  snow-covered canopies, with one value for each plant type;
+* ``soilhc_method`` in ``jules_soil``, the soil thermal conductivity model
+  (``'cox'``, ``'johansen'`` or ``'chadburn'``);
+* ``wght_alb`` in ``jules_radiation``, only used with site forcing.
+
+Plant functional types
+~~~~~~~~~~~~~~~~~~~~~~
+
+As well as the 5 standard plant types (``brd_leaf``, ``ndl_leaf``,
+``c3_grass``, ``c4_grass`` and ``shrub``), the ``jules_surface_types``
+namelist accepts the 13 plant types of standalone JULES:
+``brd_leaf_dec``, ``brd_leaf_eg_trop``, ``brd_leaf_eg_temp``,
+``ndl_leaf_dec``, ``ndl_leaf_eg``, ``c3_grass``, ``c3_crop``,
+``c3_pasture``, ``c4_grass``, ``c4_crop``, ``c4_pasture``, ``shrub_dec``
+and ``shrub_eg``. Each plant type has a ``jules_pftparm`` namelist,
+identified by ``pft_name_io``. The metadata for the extra types is in
+``jules-lsm``; it could move to the shared JULES metadata in due course.
+Surface types that are not used are left unset.
 
 The atmospheric profile namelists only use ``profile_size=1`` placeholder
 values, because the forcing overwrites the first layer before JULES runs.
@@ -223,8 +300,8 @@ The rose-stem app is ``rose-stem/app/jules``. The Cardington test runs as
 the task ``cardington-1x1-50000x50000`` in ``tasks_jules.cylc``. It is
 included in the group
 ``jules_cardington-1x1-50000x50000_azspice_gnu_fast-debug-64bit``. The main
-app is kept consistent with ``lfric_atm``. Three optional configurations
-apply, in this order:
+app is kept consistent with ``lfric_atm``. For Cardington, three optional
+configurations apply, in this order:
 
 ``rose-app-1x1-50000x50000.conf``
    Mesh and ``base_mesh`` settings.
@@ -249,6 +326,31 @@ apply, in this order:
    * ``l_mo_buoyancy_calc``, ``l_var_rainfrac`` and ``l_sea_alb_var_chl``
      switched off;
    * a CO\ :sub:`2` mixing ratio of 5.941e-4.
+
+A second test replicates the PLUMBER2 site AR-SLu (San Luis, Argentina) from
+the standalone JULES suite u-dy575. It runs for the whole of 2010 as the
+task ``ar_slu-1x1-50000x50000``, with the mesh optional configuration and
+``rose-app-ar_slu.conf``. That optional configuration sets:
+
+* the 13 plant types with the u-dy575 parameters, and 5 non-vegetated types
+  including the urban canyon and roof (``l_urban2t``), giving 18 land tiles;
+* the site tile fractions, soil properties and topographic index;
+* the initial state, taken from the u-dy575 dump at the start of its main
+  run, after spin-up (soil moisture and temperature, water table, wetness
+  below the soil column and tile temperatures);
+* time-varying leaf area index from a site ancillary
+  (``ancil_option='site'``), the MODIS leaf area index file used by
+  u-dy575 converted as described above;
+* the u-dy575 canopy heights, which are constant;
+* forcing heights of 7.985 m, the u-dy575 albedo weights
+  (``0.3,0.2,0.34,0.16``) and the Chadburn soil thermal conductivity;
+* ``f_lon_deg=0.0``. The forcing is in local time, and u-dy575 uses
+  ``l_local_solar_time``, so the solar hour angle must not include the
+  longitude.
+
+The site has no urban fraction, so the MORUSES urban options are left off;
+they would otherwise need urban ancillary fields. The PLUMBER2 met file is
+read directly, using ``file_def_jules_forcing_plumber.xml``.
 
 The ``[file:configuration.nml]`` source list holds every namelist, including
 the ones that are ignored. Optional ones are marked ``(optional)``. This means
@@ -284,7 +386,12 @@ Limitations
   274 K. Separate rain, snow, or convective and large-scale precipitation
   are not supported.
 * Some standalone JULES options cannot be set in LFRic. These include
-  ``iscrntdiag`` and the urban schemes (for example ``l_urban2t``).
+  ``iscrntdiag``, tiled soil (``l_tile_soil``), ``l_local_solar_time``
+  (see the AR-SLu configuration for the workaround) and the
+  ``jules_temp_fixes`` switches, which are hard-coded in
+  ``jules_physics_init``.
+* There is no spin-up. A spun-up state has to be supplied as the initial
+  state in ``ideal_surface``.
 * Diffuse fraction and visible fraction are fixed at 0.4 and 0.5.
 * Some JULES inputs are deliberately left unset, because the LFRic build of
   JULES does not use them. Examples are ``ti_sig_soilt``, ``a_step``, and the

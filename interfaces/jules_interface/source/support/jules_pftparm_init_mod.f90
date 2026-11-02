@@ -43,7 +43,9 @@ contains
     use jules_pftparm_nml_iterator_mod, only: jules_pftparm_nml_iterator_type
     use jules_pftparm_nml_mod,    only: jules_pftparm_nml_type
     use jules_surface_types_mod,  only: npft, brd_leaf, ndl_leaf, c3_grass,    &
-       c4_grass, shrub
+       c4_grass, shrub, brd_leaf_dec, brd_leaf_eg_trop, brd_leaf_eg_temp,      &
+       ndl_leaf_dec, ndl_leaf_eg, c3_crop, c3_pasture, c4_crop, c4_pasture,    &
+       shrub_dec, shrub_eg
 
     use log_mod, only: log_event, log_scratch_space, log_level_error
 
@@ -76,6 +78,28 @@ contains
         i = c4_grass
       case ( 'shrub' )
         i = shrub
+      case ( 'brd_leaf_dec' )
+        i = brd_leaf_dec
+      case ( 'brd_leaf_eg_trop' )
+        i = brd_leaf_eg_trop
+      case ( 'brd_leaf_eg_temp' )
+        i = brd_leaf_eg_temp
+      case ( 'ndl_leaf_dec' )
+        i = ndl_leaf_dec
+      case ( 'ndl_leaf_eg' )
+        i = ndl_leaf_eg
+      case ( 'c3_crop' )
+        i = c3_crop
+      case ( 'c3_pasture' )
+        i = c3_pasture
+      case ( 'c4_crop' )
+        i = c4_crop
+      case ( 'c4_pasture' )
+        i = c4_pasture
+      case ( 'shrub_dec' )
+        i = shrub_dec
+      case ( 'shrub_eg' )
+        i = shrub_eg
       case DEFAULT
         write(log_scratch_space,'(A)')                                         &
            'PFT name not recognised: ' // jules_pftparm%pft_name_io()

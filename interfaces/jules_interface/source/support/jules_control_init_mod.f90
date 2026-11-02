@@ -60,6 +60,17 @@ contains
                               c3_grass_in => c3_grass,                         &
                               c4_grass_in => c4_grass,                         &
                               shrub_in => shrub,                               &
+                              brd_leaf_dec_in => brd_leaf_dec,                 &
+                              brd_leaf_eg_trop_in => brd_leaf_eg_trop,         &
+                              brd_leaf_eg_temp_in => brd_leaf_eg_temp,         &
+                              ndl_leaf_dec_in => ndl_leaf_dec,                 &
+                              ndl_leaf_eg_in => ndl_leaf_eg,                   &
+                              c3_crop_in => c3_crop,                           &
+                              c3_pasture_in => c3_pasture,                     &
+                              c4_crop_in => c4_crop,                           &
+                              c4_pasture_in => c4_pasture,                     &
+                              shrub_dec_in => shrub_dec,                       &
+                              shrub_eg_in => shrub_eg,                         &
                               urban_in => urban,                               &
                               urban_canyon_in => urban_canyon,                 &
                               urban_roof_in => urban_roof,                     &
@@ -76,7 +87,11 @@ contains
     use jules_surface_types_mod, only: npft, nnvg, ntype, brd_leaf, ndl_leaf,  &
                                        c3_grass, c4_grass, shrub, urban,       &
                                        urban_canyon, urban_roof, lake,         &
-                                       soil, ice
+                                       soil, ice, brd_leaf_dec,                &
+                                       brd_leaf_eg_trop, brd_leaf_eg_temp,     &
+                                       ndl_leaf_dec, ndl_leaf_eg, c3_crop,     &
+                                       c3_pasture, c4_crop, c4_pasture,        &
+                                       shrub_dec, shrub_eg
     use jules_vegetation_mod, only: l_triffid
     use jules_model_environment_mod, only: lsm_id, jules,                      &
         check_jules_model_environment
@@ -113,6 +128,17 @@ contains
       c3_grass     = c3_grass_in
       c4_grass     = c4_grass_in
       shrub        = shrub_in
+      brd_leaf_dec     = brd_leaf_dec_in
+      brd_leaf_eg_trop = brd_leaf_eg_trop_in
+      brd_leaf_eg_temp = brd_leaf_eg_temp_in
+      ndl_leaf_dec     = ndl_leaf_dec_in
+      ndl_leaf_eg      = ndl_leaf_eg_in
+      c3_crop          = c3_crop_in
+      c3_pasture       = c3_pasture_in
+      c4_crop          = c4_crop_in
+      c4_pasture       = c4_pasture_in
+      shrub_dec        = shrub_dec_in
+      shrub_eg         = shrub_eg_in
       urban        = urban_in
       urban_canyon = urban_canyon_in
       urban_roof   = urban_roof_in

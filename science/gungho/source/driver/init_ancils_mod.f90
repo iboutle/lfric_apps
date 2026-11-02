@@ -33,6 +33,7 @@ module init_ancils_mod
   use initialization_config_mod,      only : ancil_option,          &
                                              ancil_option_idealised,&
                                              ancil_option_updating, &
+                                             ancil_option_site,     &
                                              sst_source,            &
                                              sst_source_start_dump, &
                                              sst_source_surf,       &
@@ -186,7 +187,7 @@ contains
 
     !=====  LAND ANCILS  =====
     if (init_option == init_option_fd_start_dump .and. &
-         .not. checkpoint_read) then
+         .not. checkpoint_read .and. ancil_option /= ancil_option_site) then
       call setup_ancil_field("land_area_fraction", depository, ancil_fields, &
                               mesh, twod_mesh, twod=.true.)
       call setup_ancil_field("land_tile_fraction", depository, ancil_fields, &
@@ -194,16 +195,31 @@ contains
                               ndata=n_land_tile)
     end if
 
-    call pft_time_axis%initialise("plant_func_time",          &
-                                  file_id="plant_func_ancil", &
-                                  interp_flag=interp_flag, pop_freq="daily")
-    call setup_ancil_field("canopy_height", depository, ancil_fields,         &
-                              mesh, twod_mesh, twod=.true., ndata=npft, &
-                              time_axis=pft_time_axis)
+    if (ancil_option == ancil_option_site) then
+      ! Site runs hold each leaf area index until the next data time, as for
+      ! the 'nf' interpolation option of standalone JULES, so the data is not
+      ! interpolated and is applied on every timestep
+      call pft_time_axis%initialise("plant_func_time",          &
+                                    file_id="plant_func_ancil", &
+                                    interp_flag=.false., window_size=1)
+    else
+      call pft_time_axis%initialise("plant_func_time",          &
+                                    file_id="plant_func_ancil", &
+                                    interp_flag=interp_flag, pop_freq="daily")
+    end if
+    ! Site runs keep the canopy height fixed at its initial value
+    if (ancil_option /= ancil_option_site) then
+      call setup_ancil_field("canopy_height", depository, ancil_fields,       &
+                                mesh, twod_mesh, twod=.true., ndata=npft, &
+                                time_axis=pft_time_axis)
+    end if
     call setup_ancil_field("leaf_area_index", depository, ancil_fields,       &
                               mesh, twod_mesh, twod=.true., ndata=npft, &
                               time_axis=pft_time_axis)
     call ancil_times_list%insert_item(pft_time_axis)
+
+    ! Site runs only read the plant functional type ancil
+    if (ancil_option == ancil_option_site) return
 
     if ( l_urban2t .and. (init_option == init_option_fd_start_dump .and. &
          .not. checkpoint_read) ) then

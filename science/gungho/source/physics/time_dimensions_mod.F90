@@ -17,7 +17,8 @@ module time_dimensions_mod
   !
   use initialization_config_mod, only: ancil_option,                          &
                                        ancil_option_fixed,                    &
-                                       ancil_option_updating
+                                       ancil_option_updating,                 &
+                                       ancil_option_site
 #endif
   use initialization_config_mod, only: lbc_option,                            &
                                        lbc_option_gungho_file,                &
@@ -29,6 +30,7 @@ module time_dimensions_mod
   !
   use files_config_mod,          only: ancil_dir => ancil_directory,          &
                                        sst_ancil_path,                        &
+                                       plant_func_ancil_path,                 &
                                        emiss_bc_biofuel_ancil_path,           &
                                        emiss_bc_fossil_ancil_path,            &
                                        emiss_bc_biomass_ancil_path,           &
@@ -173,6 +175,10 @@ module time_dimensions_mod
     if (tdim /= 0) &
       call set_axis_dimension('jules_forcing_time_axis', tdim, &
         tolerate_missing_axes)
+    tdim = get_site_ancil_dim()
+    if (tdim /= 0) &
+      call set_axis_dimension('site_ancil_time_axis', tdim, &
+        tolerate_missing_axes)
   end subroutine sync_time_dimensions
 
   !> @brief Source the dimension of the lbc_axis from the lbc file.
@@ -283,4 +289,23 @@ module time_dimensions_mod
     end if
 
   end function get_jules_forcing_dim
+
+  !> @brief Source the dimension of the site_ancil_time_axis from the
+  !>        plant functional type ancil file read in site runs.
+  !>
+  !> @result The dimension of the site_ancil_time_axis
+  !>         or zero if there is no site ancil file.
+  !>
+  function get_site_ancil_dim() result(tdim)
+    implicit none
+    integer(i_def) :: tdim
+    tdim = 0
+#ifdef UM_PHYSICS
+    if (ancil_option == ancil_option_site) then
+
+      if (.not. get_ancil_dim(ancil_dir, plant_func_ancil_path, tdim)) return
+
+    end if
+#endif
+  end function get_site_ancil_dim
 end module time_dimensions_mod

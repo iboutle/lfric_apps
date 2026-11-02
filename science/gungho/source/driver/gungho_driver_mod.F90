@@ -49,6 +49,7 @@ module gungho_driver_mod
                                           lbc_option_um2lfric_file, &
                                           ancil_option,             &
                                           ancil_option_updating,    &
+                                          ancil_option_site,        &
                                           coarse_aerosol_ancil,     &
                                           coarse_ozone_ancil,       &
                                           jules_forcing
@@ -528,19 +529,22 @@ contains
     ! ancillaries needs to be that of the start of timestep, but the
     ! first thing that happens in a timestep is that the clock ticks to the
     ! end of timestep date.
-    if ( ancil_option == ancil_option_updating ) then
-      surface_fields => modeldb%fields%get_field_collection("surface_fields")
+    if ( ancil_option == ancil_option_updating .or. &
+         ancil_option == ancil_option_site ) then
       ancil_fields => modeldb%fields%get_field_collection("ancil_fields")
       call update_variable_fields( model_axes%ancil_times_list, &
                                    modeldb%clock,                       &
                                    ancil_fields,                        &
                                    regrid_operation,                    &
                                    regrid_lowest_order )
-      call update_ancils_alg( modeldb%config,              &
-                              model_axes%ancil_times_list, &
-                              modeldb%clock,               &
-                              ancil_fields,                &
-                              surface_fields)
+      if ( ancil_option == ancil_option_updating ) then
+        surface_fields => modeldb%fields%get_field_collection("surface_fields")
+        call update_ancils_alg( modeldb%config,              &
+                                model_axes%ancil_times_list, &
+                                modeldb%clock,               &
+                                ancil_fields,                &
+                                surface_fields)
+      end if
     end if
 
     ! Update the time varying trace gases

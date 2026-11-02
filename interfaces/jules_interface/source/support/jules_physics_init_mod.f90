@@ -30,6 +30,10 @@ module jules_physics_init_mod
                               i_grain_growth_opt_taillandier,                  &
                               i_relayer_opt_original,                          &
                               i_relayer_opt_inverse
+  use jules_soil_config_mod, only :                                            &
+                              soilhc_method_cox,                               &
+                              soilhc_method_johansen,                          &
+                              soilhc_method_chadburn
   use jules_surface_config_mod, only :                                         &
                               all_tiles_off, all_tiles_on,                     &
                               cor_mo_iter_lim_oblen,                           &
@@ -361,7 +365,7 @@ contains
     l_snow_infilt          = .true.
     l_snow_nocan_hc        = .true.
     l_snowdep_surf         = .true.
-    lai_alb_lim_sn(1:npft) = (/ 1.0_r_um, 1.0_r_um, 0.1_r_um, 0.1_r_um, 0.1_r_um /)
+    lai_alb_lim_sn(1:npft) = real(config%jules_snow%lai_alb_lim_sn(), r_um)
     n_lai_exposed(1:npft)  = real(config%jules_snow%n_lai_exposed(), r_um)
     rho_snow_et_crit       = 150.0_r_um
     rho_snow_fresh         = real(config%jules_snow%rho_snow_fresh(), r_um)
@@ -384,7 +388,14 @@ contains
     l_dpsids_dsdz   = config%jules_soil%l_dpsids_dsdz()
     l_soil_sat_down = config%jules_soil%l_soil_sat_down()
     l_vg_soil       = config%jules_soil%l_vg_soil()
-    soilhc_method   = 2
+    select case (config%jules_soil%soilhc_method())
+      case(soilhc_method_cox)
+        soilhc_method = 1
+      case(soilhc_method_johansen)
+        soilhc_method = 2
+      case(soilhc_method_chadburn)
+        soilhc_method = 3
+    end select
     confrac         = 0.3_r_um
     cs_min          = 1.0e-6_r_um
     zsmc            = 1.0_r_um

@@ -113,6 +113,7 @@ module gungho_setup_io_mod
                                        ancil_option_fixed,        &
                                        ancil_option_idealised,    &
                                        ancil_option_updating,     &
+                                       ancil_option_site,         &
                                        lbc_option,                &
                                        lbc_option_gungho_file,    &
                                        lbc_option_um2lfric_file,  &
@@ -405,13 +406,6 @@ module gungho_setup_io_mod
       if (ancil_option == ancil_option_updating .or. &
            .not. checkpoint_read) then
 
-        ! Set plant functional type ancil filename from namelist
-        write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
-                                 trim(plant_func_ancil_path)
-        call files_list%insert_item( lfric_xios_file_type( ancil_fname,        &
-                                                         xios_id="plant_func_ancil", &
-                                                         io_mode=FILE_MODE_READ ) )
-
         ! Set sea chlorophyll ancil filename from namelist
         if ( l_sea_alb_var_chl ) then
           write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
@@ -481,6 +475,21 @@ module gungho_setup_io_mod
       end if ! updating or a new run
 
     end if ! fixed or updating ancils
+
+    ! Plant functional type ancil, read on a new run or if updating, and in
+    ! site runs (which only read this ancil)
+    if ( ( ( ancil_option == ancil_option_fixed .or.        &
+             ancil_option == ancil_option_updating ) .and.  &
+           ( ancil_option == ancil_option_updating .or.     &
+             .not. checkpoint_read ) ) .or.                 &
+         ancil_option == ancil_option_site ) then
+      ! Set plant functional type ancil filename from namelist
+      write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                               trim(plant_func_ancil_path)
+      call files_list%insert_item( lfric_xios_file_type( ancil_fname,        &
+                                                         xios_id="plant_func_ancil", &
+                                                         io_mode=FILE_MODE_READ ) )
+    end if
 
     ! Chemistry ancils
     if ( (chem_scheme == chem_scheme_strattrop    .or.        &

@@ -21,6 +21,19 @@
         "kgo_checks": ["checksum"],
     }) %}
 
+{% elif task_ns.conf_name == "ar_slu-1x1-50000x50000" %}
+
+    {# AR-SLu (San Luis) PLUMBER2 site forcing, 2010-01-01 00:00 to 2010-12-31 23:30, #}
+    {# replicating standalone JULES suite u-dy575 #}
+    {% do task_dict.update({
+        "opt_confs": ["ar_slu"],
+        "resolution": "1x1-50000x50000",
+        "DT": 1800,
+        "tsteps": 17520,
+        "wallclock": 60,
+        "kgo_checks": [],
+    }) %}
+
 {% elif task_ns.conf_name == "unit_tests" %}
 
     {% do task_dict.update({

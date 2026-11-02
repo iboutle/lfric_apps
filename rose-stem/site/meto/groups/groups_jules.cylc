@@ -11,6 +11,7 @@
 {% do site_groups.update({
     "jules_azspice_developer": [
         "jules_cardington-1x1-50000x50000_azspice_gnu_fast-debug-64bit",
+        "jules_ar_slu-1x1-50000x50000_azspice_gnu_fast-debug-64bit",
         "jules_canned_azspice_gnu_fast-debug-64bit",
     ],
     "jules_azspice": [

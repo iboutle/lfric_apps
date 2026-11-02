@@ -519,6 +519,7 @@ l_spec_alb_bs=.false.,
 l_spec_albedo=.true.,
 ratio_albsoil=2.0,
 swdn_frac_albsoil=0.5,
+wght_alb=0.0,0.5,0.0,0.5,
 /
 &jules_sea_seaice
 alpham=0.72,
@@ -548,6 +549,7 @@ u_cdn_max=33.0,
 l_dpsids_dsdz=.true.,
 l_soil_sat_down=.true.,
 l_vg_soil=.false.,
+soilhc_method='johansen',
 /
 &jules_snow
 can_clump=4.0,4.0,1.0,1.0,1.0,
@@ -555,6 +557,7 @@ cansnowpft=.true.,.true.,.false.,.false.,.false.,
 i_basal_melting_opt='instant',
 i_grain_growth_opt='taillandier',
 i_relayer_opt='inverse',
+lai_alb_lim_sn=1.0,1.0,0.1,0.1,0.1,
 n_lai_exposed=1.0,1.0,3.0,3.0,2.0,
 rho_snow_fresh=170.0,
 unload_rate_u=2.31e-6,2.31e-6,0.0,0.0,0.0,

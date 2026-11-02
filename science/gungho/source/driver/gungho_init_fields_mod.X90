@@ -57,6 +57,7 @@ module gungho_init_fields_mod
                                                  ancil_option_fixed,          &
                                                  ancil_option_idealised,      &
                                                  ancil_option_updating,       &
+                                                 ancil_option_site,           &
                                                  lbc_option,                  &
                                                  lbc_option_none,             &
                                                  lbc_option_analytic,         &
@@ -406,7 +407,8 @@ subroutine create_model_data( modeldb,           &
     ! If checkpoint reading has been specified then override these options
     if (checkpoint_read) then
       prognostic_init_choice = init_option_checkpoint_dump
-      if ( ancil_option /= ancil_option_updating ) then
+      if ( ancil_option /= ancil_option_updating .and. &
+           ancil_option /= ancil_option_site ) then
         ancil_choice = ancil_option_none
       end if
     end if
@@ -592,7 +594,7 @@ subroutine create_model_data( modeldb,           &
 
       ! Create and populate collection of fields to be read from ancillary files
       select case ( ancil_choice )
-        case ( ancil_option_fixed, ancil_option_updating )
+        case ( ancil_option_fixed, ancil_option_updating, ancil_option_site )
           call create_fd_ancils( depository,                      &
                                  ancil_fields,                    &
                                  mesh, twod_mesh ,                &
@@ -1091,12 +1093,15 @@ subroutine create_model_data( modeldb,           &
             call depository%remove_field("n_snow_layers_in")
           end if
 
-        case ( ancil_option_idealised )
+        case ( ancil_option_idealised, ancil_option_site )
           call init_variable_fields( model_axes%ancil_times_list,         &
                                      modeldb%clock,                       &
                                      ancil_fields,                        &
                                      regrid_operation )
-          if (.not. checkpoint_read) then
+          ! Site ancils are all time-varying, so are read through their
+          ! time axes only
+          if (.not. checkpoint_read .and. &
+              ancil_choice == ancil_option_idealised) then
             call log_event( "Gungho: Reading ancillaries from file ", LOG_LEVEL_INFO )
             call read_state( ancil_fields )
           end if
