@@ -187,9 +187,11 @@ Radiation
 
 No radiation scheme is run. Instead, ``jules_forcing_init`` (called from
 ``gungho_model_mod``) sets the SW bands normally read by ``socrates_init``.
-It sets two broadband bands (wavelength limits of -1, which is
-``spec_band_bb`` in standalone JULES). The first band has a
-``sw_weight_blue`` of 1 and the second 0. With this setup, the existing
+It sets two bands, covering the visible (0.2 to 0.69 micron) and
+near-infrared (0.69 to 5 micron) parts of the spectrum. The first band has
+a ``sw_weight_blue`` of 1 and the second 0. The land albedos do not depend
+on the band limits, but the spectral sea albedo (``l_spec_sea_alb``) needs
+them: it cannot use more than one band with the broadband limits of -1. With this setup, the existing
 ``sw_rad_tile`` call in ``rad_tile_alg`` gives the visible direct and
 diffuse tile albedos in the first band, and the near-infrared ones in the
 second. After ``rad_tile_alg``, ``jules_forcing_sw_up_kernel`` sets the

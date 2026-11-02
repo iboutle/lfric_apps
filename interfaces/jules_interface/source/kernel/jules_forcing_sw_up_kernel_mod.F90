@@ -49,7 +49,7 @@ module jules_forcing_sw_up_kernel_mod
 contains
 
   !> @brief Calculates the upward SW flux on tiles for JULES site forcing
-  !> @details The tile albedos are for two broadband SW bands, giving the
+  !> @details The tile albedos are for two SW bands, giving the
   !>          visible and near-infrared albedos. As in standalone JULES, the
   !>          albedo applied to the downward SW is a weighted sum of the
   !>          direct and diffuse albedos in the two bands.
