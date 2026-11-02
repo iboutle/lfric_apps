@@ -11,10 +11,21 @@
     <axis_definition>
       <axis id="pressure_levels" name="pressure_levels" n_glo="29" value="(0,28)[100000 95000 92500 90000 85000 70000 60000 50000 40000 30000 25000 20000 15000 10000 7000 5000 3000 2000 1000 700 500 300 200 100 70 50 30 20 10]"/>
       <axis id="pressure_levels_xi3" name="pressure_levels_xi3" n_glo="1" value="(0,0)[85000]"/>
+      <!-- Time axis of the JULES site forcing file, sized from the file at run time -->
+      <axis id="jules_forcing_time_axis" name="jules_forcing_time_axis" />
+      <!-- Single point of the JULES site forcing file (no mesh information) -->
+      <axis id="jules_forcing_point" name="land" n_glo="1" />
     </axis_definition>
 
     <domain_definition src="../../lfric_atm/metadata/domain_def_main.xml"/>
     <grid_definition src="../../lfric_atm/metadata/grid_def_main.xml"/>
+    <grid_definition>
+      <!-- JULES site forcing data: single point by time, matching (time, land) in the file -->
+      <grid id="jules_forcing_grid">
+        <axis axis_ref="jules_forcing_point"/>
+        <axis axis_ref="jules_forcing_time_axis"/>
+      </grid>
+    </grid_definition>
 
     <field_definition src="../../lfric_atm/metadata/lfric_dictionary.xml"/>
 
@@ -33,6 +44,18 @@
 	type="one_file"
 	time_counter="none">
 
+      <!-- JULES site forcing data, read when initialization:jules_forcing is true -->
+      <file id="jules_forcing" name="jules_forcing" mode="read" output_freq="30mi" convention="CF" cyclic="true" enabled=".FALSE.">
+        <field id="jules_forcing_time" name="time" unit="seconds" operation="once" axis_ref="jules_forcing_time_axis" />
+        <field id="forcing_wind_data" name="Wind" long_name="wind_speed_at_10m" unit="m s-1" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_tair_data" name="Tair" long_name="air_temperature_at_10m" unit="K" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_qair_data" name="Qair" long_name="specific_humidity_at_10m" unit="kg kg-1" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_psurf_data" name="PSurf" long_name="surface_air_pressure" unit="Pa" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_lwdown_data" name="LWdown" long_name="surface_downwelling_longwave_flux" unit="W m-2" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_swdown_data" name="SWdown" long_name="surface_downwelling_shortwave_flux" unit="W m-2" operation="instant" grid_ref="jules_forcing_grid" />
+        <field id="forcing_rainf_data" name="Rainf" long_name="rainfall_flux" unit="kg m-2 s-1" operation="instant" grid_ref="jules_forcing_grid" />
+      </file>
+
       <!-- Checkpoint groups -->
 
       <!-- File definition for checkpoint write -->
@@ -44,45 +67,56 @@
       </file>
 
       <file id="lfric_diag" name="lfric_diag" output_freq="6h" convention="UGRID" enabled=".TRUE.">
-	<field field_ref="theta" />
-	<field field_ref="m_v" />
-	<field field_ref="rho" />
-	<field field_ref="wetrho_in_w3" />
-	<field field_ref="processed__pressure_in_w3" />
 	<field field_ref="u_in_w3" />
 	<field field_ref="v_in_w3" />
-	<field field_ref="w_in_wth" />
+	<field field_ref="processed__pstar" />
+	<field field_ref="surface__tile_fraction" />
+	<field field_ref="surface__z0m" />
+	<field field_ref="surface__z0m_tile" />
+	<field field_ref="surface__canopy_height" />
+	<field field_ref="surface__leaf_area_index" />
 	<field field_ref="surface__tile_temperature" />
 	<field field_ref="surface__grid_surface_temperature" />
-	<field field_ref="surface__z0m" />
-	<field field_ref="surface__grid_latent_heat" />
+	<field field_ref="surface__t1p5m_surft" />
+	<field field_ref="surface__t1p5m" />
+	<field field_ref="surface__q1p5m_surft" />
+	<field field_ref="surface__q1p5m" />
+	<field field_ref="surface__rh1p5m" />
 	<field field_ref="surface__tile_heat_flux" />
+	<field field_ref="surface__tile_moisture_flux" />
+	<field field_ref="surface__latent_heat" />
+	<field field_ref="surface__grid_latent_heat" />
+	<field field_ref="surface__canopy_water" />
+	<field field_ref="surface__grid_canopy_water" />
+	<field field_ref="surface__throughfall" />
+	<field field_ref="surface__grid_throughfall" />
+	<field field_ref="surface__canopy_evap" />
+	<field field_ref="surface__grid_canopy_evap" />
+	<field field_ref="surface__soil_evap" />
+	<field field_ref="surface__surf_ht_flux" />
+	<field field_ref="surface__soil_surf_ht_flux" />
+	<field field_ref="surface__surf_sw_net" />
+	<field field_ref="surface__surf_radnet" />
+	<field field_ref="surface__surf_lw_up" />
+	<field field_ref="surface__surf_lw_down" />
+	<field field_ref="surface__gross_prim_prod" />
+	<field field_ref="surface__net_prim_prod" />
+	<field field_ref="surface__gc_tile" />
+	<field field_ref="surface__soil_respiration" />
+	<field field_ref="soil__surface_runoff" />
+	<field field_ref="soil__sub_surface_runoff" />
+	<field field_ref="soil__soil_moisture_content" />
 	<field field_ref="soil__soil_moisture" />
 	<field field_ref="soil__unfrozen_soil_moisture" />
+	<field field_ref="soil__frozen_soil_moisture" />
 	<field field_ref="soil__soil_temperature" />
-      </file>
-
-      <file id="lfric_averages" name="lfric_averages" output_freq="12h" convention="UGRID" enabled=".TRUE.">
-        <field field_ref="theta" operation="average" />
-        <field field_ref="exner" operation="average" />
-        <field field_ref="u_in_w3" operation="average" />
-        <field field_ref="v_in_w3" operation="average" />
-        <field field_ref="w_in_wth" operation="average" />
+	<field field_ref="soil__water_table" />
+	<field field_ref="soil__soil_moist_wilt" />
+	<field field_ref="soil__soil_moist_crit" />
+	<field field_ref="soil__soil_moist_sat" />
       </file>
 
       <file id="lfric_initial" name="lfric_initial" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
-	<field_group operation="once" freq_op="1ts">
-	  <field field_ref="init_theta" />
-	  <field field_ref="init_m_v" />
-	  <field field_ref="init_m_cl" />
-	  <field field_ref="init_m_s" />
-	  <field field_ref="init_m_r" />
-	  <field field_ref="init_w_in_wth" />
-	  <field field_ref="init_rho" />
-	  <field field_ref="init_exner" />
-	  <field field_ref="init_height_w3" />
-	  <field field_ref="init_height_wth" />
-	</field_group>
       </file>
 
       <!-- File definition for writing an FD dump -->
@@ -106,8 +140,8 @@
 
       <variable_group id = "parameters" >
         <variable id = "using_server" type = "bool" >true</variable>
-        <variable id = "info_level" type = "int" >$XIOS_INFO_LEVEL</variable>
-        <variable id = "print_file" type="bool">$XIOS_PRINT_FILE</variable>
+        <variable id = "info_level" type = "int" >50</variable>
+        <variable id = "print_file" type="bool">true</variable>
       </variable_group>
     </variable_definition>
   </context>
