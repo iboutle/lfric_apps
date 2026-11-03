@@ -27,6 +27,7 @@ module jules_timestep_alg_mod
 
   ! Moisture species
   use mr_indices_mod,             only: nummr, imr_v, imr_s, imr_ci
+  use initialization_config_mod,  only: ancil_option_site
 
   ! JULES Science routines
   use apply_jules_forcing_alg_mod, only: apply_jules_forcing_alg
@@ -253,11 +254,13 @@ contains
     type( field_collection_type ), pointer :: jules_forcing_fields
     type( field_type ), pointer :: sw_down_surf
     type( field_type ), pointer :: sw_up_tile
+    type( field_type ), pointer :: leaf_area_index
     real(r_def) :: albedo_weights(4)
     real(r_def) :: weight_vis_dir, weight_vis_dif
     real(r_def) :: weight_nir_dir, weight_nir_dif
 
     integer(kind=i_def), parameter  :: outer = 1
+    real(kind=r_def),    parameter  :: min_site_lai = 0.01_r_def
     integer(i_def) :: loop
     integer(kind=i_def)   :: ncells
 
@@ -294,6 +297,13 @@ contains
       call apply_jules_forcing_alg( theta, mr, jules_forcing_fields, &
                                     derived_fields, radiation_fields, &
                                     microphysics_fields )
+    end if
+
+    ! As for prescribed vegetation in standalone JULES, the leaf area index
+    ! read from the site ancillaries is at least 0.01
+    if ( modeldb%config%initialization%ancil_option() == ancil_option_site ) then
+      call surface_fields%get_field('leaf_area_index', leaf_area_index)
+      call invoke( inc_max_aX(min_site_lai, leaf_area_index) )
     end if
 
     ! Call jules science algorithms

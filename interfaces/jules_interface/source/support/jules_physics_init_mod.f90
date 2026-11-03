@@ -503,6 +503,11 @@ contains
     l_elev_land_ice    = config%jules_surface%l_elev_land_ice()
     l_elev_lw_down     = config%jules_surface%l_elev_lw_down()
     l_point_data       = config%jules_surface%l_point_data()
+    if ( l_point_data .and. .not. config%initialization%jules_forcing() ) then
+      call log_event( 'jules_physics_init: l_point_data (point rainfall '// &
+                      'data) is only available with JULES site forcing',   &
+                      LOG_LEVEL_ERROR )
+    end if
     orog_drag_param    = real(config%jules_surface%orog_drag_param(), r_um)
     lake_water_conserve_method = use_elake_surft
 

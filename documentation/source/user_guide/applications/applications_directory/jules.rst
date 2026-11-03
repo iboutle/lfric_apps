@@ -65,14 +65,20 @@ Variable   Description                         Units
 It must also have a CF ``time`` coordinate variable with units of the form
 ``seconds since <date>``. The length of the ``time`` dimension sets the size
 of the XIOS time axis, and is read when the model starts
-(``get_jules_forcing_dim`` in ``time_dimensions_mod``). The file does not
-need any UGRID mesh information.
+(``get_jules_forcing_dim`` in ``time_dimensions_mod``). The ``time``
+dimension must be fixed, not unlimited: XIOS treats an unlimited dimension
+as its own record dimension rather than as the time axis of the grid, and
+fails with "incorrect dimension". A file with an unlimited time dimension
+can be converted with ``nccopy -u``. The file does not need any UGRID mesh
+information.
 
 The variable names and dimensions are set by the XIOS file definition, so
 other formats can be read without converting them. For example,
 ``file_def_jules_forcing_plumber.xml`` in the rose-stem app reads PLUMBER2
-(FLUXNET) met files directly: their variables are on ``(time, y, x)``, and
-surface pressure and precipitation are called ``Psurf`` and ``Precip``.
+(FLUXNET) met files without renaming or reordering anything: their
+variables are on ``(time, y, x)``, and surface pressure and precipitation
+are called ``Psurf`` and ``Precip``. Only the unlimited time dimension needs
+changing, with ``nccopy -u``.
 
 The XIOS file definition is in ``file_def_jules_forcing.xml``, included by
 ``iodef.xml``. In the rose-stem app this file is installed from
@@ -119,6 +125,13 @@ interpolated in time: each value is held until the next data time, as for
 the ``'nf'`` option of standalone JULES (``create_fd_ancils`` in
 ``init_ancils_mod``). The canopy height is not read, and stays at its
 ``ideal_surface`` value, as in standalone JULES without TRIFFID.
+
+As for the forcing, the site ancillaries are updated before each timestep
+(in ``gungho_driver_mod``), so that the data for a time applies from the
+start of that timestep. As for prescribed vegetation in standalone JULES,
+the leaf area index is then set to at least 0.01 (in
+``jules_timestep_alg``). This matters with ``all_tiles`` on, when the
+canopy radiation is also calculated for plant types with no leaf area.
 
 The ancillary file does not need any mesh information. In ``iodef.xml``
 the ``plant_func_ancil`` file reads the variable ``lai_pft`` on
@@ -354,8 +367,12 @@ task ``ar_slu-1x1-50000x50000``, with the mesh optional configuration and
   longitude.
 
 The site has no urban fraction, so the MORUSES urban options are left off;
-they would otherwise need urban ancillary fields. The PLUMBER2 met file is
-read directly, using ``file_def_jules_forcing_plumber.xml``.
+they would otherwise need urban ancillary fields. As in u-dy575, the
+rainfall is treated as point data (``l_point_data``), which changes the
+canopy interception and surface runoff.
+
+The PLUMBER2 met file is read using ``file_def_jules_forcing_plumber.xml``,
+after making its time dimension fixed with ``nccopy -u``.
 
 The ``[file:configuration.nml]`` source list holds every namelist, including
 the ones that are ignored. Optional ones are marked ``(optional)``. This means
@@ -390,6 +407,8 @@ Limitations
 * All precipitation is supplied as ``Rainf`` and split into rain and snow at
   274 K. Separate rain, snow, or convective and large-scale precipitation
   are not supported.
+* Point rainfall data (``l_point_data``) is only available with site
+  forcing.
 * Some standalone JULES options cannot be set in LFRic. These include
   ``iscrntdiag``, tiled soil (``l_tile_soil``), ``l_local_solar_time``
   (see the AR-SLu configuration for the workaround) and the

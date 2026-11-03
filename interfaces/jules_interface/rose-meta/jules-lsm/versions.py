@@ -103,4 +103,6 @@ class vn32_tXXX(MacroUpgrade):
                     value = ".false."
                 self.add_setting(config, [section, "cansnowpft_io"], value)
             self.remove_setting(config, ["namelist:jules_snow", "cansnowpft"])
+        """l_point_data is now available in LFRic, with JULES site forcing"""
+        self.enable_setting(config, ["namelist:jules_surface", "l_point_data"])
         return config, self.reports

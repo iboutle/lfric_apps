@@ -496,6 +496,17 @@ contains
                                    modeldb%clock, jules_forcing_fields )
     end if
 
+    ! Update the site ancillaries in the same way as the JULES site forcing,
+    ! so that they also apply from the start of the timestep, as for
+    ! prescribed data in standalone JULES
+    if ( ancil_option == ancil_option_site ) then
+      ancil_fields => modeldb%fields%get_field_collection("ancil_fields")
+      call update_variable_fields( model_axes%ancil_times_list, &
+                                   modeldb%clock, ancil_fields, &
+                                   regrid_operation,            &
+                                   regrid_lowest_order )
+    end if
+
     ! If IAU is active and increments need to be added over a time window, then do this
     ! at the start of every ts within the required time window
     if ( iau ) then
@@ -529,22 +540,19 @@ contains
     ! ancillaries needs to be that of the start of timestep, but the
     ! first thing that happens in a timestep is that the clock ticks to the
     ! end of timestep date.
-    if ( ancil_option == ancil_option_updating .or. &
-         ancil_option == ancil_option_site ) then
+    if ( ancil_option == ancil_option_updating ) then
+      surface_fields => modeldb%fields%get_field_collection("surface_fields")
       ancil_fields => modeldb%fields%get_field_collection("ancil_fields")
       call update_variable_fields( model_axes%ancil_times_list, &
                                    modeldb%clock,                       &
                                    ancil_fields,                        &
                                    regrid_operation,                    &
                                    regrid_lowest_order )
-      if ( ancil_option == ancil_option_updating ) then
-        surface_fields => modeldb%fields%get_field_collection("surface_fields")
-        call update_ancils_alg( modeldb%config,              &
-                                model_axes%ancil_times_list, &
-                                modeldb%clock,               &
-                                ancil_fields,                &
-                                surface_fields)
-      end if
+      call update_ancils_alg( modeldb%config,              &
+                              model_axes%ancil_times_list, &
+                              modeldb%clock,               &
+                              ancil_fields,                &
+                              surface_fields)
     end if
 
     ! Update the time varying trace gases
