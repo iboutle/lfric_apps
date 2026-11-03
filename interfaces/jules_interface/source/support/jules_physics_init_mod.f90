@@ -140,7 +140,7 @@ contains
          i_high_wind_drag, ip_hwdrag_null, ip_hwdrag_limited,               &
          ip_hwdrag_reduced_v1
     use jules_snow_mod, only: check_jules_snow,                             &
-         cansnowpft, nsmax, a_snow_et, b_snow_et, c_snow_et, can_clump,     &
+         nsmax, a_snow_et, b_snow_et, c_snow_et, can_clump,                 &
          dzsnow, frac_snow_subl_melt, i_snow_cond_parm, l_et_metamorph,     &
          l_snow_infilt, l_snow_nocan_hc, l_snowdep_surf, lai_alb_lim_sn,    &
          n_lai_exposed, rho_snow_et_crit, rho_snow_fresh, snow_hcon,        &
@@ -340,7 +340,6 @@ contains
     b_snow_et              = 0.042_r_um
     c_snow_et              = 0.046_r_um
     can_clump(1:npft)      = real(config%jules_snow%can_clump(), r_um)
-    cansnowpft(1:npft)     = config%jules_snow%cansnowpft()
     dzsnow(1:nsmax)        = (/ 0.04_r_um, 0.12_r_um, 0.34_r_um /)
     frac_snow_subl_melt    = 1
     graupel_options        = 2
@@ -376,10 +375,6 @@ contains
 
     ! Set the LFRic dimension
     snow_lev_tile = nsmax * n_land_tile
-
-    ! Check the contents of the JULES snow parameters module
-    ! This module sets some derived parameters
-    call check_jules_snow()
 
     ! ----------------------------------------------------------------
     ! JULES soil settings - contained in modules jules_soil
@@ -677,6 +672,11 @@ contains
     call print_nlist_jules_pftparm()
     call print_nlist_jules_nvegparm()
     call c_z0h_z0m_print()
+
+    ! Check the contents of the JULES snow parameters module. This sets some
+    ! derived parameters, including from cansnowpft, which is set by
+    ! jules_pftparm_init, and can_model
+    call check_jules_snow()
 
     ! This routine checks that the options set are actually compatible
     call check_jules_pftparm(npft,nnpft)

@@ -41,6 +41,7 @@ contains
        sug_g0, sug_grec, sug_yg, tef, tleaf_of, tlow, tupp, vint, vsl, z0v
 
     use jules_pftparm_nml_iterator_mod, only: jules_pftparm_nml_iterator_type
+    use jules_snow_mod,           only: cansnowpft
     use jules_pftparm_nml_mod,    only: jules_pftparm_nml_type
     use jules_surface_types_mod,  only: npft, brd_leaf, ndl_leaf, c3_grass,    &
        c4_grass, shrub, brd_leaf_dec, brd_leaf_eg_trop, brd_leaf_eg_temp,      &
@@ -139,6 +140,9 @@ contains
       case ( orient_io_horizontal )
         orient(i) = 1
       end select
+
+      ! cansnowpft is in jules_snow in standalone JULES
+      cansnowpft(i) = jules_pftparm%cansnowpft_io()
 
       a_wl(i) = real(jules_pftparm%a_wl_io(), r_um)
       a_ws(i) = real(jules_pftparm%a_ws_io(), r_um)

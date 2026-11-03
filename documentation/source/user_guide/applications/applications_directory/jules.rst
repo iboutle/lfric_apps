@@ -247,7 +247,10 @@ namelist accepts the 13 plant types of standalone JULES:
 ``ndl_leaf_dec``, ``ndl_leaf_eg``, ``c3_grass``, ``c3_crop``,
 ``c3_pasture``, ``c4_grass``, ``c4_crop``, ``c4_pasture``, ``shrub_dec``
 and ``shrub_eg``. Each plant type has a ``jules_pftparm`` namelist,
-identified by ``pft_name_io``. The metadata for the extra types is in
+identified by ``pft_name_io``. Whether snow can be held under the canopy is
+set by ``cansnowpft_io`` in each of these, rather than by the ``cansnowpft``
+array of standalone JULES's ``jules_snow`` namelist, which LFRic could only
+read with 5 plant types. The metadata for the extra types is in
 ``jules-lsm``; it could move to the shared JULES metadata in due course.
 Surface types that are not used are left unset.
 

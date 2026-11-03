@@ -73,4 +73,34 @@ class vn32_tXXX(MacroUpgrade):
         self.add_setting(
             config, ["namelist:jules_soil", "soilhc_method"], "'johansen'"
         )
+        """Move cansnowpft from jules_snow to cansnowpft_io in each instance
+        of jules_pftparm, using the index of the instance's plant type"""
+        cansnowpft = self.get_setting_value(
+            config, ["namelist:jules_snow", "cansnowpft"]
+        )
+        if cansnowpft is not None:
+            values = []
+            for value in cansnowpft.replace("\n", "").split(","):
+                value = value.strip().lstrip("=")
+                if "*" in value:
+                    count, value = value.split("*")
+                    values += [value] * int(count)
+                elif value:
+                    values.append(value)
+            for section in list(config.value.keys()):
+                if not section.startswith("namelist:jules_pftparm("):
+                    continue
+                pft_name = self.get_setting_value(
+                    config, [section, "pft_name_io"]
+                )
+                index = self.get_setting_value(
+                    config,
+                    ["namelist:jules_surface_types", pft_name.strip("'\"")],
+                )
+                if index is not None and 1 <= int(index) <= len(values):
+                    value = values[int(index) - 1]
+                else:
+                    value = ".false."
+                self.add_setting(config, [section, "cansnowpft_io"], value)
+            self.remove_setting(config, ["namelist:jules_snow", "cansnowpft"])
         return config, self.reports
