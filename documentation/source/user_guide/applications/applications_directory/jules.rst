@@ -180,7 +180,8 @@ calls ``jules_forcing_kernel`` to set the model state from the forcing:
   at the forcing level comes from hydrostatic balance at height
   ``jules_forcing_z1_tq``.
 * Potential temperature in the first layer is ``Tair`` divided by the Exner
-  pressure there. The vapour mixing ratio is set to ``Qair``.
+  pressure there. The vapour mixing ratio is set from the specific humidity
+  ``Qair``, as ``Qair / (1 - Qair)``, because the physics uses mixing ratios.
 * The wind ``u`` is set to ``Wind`` and ``v`` is set to zero. Density comes
   from the equation of state.
 * The downward SW and LW surface fluxes come from ``SWdown`` and ``LWdown``.
