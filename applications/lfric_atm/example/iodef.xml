@@ -68,13 +68,56 @@
 	<field field_ref="radiation__lw_down_surf" />
 	<field field_ref="radiation__lw_up_surf" />
 	<field field_ref="microphysics__ls_prec" />
+	<field field_ref="microphysics__dt_mphys" />
+	<field field_ref="microphysics__dmv_mphys" />
+	<field field_ref="microphysics__dmcl_mphys" />
+	<field field_ref="microphysics__dmr_mphys" />
+	<field field_ref="microphysics__dbcf_mphys" />
+	<field field_ref="microphysics__dcfl_mphys" />
 	<field field_ref="processed__total_prec" />
 	<field field_ref="cloud__bulk_fraction" />
 	<field field_ref="cloud__combined_cloud_amount" />
 	<field field_ref="cloud__cloud_amount_maxrnd" />
+	<field field_ref="cloud__dt_pc2_initiation" />
+	<field field_ref="cloud__dmv_pc2_initiation" />
+	<field field_ref="cloud__dmcl_pc2_initiation" />
+	<field field_ref="cloud__dbcf_pc2_initiation" />
+	<field field_ref="cloud__dcfl_pc2_initiation" />
+	<field field_ref="cloud__dt_pc2_checks" />
+	<field field_ref="cloud__dmv_pc2_checks" />
+	<field field_ref="cloud__dmcl_pc2_checks" />
+	<field field_ref="cloud__dbcf_pc2_checks" />
+	<field field_ref="cloud__dcfl_pc2_checks" />
+	<field field_ref="cloud__dt_pc2_conv_coupling" />
+	<field field_ref="cloud__dmv_pc2_conv_coupling" />
+	<field field_ref="cloud__dmcl_pc2_conv_coupling" />
+	<field field_ref="cloud__dbcf_pc2_conv_coupling" />
+	<field field_ref="cloud__dcfl_pc2_conv_coupling" />
 	<field field_ref="convection__conv_rain" />
 	<field field_ref="convection__massflux_up" />
+	<field field_ref="convection__shallow_in_col" />
+	<field field_ref="convection__deep_in_col" />
+	<field field_ref="convection__mid_in_col" />
+	<field field_ref="convection__shallow_prec" />
+	<field field_ref="convection__deep_prec" />
+	<field field_ref="convection__mid_prec" />
+	<field field_ref="convection__cca" />
+	<field field_ref="convection__cca_2d" />
+	<field field_ref="convection__cv_top" />
+	<field field_ref="convection__dt_conv" />
+	<field field_ref="convection__dmv_conv" />
+	<field field_ref="convection__dmcl_conv" />
 	<field field_ref="turbulence__zh" />
+	<field field_ref="turbulence__zht" />
+	<field field_ref="turbulence__bl_type_ind" />
+	<field field_ref="turbulence__cumulus" />
+	<field field_ref="turbulence__ntml" />
+	<field field_ref="turbulence__tke" />
+	<field field_ref="turbulence__dt_bl" />
+	<field field_ref="turbulence__dmv_bl" />
+	<field field_ref="turbulence__dmcl_bl" />
+	<field field_ref="turbulence__dbcf_bl" />
+	<field field_ref="turbulence__dcfl_bl" />
 	<field field_ref="surface__tile_temperature" />
 	<field field_ref="surface__grid_surface_temperature" />
 	<field field_ref="surface__z0m" />
@@ -92,14 +135,6 @@
 	<field field_ref="snow__snow_layer_ice_mass" />
 	<field field_ref="forcing__dtheta_force" />
 	<field field_ref="forcing__dt_force" />
-      </file>
-
-      <file id="lfric_averages" name="lfric_averages" output_freq="12h" convention="UGRID" enabled=".TRUE.">
-        <field field_ref="theta" operation="average" />
-        <field field_ref="exner" operation="average" />
-        <field field_ref="u_in_w3" operation="average" />
-        <field field_ref="v_in_w3" operation="average" />
-        <field field_ref="w_in_wth" operation="average" />
       </file>
 
       <file id="lfric_initial" name="lfric_initial" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
