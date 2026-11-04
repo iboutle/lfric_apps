@@ -26,13 +26,13 @@
     "lfric_atm_epic_exoplanets": [
         "lfric_atm_camembert_case3_gj1214b-C12_epic_gnu_fast-debug-64bit",
         "lfric_atm_hd209458b-C24_epic_gnu_fast-debug-64bit",
-        "lfric_atm_scm_hd209458b-BiP2x2-50000x50000_epic_gnu_fast-debug-64bit",
+        "lfric_atm_scm_hd209458b-1x1-50000x50000_epic_gnu_fast-debug-64bit",
         "lfric_atm_thai_ben1-C48_MG_epic_gnu_fast-debug-64bit",
     ],
     "lfric_atm_dial3_exoplanets": [
         "lfric_atm_camembert_case3_gj1214b-C12_dial3_gnu_fast-debug-64bit",
         "lfric_atm_hd209458b-C24_dial3_gnu_fast-debug-64bit",
-        "lfric_atm_scm_hd209458b-BiP2x2-50000x50000_dial3_gnu_fast-debug-64bit",
+        "lfric_atm_scm_hd209458b-1x1-50000x50000_dial3_gnu_fast-debug-64bit",
         "lfric_atm_thai_ben1-C48_MG_dial3_gnu_fast-debug-64bit",
     ],
     }) %}

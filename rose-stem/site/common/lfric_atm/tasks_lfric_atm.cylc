@@ -1005,11 +1005,11 @@
 {# Single column jobs #}
 {# ###################################################################### #}
 
-{% elif task_ns.conf_name == "scm_gal10_bomex-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_bomex-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","no_aerosol","bomex"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 72,
         "wallclock": 5,
@@ -1017,11 +1017,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_coma9_bomex-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_coma9_bomex-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","coma9","no_aerosol","bomex"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 72,
         "wallclock": 5,
@@ -1029,11 +1029,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_comorph_dev_bomex-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_comorph_dev_bomex-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","comorph_dev","no_aerosol","bomex"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 72,
         "wallclock": 5,
@@ -1041,22 +1041,22 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_cbl-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_cbl-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","cbl"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 48,
         "wallclock": 5,
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_cbl_dry-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_cbl_dry-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","cbl_dry"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 48,
         "wallclock": 5,
@@ -1064,11 +1064,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_comp_tran_ref-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_comp_tran_ref-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","comp_tran_ref"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 216,
         "wallclock": 5,
@@ -1076,22 +1076,22 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_constrain-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_constrain-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","constrain"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 900,
         "tsteps": 56,
         "wallclock": 5,
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_dice2-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_dice2-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","dice2"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "wallclock": 5,
@@ -1099,11 +1099,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_gabls4-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_gabls4-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","gabls4"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 60,
         "tsteps": 2160,
         "wallclock": 5,
@@ -1111,11 +1111,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_sahara-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_sahara-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","sahara"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 900,
         "tsteps": 36,
         "wallclock": 5,
@@ -1123,11 +1123,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_seaice-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_seaice-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","seaice"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 900,
         "tsteps": 56,
         "wallclock": 5,
@@ -1135,11 +1135,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_snow-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_snow-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","dice2","snow_init"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "wallclock": 5,
@@ -1147,11 +1147,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_gal10_toga-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_gal10_toga-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","no_aerosol","toga"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 1368,
         "wallclock": 5,
@@ -1159,11 +1159,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_coma9_toga-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_coma9_toga-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","coma9","no_aerosol","toga"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 1368,
         "wallclock": 5,
@@ -1171,11 +1171,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_comorph_dev_toga-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_comorph_dev_toga-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","comorph_dev","no_aerosol","toga", "coord_order_1"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 1368,
         "wallclock": 5,
@@ -1183,11 +1183,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_llcs-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_llcs-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","llcs","no_aerosol","toga"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 48,
         "wallclock": 5,
@@ -1195,11 +1195,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_rad_gas-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_rad_gas-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","no_aerosol","rad_gas"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 3600,
         "tsteps": 288,
         "wallclock": 5,
@@ -1207,11 +1207,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_ral4_comp_tran_ref-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ral4_comp_tran_ref-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ral4_scm","no_aerosol","comp_tran_ref"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 216,
         "wallclock": 5,
@@ -1219,11 +1219,11 @@
         "xios_min_buffer_size": 2097152,
     }) %}
 
-{% elif task_ns.conf_name == "scm_ral4_constrain-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ral4_constrain-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ral4_scm","no_aerosol","constrain"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 900,
         "tsteps": 56,
         "wallclock": 5,
@@ -1232,11 +1232,11 @@
         "xios_min_buffer_size": 2097152,
     }) %}
 
-{% elif task_ns.conf_name == "scm_ral4_dice2-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ral4_dice2-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ral4_scm","no_aerosol","dice2"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "wallclock": 5,
@@ -1244,11 +1244,11 @@
         "xios_min_buffer_size": 2097152,
     }) %}
 
-{% elif task_ns.conf_name == "scm_ral4_moruses-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ral4_moruses-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ral4_scm","no_aerosol","dice2","moruses"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "wallclock": 5,
@@ -1257,11 +1257,11 @@
         "xios_min_buffer_size": 2097152,
     }) %}
 
-{% elif task_ns.conf_name == "scm_ral4_urban2t-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ral4_urban2t-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ral4_scm","no_aerosol","dice2","urban2t"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "wallclock": 5,
@@ -1270,11 +1270,11 @@
         "xios_min_buffer_size": 2097152,
     }) %}
 
-{% elif task_ns.conf_name == "scm_ukca_land-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ukca_land-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l70_40km","ukca","dice2"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 600,
         "tsteps": 432,
         "crun": 2,
@@ -1283,11 +1283,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_ukca_sea-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_ukca_sea-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l85_85km","ukca","toga"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 1200,
         "tsteps": 432,
         "crun": 2,
@@ -1296,11 +1296,11 @@
         "plot_str": "plot_scm.py $NODAL_DATA_DIR/lfric_diagnostics.nc  $PLOT_DIR",
     }) %}
 
-{% elif task_ns.conf_name == "scm_hd209458b-BiP2x2-50000x50000" %}
+{% elif task_ns.conf_name == "scm_hd209458b-1x1-50000x50000" %}
 
     {% do task_dict.update({
         "opt_confs": ["l66_9000km", "hd209458b", "scm_45N"],
-        "resolution": "BiP2x2-50000x50000",
+        "resolution": "1x1-50000x50000",
         "DT": 30,
         "tsteps": 120,
         "wallclock": 5,

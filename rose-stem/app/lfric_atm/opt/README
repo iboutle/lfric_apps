@@ -14,7 +14,7 @@ Horizontal mesh information:
 - C224_MG_op - C224 mesh file for use with offline partitioning
 - C768, C896 - standard mesh information, plus low resolution aerosol and
                ozone ancillaries
-- BiP2x2-50000x50000 - SCM mesh, setup with no dynamics
+- 1x1-50000x50000 - SCM mesh, setup with no dynamics
 - BiP64x64-100x100_MG, BiP64x64-250x250_MG, BiP64x64-500x500_MG,
   BiP64x64-1500x1500_MG - various resolution bicyclic lam domains
 - seuk_MG - small UK LBC forced LAM, with input files and date
