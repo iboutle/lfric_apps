@@ -14,7 +14,7 @@ module pc2_force_response_alg_mod
    implicit none
 
    private
-   public pc2_force_response_alg
+   public pc2_force_response_alg, pc2_pressure_response_alg
 
 contains
   !>@brief Run PC2 homogeneous forcing to respond to forcing
@@ -118,5 +118,130 @@ contains
                 setval_X(dbcf_forcing, dbcf_pc2_inc) )
 
   end subroutine pc2_force_response_alg
+
+  !>@brief Run PC2 homogeneous forcing to respond to a Lagrangian pressure
+  !>       change from vertical advection
+  !>@details Calculates the PC2 response of vapour, cloud condensate and
+  !>         fraction to the change in pressure following an advected parcel,
+  !>         from its departure point to its arrival point, with no other
+  !>         forcing. The parcel is the start of timestep state plus the
+  !>         vertical advection increments. This matches the treatment of
+  !>         vertical advection in the UM single column model.
+  !>         See UMDP30 for full scheme details.
+  !>@param[in]     mr_n            Start of timestep mixing ratios
+  !>@param[in]     theta           Potential temperature in wth space
+  !>@param[in]     derived_fields  Group of derived fields
+  !>@param[in]     cloud_fields    Group of cloud fields
+  !>@param[in]     dexner_vertadv  Vertical advection increment to Exner
+  !>                               pressure, giving the departure points
+  !>@param[in,out] dtheta_vertadv  Vertical advection increment to theta
+  !>@param[in,out] dmv_vertadv     Vertical advection increment to vapour
+  !>@param[in,out] dmcl_vertadv    Vertical advection increment to liquid
+  !>@param[in,out] dcfl_forcing    Cloud liquid fraction increment
+  !>@param[in,out] dbcf_forcing    Cloud bulk fraction increment
+  !>@param[in]     dt              The model timestep length
+  subroutine pc2_pressure_response_alg( mr_n,           &
+                                        theta,          &
+                                        derived_fields, &
+                                        cloud_fields,   &
+                                        dexner_vertadv, &
+                                        dtheta_vertadv, &
+                                        dmv_vertadv,    &
+                                        dmcl_vertadv,   &
+                                        dcfl_forcing,   &
+                                        dbcf_forcing,   &
+                                        dt )
+
+    use pc2_homogeneous_kernel_mod, only: pc2_homogeneous_kernel_type
+    use mr_indices_mod,             only: imr_v, imr_cl, nummr
+
+    implicit none
+
+    type( field_type ), intent( in )    :: mr_n ( nummr )
+    type( field_type ), intent( in )    :: theta
+    type( field_type ), intent( in )    :: dexner_vertadv
+    type( field_type ), intent( inout ) :: dtheta_vertadv
+    type( field_type ), intent( inout ) :: dmv_vertadv
+    type( field_type ), intent( inout ) :: dmcl_vertadv
+    type( field_type ), intent( inout ) :: dcfl_forcing
+    type( field_type ), intent( inout ) :: dbcf_forcing
+
+    type( field_collection_type ), intent(in) :: derived_fields, cloud_fields
+    real( kind=r_def ), intent( in )    :: dt
+
+    ! Advected parcel
+    type( field_type ) :: theta_adv, mv_adv, mcl_adv, exner_departure
+    ! Zero forcings, as the only forcing is the pressure change
+    type( field_type ) :: dtheta_zero, dmv_zero, dmcl_zero
+    ! Response increments
+    type( field_type ) :: dtheta_pc2_inc
+    type( field_type ) :: dmv_pc2_inc
+    type( field_type ) :: dmcl_pc2_inc
+    type( field_type ) :: dcfl_pc2_inc
+    type( field_type ) :: dbcf_pc2_inc
+
+    ! Temporary unpacked fields from collections
+    type( field_type ), pointer :: exner_in_wth
+
+    ! For PC2
+    type( field_type ), pointer :: liquid_fraction
+    type( field_type ), pointer :: frozen_fraction
+    type( field_type ), pointer :: bulk_fraction
+
+    call derived_fields%get_field('exner_in_wth', exner_in_wth)
+    call cloud_fields%get_field('liquid_fraction', liquid_fraction)
+    call cloud_fields%get_field('frozen_fraction', frozen_fraction)
+    call cloud_fields%get_field('bulk_fraction', bulk_fraction)
+
+    call theta%copy_field_properties(theta_adv)
+    call theta%copy_field_properties(mv_adv)
+    call theta%copy_field_properties(mcl_adv)
+    call theta%copy_field_properties(exner_departure)
+    call theta%copy_field_properties(dtheta_zero)
+    call theta%copy_field_properties(dmv_zero)
+    call theta%copy_field_properties(dmcl_zero)
+    call theta%copy_field_properties(dtheta_pc2_inc)
+    call theta%copy_field_properties(dmv_pc2_inc)
+    call theta%copy_field_properties(dmcl_pc2_inc)
+    call theta%copy_field_properties(dcfl_pc2_inc)
+    call theta%copy_field_properties(dbcf_pc2_inc)
+
+    call invoke( setval_X(theta_adv, theta),                          &
+                 inc_X_plus_Y(theta_adv, dtheta_vertadv),             &
+                 setval_X(mv_adv, mr_n(imr_v)),                       &
+                 inc_X_plus_Y(mv_adv, dmv_vertadv),                   &
+                 setval_X(mcl_adv, mr_n(imr_cl)),                     &
+                 inc_X_plus_Y(mcl_adv, dmcl_vertadv),                 &
+                 setval_X(exner_departure, exner_in_wth),             &
+                 inc_X_plus_Y(exner_departure, dexner_vertadv),       &
+                 setval_c(dtheta_zero, 0.0_r_def),                    &
+                 setval_c(dmv_zero,    0.0_r_def),                    &
+                 setval_c(dmcl_zero,   0.0_r_def),                    &
+                 pc2_homogeneous_kernel_type( mv_adv,                 &
+                                              mcl_adv,                &
+                                              liquid_fraction,        &
+                                              frozen_fraction,        &
+                                              bulk_fraction,          &
+                                              theta_adv,              &
+                                              exner_in_wth,           &
+                                              exner_departure,        &
+                                              ! Forcings
+                                              dtheta_zero,            &
+                                              dmv_zero,               &
+                                              dmcl_zero,              &
+                                              ! Response increments
+                                              dtheta_pc2_inc,         &
+                                              dmv_pc2_inc,            &
+                                              dmcl_pc2_inc,           &
+                                              dcfl_pc2_inc,           &
+                                              dbcf_pc2_inc,           &
+                                              dt ),                   &
+                 inc_X_plus_Y(dtheta_vertadv, dtheta_pc2_inc),        &
+                 inc_X_plus_Y(dmv_vertadv,    dmv_pc2_inc),           &
+                 inc_X_plus_Y(dmcl_vertadv,   dmcl_pc2_inc),          &
+                 inc_X_plus_Y(dcfl_forcing,   dcfl_pc2_inc),          &
+                 inc_X_plus_Y(dbcf_forcing,   dbcf_pc2_inc) )
+
+  end subroutine pc2_pressure_response_alg
 
 end module pc2_force_response_alg_mod

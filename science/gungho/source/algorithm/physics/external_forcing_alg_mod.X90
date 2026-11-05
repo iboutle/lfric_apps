@@ -44,7 +44,8 @@ module external_forcing_alg_mod
   use deep_hot_jupiter_kernel_mod,     only: deep_hot_jupiter_kernel_type
   use momentum_smagorinsky_kernel_mod, only: momentum_smagorinsky_kernel_type
 #ifdef UM_PHYSICS
-  use pc2_force_response_alg_mod,      only: pc2_force_response_alg
+  use pc2_force_response_alg_mod,      only: pc2_force_response_alg,           &
+                                             pc2_pressure_response_alg
 #endif
   ! Derived Types
   use config_mod,                      only: config_type
@@ -170,6 +171,11 @@ contains
 
     type(field_type)    :: u_smoothed, dx, visc_m
     type(field_type)    :: du_in_w3, dv_in_w3, dw_in_wth
+    ! Vertical advection increments, kept separate from the prescribed
+    ! forcing so that PC2 can respond to them differently
+    type(field_type)    :: dtheta_vertadv, dmv_vertadv, dmcl_vertadv
+    type(field_type)    :: dexner_vertadv
+    logical(kind=l_def) :: prescribed_forcing, pc2_response
     integer(kind=i_def) :: order, nlayers
     real(kind=r_def)    :: nudging_time_weight
     real(kind=r_def)    :: diffusion_coefficient_scaled, dx_sum, dx_size
@@ -208,6 +214,8 @@ contains
     scheme = IMDI
     if (section_choice_is_loaded()) cloud = config%section_choice%cloud()
     if (cloud_is_loaded()) scheme = config%cloud%scheme()
+    pc2_response = cloud == cloud_um .and. scheme == scheme_pc2 .and. &
+                   pc2_force_response
 
     mesh => theta%get_mesh()
     height_wth => get_height_fv(config, mesh, Wtheta)
@@ -539,10 +547,25 @@ contains
         call invoke(setval_c(du_forcing, 0.0_r_def))
       end if
 
-      call vertadvect_forcing_alg( config,                                       &
-                                   dtheta_forcing, dmv_forcing, dmcl_forcing,    &
-                                   du_forcing, theta, mr_n, rho, derived_fields, &
-                                   twod_mesh, dt, time_now )
+      call dtheta_vertadv%initialise( vector_space = theta%get_function_space() )
+      call dmv_vertadv%initialise( vector_space = theta%get_function_space() )
+      call dmcl_vertadv%initialise( vector_space = theta%get_function_space() )
+      call invoke( setval_c(dtheta_vertadv, 0.0_r_def), &
+                   setval_c(dmv_vertadv,    0.0_r_def), &
+                   setval_c(dmcl_vertadv,   0.0_r_def) )
+
+      if ( pc2_response ) then
+        ! Exner pressure is also advected, for the PC2 response to the
+        ! Lagrangian pressure change
+        call dexner_vertadv%initialise( vector_space = theta%get_function_space() )
+        call invoke( setval_c(dexner_vertadv, 0.0_r_def) )
+      end if
+
+      call vertadvect_forcing_alg( config,                                     &
+                                   dtheta_vertadv, dmv_vertadv, dmcl_vertadv,  &
+                                   du_forcing, dexner_vertadv, pc2_response,   &
+                                   theta, mr_n, exner_in_wth, rho,             &
+                                   derived_fields, twod_mesh, dt, time_now )
       theta_forcing_done  = .true.
       vapour_forcing_done = .true.
       wind_forcing_done   = .true.
@@ -594,19 +617,51 @@ contains
 
 #ifdef UM_PHYSICS
     if ( theta_forcing_done .or. vapour_forcing_done ) then
-      ! pc2 response to forcing if requested
-      if (cloud == cloud_um .and. scheme == scheme_pc2 .and. &
-           pc2_force_response) then
+      ! pc2 response to forcing if requested, treated as in the UM single
+      ! column model: a homogeneous response to the prescribed forcing, and
+      ! a response to the Lagrangian pressure change for vertical advection
+      if ( pc2_response ) then
 
-        call pc2_force_response_alg(mr_n, theta, derived_fields, cloud_fields, &
-                                    dtheta_forcing, dmv_forcing, dmcl_forcing, &
-                                    dcfl_forcing, dbcf_forcing, dt)
+        prescribed_forcing = theta_forcing /= theta_forcing_none .or.          &
+                             theta_relaxation .or.                             &
+                             vapour_forcing /= vapour_forcing_none .or.        &
+                             vapour_relaxation
+
+        if ( prescribed_forcing ) then
+          ! At this point the increments only hold the prescribed forcing
+          call pc2_force_response_alg(mr_n, theta, derived_fields,            &
+                                      cloud_fields, dtheta_forcing,            &
+                                      dmv_forcing, dmcl_forcing,               &
+                                      dcfl_forcing, dbcf_forcing, dt)
+        else
+          call dtheta_forcing%copy_field_properties(dcfl_forcing)
+          call dtheta_forcing%copy_field_properties(dbcf_forcing)
+          call invoke( setval_c(dcfl_forcing, 0.0_r_def), &
+                       setval_c(dbcf_forcing, 0.0_r_def) )
+        end if
+
+        if ( vertadvect_forcing ) then
+          ! Respond to the pressure change of the advected parcel, from its
+          ! departure point to its arrival point
+          call pc2_pressure_response_alg(mr_n, theta, derived_fields,         &
+                                         cloud_fields, dexner_vertadv,        &
+                                         dtheta_vertadv, dmv_vertadv,         &
+                                         dmcl_vertadv, dcfl_forcing,          &
+                                         dbcf_forcing, dt)
+        end if
 
         vapour_forcing_done = .true.
 
       end if
     end if
 #endif
+
+    ! Add the vertical advection to the other forcing increments
+    if ( vertadvect_forcing ) then
+      call invoke( inc_X_plus_Y(dtheta_forcing, dtheta_vertadv), &
+                   inc_X_plus_Y(dmv_forcing,    dmv_vertadv),    &
+                   inc_X_plus_Y(dmcl_forcing,   dmcl_vertadv) )
+    end if
 
     if ( LPROF ) call stop_timing( id, 'external_forcing' )
     !

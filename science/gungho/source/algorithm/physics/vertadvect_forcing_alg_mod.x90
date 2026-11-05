@@ -42,8 +42,13 @@ contains
   !> @param[in,out] dmv_forcing      Vertical advection increment to vapour
   !> @param[in,out] dmcl_forcing     Vertical advection increment to liquid
   !> @param[in,out] du_forcing       Vertical advection increment to wind
+  !> @param[in,out] dexner_forcing   Vertical advection increment to Exner
+  !>                                 pressure, giving the Exner pressure at the
+  !>                                 departure points (if advect_exner)
+  !> @param[in]     advect_exner     Whether to advect Exner pressure
   !> @param[in]     theta            Field to which vertical advection is applied
   !> @param[in]     mr               Field to which vertical advection is applied
+  !> @param[in]     exner_in_wth     Exner pressure in Wtheta space
   !> @param[in]     rho              Dry air density in same space as field
   !> @param[in]     derived_fields
   !> @param[in]     twod_mesh        Information about the horizontal mesh
@@ -51,7 +56,8 @@ contains
   !> @param[in]     time_now         Current model time in seconds
   subroutine vertadvect_forcing_alg( config,                                    &
                                      dtheta_forcing, dmv_forcing, dmcl_forcing, &
-                                     du_forcing, theta, mr, rho,                &
+                                     du_forcing, dexner_forcing, advect_exner,  &
+                                     theta, mr, exner_in_wth, rho,              &
                                      derived_fields,                            &
                                      twod_mesh, dt, time_now )
 
@@ -67,9 +73,11 @@ contains
   type(config_type), intent(in) :: config
 
   type( field_type ), intent(inout)         :: dtheta_forcing, dmv_forcing,    &
-                                               dmcl_forcing, du_forcing
+                                               dmcl_forcing, du_forcing,       &
+                                               dexner_forcing
+  logical( kind=l_def ), intent(in)         :: advect_exner
   type( field_type ), intent(in)            :: theta, mr(nummr)
-  type( field_type ), intent(in)            :: rho
+  type( field_type ), intent(in)            :: exner_in_wth, rho
   type( field_collection_type ), intent(in) :: derived_fields
   type( mesh_type ), pointer, intent(in)    :: twod_mesh
 
@@ -81,6 +89,7 @@ contains
   type( field_type )          :: dtheta_vertadv
   type( field_type )          :: dmv_vertadv
   type( field_type )          :: dmcl_vertadv
+  type( field_type )          :: dexner_vertadv
   type( field_type )          :: du_vertadv
   type( field_type )          :: field_mean
   type( field_type )          :: w_rholev  ! vert adv velocity on rholevs
@@ -178,6 +187,29 @@ contains
                  vertadvect_kernel_type( dmcl_vertadv, field_mean, w_rholev,   &
                                              height_wth, dt ),                 &
                  inc_X_plus_Y( dmcl_forcing, dmcl_vertadv )  )
+  end if
+
+  ! Vertical advection of Exner pressure, if requested, giving the Exner
+  ! pressure at the departure points for the PC2 response to the Lagrangian
+  ! pressure change
+  if ( advect_exner ) then
+    call dexner_vertadv%initialise( vector_space = theta%get_function_space() )
+    call horiz_mean_alg( field_mean, nlayers, twod_mesh, exner_in_wth )
+    if ( number_heights == 1 ) then
+      call invoke( setval_c( w_rholev, w_lsadv_now(1) ),                       &
+                   vertadvect_kernel_type( dexner_vertadv, field_mean,         &
+                                           w_rholev, height_wth, dt ),         &
+                   inc_X_plus_Y( dexner_forcing, dexner_vertadv ) )
+    else
+      profile_size                    = number_heights
+      profile_data(1:profile_size)    = w_lsadv_now(1:profile_size)
+      profile_heights(1:profile_size) = heights(1:profile_size)
+      call invoke( profile_interp_kernel_type( w_rholev, height_w3,            &
+                                               profile_extrap ),               &
+                   vertadvect_kernel_type( dexner_vertadv, field_mean,         &
+                                           w_rholev, height_wth, dt ),         &
+                   inc_X_plus_Y( dexner_forcing, dexner_vertadv ) )
+    end if
   end if
 
   mesh => du_forcing%get_mesh()
