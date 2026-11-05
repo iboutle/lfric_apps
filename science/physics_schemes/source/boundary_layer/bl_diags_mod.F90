@@ -71,6 +71,11 @@ type :: strnewbldiag
   logical :: l_weparm =       .false. ! 362 entrain rate surf mix layer
   logical :: l_weparm_dsc =   .false. ! 363 entrain rate dec scu
   logical :: l_dzh =          .false. ! 364 inv thickness
+  ! Diagnostics of the entrainment inputs, without STASH codes
+  logical :: l_dbtop =        .false. ! buoyancy jump at SML inversion
+  logical :: l_dbtop_dsc =    .false. ! buoyancy jump at BL-top inversion
+  logical :: l_dftop =        .false. ! rad flux jump at SML top
+  logical :: l_dftop_dsc =    .false. ! rad flux jump at BL top
   logical :: l_oblen =        .false. ! 464 obukhov length
   logical :: l_ustar =        .false. ! 465 friction velocity
   logical :: l_wstar =        .false. ! 466 conv vel scale
@@ -180,6 +185,14 @@ type :: strnewbldiag
   !                    363      Entrainment rate for DSC
   real(kind=r_bl), allocatable :: dzh(:, :)
   !                    364      Inversion thickness
+  real(kind=r_bl), allocatable :: dbtop(:, :)
+  !                             Buoyancy jump across SML inversion
+  real(kind=r_bl), allocatable :: dbtop_dsc(:, :)
+  !                             Buoyancy jump across BL-top inversion
+  real(kind=r_bl), allocatable :: dftop(:, :)
+  !                             Radiative flux jump across SML top / cp
+  real(kind=r_bl), allocatable :: dftop_dsc(:, :)
+  !                             Radiative flux jump across BL top / cp
   real(kind=r_bl), allocatable :: oblen(:, :)
   !                    464      Surface Obukhov length
   real(kind=r_bl), allocatable :: ustar(:, :)
@@ -728,6 +741,30 @@ if (BL_diag%l_dzh) then
 else
   allocate(BL_diag%dzh(1,1))
 end if
+if (BL_diag%l_dbtop) then
+  allocate(BL_diag%dbtop(                                                      &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%dbtop(1,1))
+end if
+if (BL_diag%l_dbtop_dsc) then
+  allocate(BL_diag%dbtop_dsc(                                                  &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%dbtop_dsc(1,1))
+end if
+if (BL_diag%l_dftop) then
+  allocate(BL_diag%dftop(                                                      &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%dftop(1,1))
+end if
+if (BL_diag%l_dftop_dsc) then
+  allocate(BL_diag%dftop_dsc(                                                  &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%dftop_dsc(1,1))
+end if
 
 if (BL_diag%l_oblen) then
   allocate(BL_diag%oblen(                                                      &
@@ -1148,6 +1185,10 @@ deallocate(BL_diag%wbsurf)
 deallocate(BL_diag%wstar)
 deallocate(BL_diag%ustar)
 deallocate(BL_diag%oblen)
+deallocate(BL_diag%dftop_dsc)
+deallocate(BL_diag%dftop)
+deallocate(BL_diag%dbtop_dsc)
+deallocate(BL_diag%dbtop)
 deallocate(BL_diag%dzh)
 deallocate(BL_diag%weparm_dsc)
 deallocate(BL_diag%weparm)

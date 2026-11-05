@@ -40,7 +40,7 @@ module bl_exp_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_exp_kernel_type
     private
-    type(arg_type) :: meta_args(93) = (/                                       &
+    type(arg_type) :: meta_args(99) = (/                                       &
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! theta_in_wth
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      W3),                       &! rho_in_w3
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! rho_in_wth
@@ -133,7 +133,13 @@ module bl_exp_kernel_mod
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_5),&! ent_t_frac_dsc
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_5),&! ent_zrzi_dsc
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__zht
-         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1) &! diag__oblen
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__oblen
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__weparm
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__weparm_dsc
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__dbtop
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__dbtop_dsc
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__dftop
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1) &! diag__dftop_dsc
          /)
     integer :: operates_on = DOMAIN
   contains
@@ -242,6 +248,12 @@ contains
   !> @param[in,out] ent_zrzi_dsc           Level height as fraction of DSC inversion height above DSC ML base
   !> @param[in,out] zht                    Diagnostic: turb mixing height
   !> @param[in,out] oblen                  Diagnostic: Obukhov length
+  !> @param[in,out] weparm                 Diagnostic: SML-top entrainment rate (m s-1)
+  !> @param[in,out] weparm_dsc             Diagnostic: BL-top entrainment rate (m s-1)
+  !> @param[in,out] dbtop                  Diagnostic: buoyancy jump across SML inversion (m s-2)
+  !> @param[in,out] dbtop_dsc              Diagnostic: buoyancy jump across BL-top inversion (m s-2)
+  !> @param[in,out] dftop                  Diagnostic: radiative flux jump across SML top / cp (K m s-1)
+  !> @param[in,out] dftop_dsc              Diagnostic: radiative flux jump across BL top / cp (K m s-1)
   !> @param[in]     ndf_wth                Number of DOFs per cell for potential temperature space
   !> @param[in]     undf_wth               Number of unique DOFs for potential temperature space
   !> @param[in]     map_wth                Dofmap for the cell at the base of the column for potential temperature space
@@ -357,6 +369,12 @@ contains
                          ent_zrzi_dsc,                          &
                          zht,                                   &
                          oblen,                                 &
+                         weparm,                                &
+                         weparm_dsc,                            &
+                         dbtop,                                 &
+                         dbtop_dsc,                             &
+                         dftop,                                 &
+                         dftop_dsc,                             &
                          ndf_wth, undf_wth, map_wth,            &
                          ndf_w3, undf_w3, map_w3,               &
                          ndf_2d, undf_2d, map_2d,               &
@@ -501,6 +519,12 @@ contains
 
     real(kind=r_def), pointer, intent(inout) :: zht(:)
     real(kind=r_def), pointer, intent(inout) :: oblen(:)
+    real(kind=r_def), pointer, intent(inout) :: weparm(:)
+    real(kind=r_def), pointer, intent(inout) :: weparm_dsc(:)
+    real(kind=r_def), pointer, intent(inout) :: dbtop(:)
+    real(kind=r_def), pointer, intent(inout) :: dbtop_dsc(:)
+    real(kind=r_def), pointer, intent(inout) :: dftop(:)
+    real(kind=r_def), pointer, intent(inout) :: dftop_dsc(:)
     !-----------------------------------------------------------------------
     ! Local variables for the kernel
     !-----------------------------------------------------------------------
@@ -788,6 +812,12 @@ contains
     ! needed to ensure zht is saved if wanted
     bl_diag%l_zht     = .not. associated(zht, empty_real_data)
     bl_diag%l_oblen   = .not. associated(oblen, empty_real_data)
+    bl_diag%l_weparm     = .not. associated(weparm, empty_real_data)
+    bl_diag%l_weparm_dsc = .not. associated(weparm_dsc, empty_real_data)
+    bl_diag%l_dbtop      = .not. associated(dbtop, empty_real_data)
+    bl_diag%l_dbtop_dsc  = .not. associated(dbtop_dsc, empty_real_data)
+    bl_diag%l_dftop      = .not. associated(dftop, empty_real_data)
+    bl_diag%l_dftop_dsc  = .not. associated(dftop_dsc, empty_real_data)
     bl_diag%l_weight1d = .true.
     call alloc_bl_expl(bl_diag, .true.)
 
@@ -1169,6 +1199,36 @@ contains
     if (.not. associated(oblen, empty_real_data) ) then
       do i = 1, seg_len
         oblen(map_2d(1,i)) = BL_diag%oblen(i,1)
+      end do
+    end if
+    if (.not. associated(weparm, empty_real_data) ) then
+      do i = 1, seg_len
+        weparm(map_2d(1,i)) = BL_diag%weparm(i,1)
+      end do
+    end if
+    if (.not. associated(weparm_dsc, empty_real_data) ) then
+      do i = 1, seg_len
+        weparm_dsc(map_2d(1,i)) = BL_diag%weparm_dsc(i,1)
+      end do
+    end if
+    if (.not. associated(dbtop, empty_real_data) ) then
+      do i = 1, seg_len
+        dbtop(map_2d(1,i)) = BL_diag%dbtop(i,1)
+      end do
+    end if
+    if (.not. associated(dbtop_dsc, empty_real_data) ) then
+      do i = 1, seg_len
+        dbtop_dsc(map_2d(1,i)) = BL_diag%dbtop_dsc(i,1)
+      end do
+    end if
+    if (.not. associated(dftop, empty_real_data) ) then
+      do i = 1, seg_len
+        dftop(map_2d(1,i)) = BL_diag%dftop(i,1)
+      end do
+    end if
+    if (.not. associated(dftop_dsc, empty_real_data) ) then
+      do i = 1, seg_len
+        dftop_dsc(map_2d(1,i)) = BL_diag%dftop_dsc(i,1)
       end do
     end if
 

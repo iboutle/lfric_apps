@@ -218,6 +218,8 @@ contains
     type( field_type ) :: dtl_mphys, dmt_mphys, ngstress_w2,                  &
                           fd_tau_w2, ngstress_bl, fd_taux, fd_tauy, fd_tauz,  &
                           zht, oblen
+    type( field_type ) :: weparm, weparm_dsc, dbtop, dbtop_dsc,               &
+                          dftop, dftop_dsc
     type( field_type) :: rdz_wth, taux_land, tauy_land, taux_ssi, tauy_ssi
     type( field_type ) :: mr_ice
 
@@ -343,7 +345,8 @@ contains
     dz_wth           => get_dz_at_wtheta(config, mesh)
 
     ! Initialise diagnostics
-    call initialise_diags_for_bl_exp(zht, oblen)
+    call initialise_diags_for_bl_exp(zht, oblen, weparm, weparm_dsc,       &
+                                     dbtop, dbtop_dsc, dftop, dftop_dsc)
 
     ! Fields from microphysics
     call dtheta_mphys%copy_field_properties(dtl_mphys)
@@ -409,7 +412,9 @@ contains
                                     bl_weight_1dbl, bl_type_ind, level_ent,    &
                                     level_ent_dsc, ent_we_lim, ent_t_frac,     &
                                     ent_zrzi, ent_we_lim_dsc, ent_t_frac_dsc,  &
-                                    ent_zrzi_dsc, zht, oblen ),                &
+                                    ent_zrzi_dsc, zht, oblen,                  &
+                                    weparm, weparm_dsc, dbtop, dbtop_dsc,      &
+                                    dftop, dftop_dsc ),                        &
                 ! Initialise w2 fields
                 setval_c(rhokm_w2,       0.0_r_def),                           &
                 setval_c(surf_interp_w2, 0.0_r_def),                           &
@@ -478,7 +483,9 @@ contains
                                    ent_we_lim, ent_t_frac, ent_zrzi,         &
                                    ent_we_lim_dsc, ent_t_frac_dsc,           &
                                    ent_zrzi_dsc, zht, oblen,                 &
-                                   bl_weight_1dbl)
+                                   bl_weight_1dbl, inv_depth,                &
+                                   weparm, weparm_dsc, dbtop, dbtop_dsc,     &
+                                   dftop, dftop_dsc)
 
     end if
 

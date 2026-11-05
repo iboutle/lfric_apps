@@ -4817,6 +4817,42 @@ if (BL_diag%l_weparm) then
   end do
   !$OMP end do NOWAIT
 end if
+if (BL_diag%l_dbtop) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    BL_diag%dbtop(i,j)= db_top(i,j)
+  end do
+  !$OMP end do NOWAIT
+end if
+if (BL_diag%l_dbtop_dsc) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    if ( dsc(i,j) ) then
+      BL_diag%dbtop_dsc(i,j)= db_dsct(i,j)
+    else
+      BL_diag%dbtop_dsc(i,j)= db_top(i,j)
+    end if
+  end do
+  !$OMP end do NOWAIT
+end if
+if (BL_diag%l_dftop) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    BL_diag%dftop(i,j)= df_top_over_cp(i,j)
+  end do
+  !$OMP end do NOWAIT
+end if
+if (BL_diag%l_dftop_dsc) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    if ( dsc(i,j) ) then
+      BL_diag%dftop_dsc(i,j)= df_dsct_over_cp(i,j)
+    else
+      BL_diag%dftop_dsc(i,j)= df_top_over_cp(i,j)
+    end if
+  end do
+  !$OMP end do NOWAIT
+end if
 
 !-----------------------------------------------------------------------
 !     SCM Boundary Layer Diagnostics Package

@@ -19,6 +19,8 @@ module bl_exp_diags_mod
 
   ! Logical indicating whether diagnostics are requested
   logical( l_def ) :: zht_flag, oblen_flag
+  logical( l_def ) :: weparm_flag, weparm_dsc_flag, dbtop_flag,               &
+                      dbtop_dsc_flag, dftop_flag, dftop_dsc_flag
 
   public :: initialise_diags_for_bl_exp
   public :: output_diags_for_bl_exp
@@ -28,18 +30,34 @@ contains
   !> @brief Initialise fields for locally-computed diagnostics
   !> @param[inout] zht                Turbulent mixing height
   !> @param[inout] oblen              Obukhov length
-  subroutine initialise_diags_for_bl_exp(zht, oblen)
+  !> @param[inout] weparm             SML-top entrainment rate
+  !> @param[inout] weparm_dsc         BL-top entrainment rate
+  !> @param[inout] dbtop              Buoyancy jump across SML inversion
+  !> @param[inout] dbtop_dsc          Buoyancy jump across BL-top inversion
+  !> @param[inout] dftop              Radiative flux jump across SML top / cp
+  !> @param[inout] dftop_dsc          Radiative flux jump across BL top / cp
+  subroutine initialise_diags_for_bl_exp(zht, oblen, weparm, weparm_dsc,       &
+                                         dbtop, dbtop_dsc, dftop, dftop_dsc)
 
     implicit none
 
     type( field_type ), intent(inout) :: zht
     type( field_type ), intent(inout) :: oblen
+    type( field_type ), intent(inout) :: weparm, weparm_dsc
+    type( field_type ), intent(inout) :: dbtop, dbtop_dsc
+    type( field_type ), intent(inout) :: dftop, dftop_dsc
     integer( tik )                    :: id
 
     if ( LPROF ) call start_timing( id, 'diags.bl_exp' )
 
     zht_flag = init_diag(zht, 'turbulence__zht')
     oblen_flag = init_diag(oblen, 'turbulence__oblen')
+    weparm_flag = init_diag(weparm, 'turbulence__weparm')
+    weparm_dsc_flag = init_diag(weparm_dsc, 'turbulence__weparm_dsc')
+    dbtop_flag = init_diag(dbtop, 'turbulence__dbtop')
+    dbtop_dsc_flag = init_diag(dbtop_dsc, 'turbulence__dbtop_dsc')
+    dftop_flag = init_diag(dftop, 'turbulence__dftop')
+    dftop_dsc_flag = init_diag(dftop_dsc, 'turbulence__dftop_dsc')
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 
@@ -69,6 +87,13 @@ contains
   !> @param[in] zht               Turbulent mixing height
   !> @param[in] oblen             Obukhov length
   !> @param[in] bl_weight_1dbl    Blending weight to 1D BL scheme in the BL
+  !> @param[in] inv_depth         Inversion thickness
+  !> @param[in] weparm            SML-top entrainment rate
+  !> @param[in] weparm_dsc        BL-top entrainment rate
+  !> @param[in] dbtop             Buoyancy jump across SML inversion
+  !> @param[in] dbtop_dsc         Buoyancy jump across BL-top inversion
+  !> @param[in] dftop             Radiative flux jump across SML top / cp
+  !> @param[in] dftop_dsc         Radiative flux jump across BL top / cp
   subroutine output_diags_for_bl_exp(ntml, cumulus, bl_type_ind,               &
                                      wvar, dsldzm, mix_len_bm,                 &
                                      gradrinr, rhokh_bl, tke_bl, dtrdz_tq_bl,  &
@@ -76,7 +101,9 @@ contains
                                      ent_we_lim, ent_t_frac, ent_zrzi,         &
                                      ent_we_lim_dsc, ent_t_frac_dsc,           &
                                      ent_zrzi_dsc, zht, oblen,                 &
-                                     bl_weight_1dbl)
+                                     bl_weight_1dbl, inv_depth,                &
+                                     weparm, weparm_dsc, dbtop, dbtop_dsc,     &
+                                     dftop, dftop_dsc)
 
     implicit none
 
@@ -87,7 +114,9 @@ contains
                                          zht,                                  &
                                          ent_we_lim, ent_t_frac, ent_zrzi,     &
                                          ent_we_lim_dsc, ent_t_frac_dsc,       &
-                                         ent_zrzi_dsc, oblen, bl_weight_1dbl
+                                         ent_zrzi_dsc, oblen, bl_weight_1dbl,  &
+                                         inv_depth, weparm, weparm_dsc,        &
+                                         dbtop, dbtop_dsc, dftop, dftop_dsc
     type(integer_field_type), intent(in) :: level_ent, level_ent_dsc, ntml,    &
                                             cumulus, bl_type_ind
     integer( tik )  :: id
@@ -116,10 +145,17 @@ contains
     call ent_t_frac_dsc%write_field('turbulence__ent_t_frac_dsc')
     call ent_zrzi_dsc%write_field('turbulence__ent_zrzi_dsc')
     call bl_weight_1dbl%write_field('turbulence__bl_weight_1dbl')
+    call inv_depth%write_field('turbulence__inv_depth')
 
     ! Diagnostics computed in the kernel
     if (zht_flag) call zht%write_field()
     if (oblen_flag) call oblen%write_field()
+    if (weparm_flag) call weparm%write_field()
+    if (weparm_dsc_flag) call weparm_dsc%write_field()
+    if (dbtop_flag) call dbtop%write_field()
+    if (dbtop_dsc_flag) call dbtop_dsc%write_field()
+    if (dftop_flag) call dftop%write_field()
+    if (dftop_dsc_flag) call dftop_dsc%write_field()
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 

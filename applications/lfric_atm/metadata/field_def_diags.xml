@@ -689,6 +689,13 @@
   <field id="turbulence__zht" name="zht" long_name="turbulent_mixing_height" unit="m" domain_ref="face" />
   <field id="turbulence__zhsc" name="zhsc" long_name="height_at_top_of_decoupled_stratocumulus_layer" unit="m" domain_ref="face" />
   <field id="turbulence__oblen" name="oblen" long_name="obukhov_length" unit="m" domain_ref="face" />
+  <field id="turbulence__inv_depth" name="inv_depth" long_name="boundary_layer_inversion_thickness" unit="m" domain_ref="face" />
+  <field id="turbulence__weparm" name="weparm" long_name="entrainment_rate_at_surface_mixed_layer_top" unit="m s-1" domain_ref="face" />
+  <field id="turbulence__weparm_dsc" name="weparm_dsc" long_name="entrainment_rate_at_boundary_layer_top" unit="m s-1" domain_ref="face" />
+  <field id="turbulence__dbtop" name="dbtop" long_name="buoyancy_jump_across_surface_mixed_layer_inversion" unit="m s-2" domain_ref="face" />
+  <field id="turbulence__dbtop_dsc" name="dbtop_dsc" long_name="buoyancy_jump_across_boundary_layer_top_inversion" unit="m s-2" domain_ref="face" />
+  <field id="turbulence__dftop" name="dftop" long_name="radiative_flux_jump_across_surface_mixed_layer_top_over_cp" unit="K m s-1" domain_ref="face" />
+  <field id="turbulence__dftop_dsc" name="dftop_dsc" long_name="radiative_flux_jump_across_boundary_layer_top_over_cp" unit="K m s-1" domain_ref="face" />
   <field id="turbulence__bl_weight_1dbl" name="bl_weight_1dbl" long_name="Blending_weight_in_boundary_layer" unit="1" domain_ref="face" />
   <field id="turbulence__tke" name="tke_bl" long_name="turbulent_kinetic_energy" unit="m2 s-2" grid_ref="full_level_face_grid" />
   <field id="turbulence__wvar" name="wvar" long_name="vertical_velocity_variance" unit="m2 s-2" grid_ref="full_level_face_grid" />
