@@ -78,6 +78,8 @@ type :: strnewbldiag
   logical :: l_dftop_dsc =    .false. ! rad flux jump at BL top
   logical :: l_qclictop =     .false. ! in-cloud liquid at SML top
   logical :: l_chistop =      .false. ! mixing fraction at SML top
+  logical :: l_wbratio =      .false. ! buoyancy flux integral ratio
+  logical :: l_decthres =     .false. ! threshold for wbratio
   logical :: l_oblen =        .false. ! 464 obukhov length
   logical :: l_ustar =        .false. ! 465 friction velocity
   logical :: l_wstar =        .false. ! 466 conv vel scale
@@ -199,6 +201,12 @@ type :: strnewbldiag
   !                             In-cloud liquid water at SML top
   real(kind=r_bl), allocatable :: chistop(:, :)
   !                             Mixing fraction for saturation at SML top
+  real(kind=r_bl), allocatable :: wbratio(:, :)
+  !                             Ratio of negative to positive buoyancy flux
+  !                             integrals when testing whether the
+  !                             BL is well mixed (missing if not tested)
+  real(kind=r_bl), allocatable :: decthres(:, :)
+  !                             Threshold that wbratio is tested against
   real(kind=r_bl), allocatable :: oblen(:, :)
   !                    464      Surface Obukhov length
   real(kind=r_bl), allocatable :: ustar(:, :)
@@ -783,6 +791,18 @@ if (BL_diag%l_chistop) then
 else
   allocate(BL_diag%chistop(1,1))
 end if
+if (BL_diag%l_wbratio) then
+  allocate(BL_diag%wbratio(                                                    &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%wbratio(1,1))
+end if
+if (BL_diag%l_decthres) then
+  allocate(BL_diag%decthres(                                                   &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%decthres(1,1))
+end if
 
 if (BL_diag%l_oblen) then
   allocate(BL_diag%oblen(                                                      &
@@ -1203,6 +1223,8 @@ deallocate(BL_diag%wbsurf)
 deallocate(BL_diag%wstar)
 deallocate(BL_diag%ustar)
 deallocate(BL_diag%oblen)
+deallocate(BL_diag%decthres)
+deallocate(BL_diag%wbratio)
 deallocate(BL_diag%chistop)
 deallocate(BL_diag%qclictop)
 deallocate(BL_diag%dftop_dsc)

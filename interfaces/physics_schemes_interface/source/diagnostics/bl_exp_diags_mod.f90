@@ -21,7 +21,8 @@ module bl_exp_diags_mod
   logical( l_def ) :: zht_flag, oblen_flag
   logical( l_def ) :: weparm_flag, weparm_dsc_flag, dbtop_flag,               &
                       dbtop_dsc_flag, dftop_flag, dftop_dsc_flag,             &
-                      qclictop_flag, chistop_flag
+                      qclictop_flag, chistop_flag, wbratio_flag,              &
+                      decthres_flag
 
   public :: initialise_diags_for_bl_exp
   public :: output_diags_for_bl_exp
@@ -39,9 +40,12 @@ contains
   !> @param[inout] dftop_dsc          Radiative flux jump across BL top / cp
   !> @param[inout] qclictop           In-cloud liquid water at SML top
   !> @param[inout] chistop            Mixing fraction for saturation at SML top
+  !> @param[inout] wbratio            Buoyancy flux integral ratio in the
+  !>                                  well-mixed test
+  !> @param[inout] decthres           Threshold for wbratio
   subroutine initialise_diags_for_bl_exp(zht, oblen, weparm, weparm_dsc,       &
                                          dbtop, dbtop_dsc, dftop, dftop_dsc,   &
-                                         qclictop, chistop)
+                                         qclictop, chistop, wbratio, decthres)
 
     implicit none
 
@@ -51,6 +55,7 @@ contains
     type( field_type ), intent(inout) :: dbtop, dbtop_dsc
     type( field_type ), intent(inout) :: dftop, dftop_dsc
     type( field_type ), intent(inout) :: qclictop, chistop
+    type( field_type ), intent(inout) :: wbratio, decthres
     integer( tik )                    :: id
 
     if ( LPROF ) call start_timing( id, 'diags.bl_exp' )
@@ -65,6 +70,8 @@ contains
     dftop_dsc_flag = init_diag(dftop_dsc, 'turbulence__dftop_dsc')
     qclictop_flag = init_diag(qclictop, 'turbulence__qclictop')
     chistop_flag = init_diag(chistop, 'turbulence__chistop')
+    wbratio_flag = init_diag(wbratio, 'turbulence__wbratio')
+    decthres_flag = init_diag(decthres, 'turbulence__decthres')
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 
@@ -103,6 +110,9 @@ contains
   !> @param[in] dftop_dsc         Radiative flux jump across BL top / cp
   !> @param[in] qclictop          In-cloud liquid water at SML top
   !> @param[in] chistop           Mixing fraction for saturation at SML top
+  !> @param[in] wbratio           Buoyancy flux integral ratio in the
+  !>                              well-mixed test
+  !> @param[in] decthres          Threshold for wbratio
   subroutine output_diags_for_bl_exp(ntml, cumulus, bl_type_ind,               &
                                      wvar, dsldzm, mix_len_bm,                 &
                                      gradrinr, rhokh_bl, tke_bl, dtrdz_tq_bl,  &
@@ -112,7 +122,8 @@ contains
                                      ent_zrzi_dsc, zht, oblen,                 &
                                      bl_weight_1dbl, inv_depth,                &
                                      weparm, weparm_dsc, dbtop, dbtop_dsc,     &
-                                     dftop, dftop_dsc, qclictop, chistop)
+                                     dftop, dftop_dsc, qclictop, chistop,      &
+                                     wbratio, decthres)
 
     implicit none
 
@@ -126,7 +137,7 @@ contains
                                          ent_zrzi_dsc, oblen, bl_weight_1dbl,  &
                                          inv_depth, weparm, weparm_dsc,        &
                                          dbtop, dbtop_dsc, dftop, dftop_dsc,   &
-                                         qclictop, chistop
+                                         qclictop, chistop, wbratio, decthres
     type(integer_field_type), intent(in) :: level_ent, level_ent_dsc, ntml,    &
                                             cumulus, bl_type_ind
     integer( tik )  :: id
@@ -168,6 +179,8 @@ contains
     if (dftop_dsc_flag) call dftop_dsc%write_field()
     if (qclictop_flag) call qclictop%write_field()
     if (chistop_flag) call chistop%write_field()
+    if (wbratio_flag) call wbratio%write_field()
+    if (decthres_flag) call decthres%write_field()
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 

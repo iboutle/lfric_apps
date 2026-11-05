@@ -1661,9 +1661,12 @@ end do ! ii
 do ii = pdims%i_start, pdims%i_end, bl_segment_size
   do i = ii, min(ii+bl_segment_size-1, pdims%i_end)
     if (l_wtrac) iset_wtrac(i,j) = 0
+    if (BL_diag%l_wbratio) BL_diag%wbratio(i,j) = rmdi
+    if (BL_diag%l_decthres) BL_diag%decthres(i,j) = dec_thres(i,j)
     if ( test_well_mixed(i,j) ) then
 
       wb_ratio(i,j) = wbn_int(i,j)/wbp_int(i,j)
+      if (BL_diag%l_wbratio) BL_diag%wbratio(i,j) = wb_ratio(i,j)
 
       if ( wb_ratio(i,j)  <=  dec_thres(i,j) ) then
           ! No need to test depth of mixing any further as within

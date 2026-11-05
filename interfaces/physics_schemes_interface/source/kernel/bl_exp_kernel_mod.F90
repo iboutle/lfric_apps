@@ -40,7 +40,7 @@ module bl_exp_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_exp_kernel_type
     private
-    type(arg_type) :: meta_args(101) = (/                                       &
+    type(arg_type) :: meta_args(103) = (/                                       &
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! theta_in_wth
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      W3),                       &! rho_in_w3
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! rho_in_wth
@@ -141,7 +141,9 @@ module bl_exp_kernel_mod
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__dftop
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__dftop_dsc
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__qclictop
-         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1) &! diag__chistop
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__chistop
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! diag__wbratio
+         arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1) &! diag__decthres
          /)
     integer :: operates_on = DOMAIN
   contains
@@ -258,6 +260,8 @@ contains
   !> @param[in,out] dftop_dsc              Diagnostic: radiative flux jump across BL top / cp (K m s-1)
   !> @param[in,out] qclictop               Diagnostic: in-cloud liquid water at SML top (kg kg-1)
   !> @param[in,out] chistop                Diagnostic: mixing fraction for saturation at SML top
+  !> @param[in,out] wbratio                Diagnostic: ratio of negative to positive buoyancy flux integrals in well-mixed test
+  !> @param[in,out] decthres               Diagnostic: threshold for the buoyancy flux integral ratio
   !> @param[in]     ndf_wth                Number of DOFs per cell for potential temperature space
   !> @param[in]     undf_wth               Number of unique DOFs for potential temperature space
   !> @param[in]     map_wth                Dofmap for the cell at the base of the column for potential temperature space
@@ -381,6 +385,8 @@ contains
                          dftop_dsc,                             &
                          qclictop,                              &
                          chistop,                               &
+                         wbratio,                               &
+                         decthres,                              &
                          ndf_wth, undf_wth, map_wth,            &
                          ndf_w3, undf_w3, map_w3,               &
                          ndf_2d, undf_2d, map_2d,               &
@@ -533,6 +539,8 @@ contains
     real(kind=r_def), pointer, intent(inout) :: dftop_dsc(:)
     real(kind=r_def), pointer, intent(inout) :: qclictop(:)
     real(kind=r_def), pointer, intent(inout) :: chistop(:)
+    real(kind=r_def), pointer, intent(inout) :: wbratio(:)
+    real(kind=r_def), pointer, intent(inout) :: decthres(:)
     !-----------------------------------------------------------------------
     ! Local variables for the kernel
     !-----------------------------------------------------------------------
@@ -828,6 +836,8 @@ contains
     bl_diag%l_dftop_dsc  = .not. associated(dftop_dsc, empty_real_data)
     bl_diag%l_qclictop   = .not. associated(qclictop, empty_real_data)
     bl_diag%l_chistop    = .not. associated(chistop, empty_real_data)
+    bl_diag%l_wbratio    = .not. associated(wbratio, empty_real_data)
+    bl_diag%l_decthres   = .not. associated(decthres, empty_real_data)
     bl_diag%l_weight1d = .true.
     call alloc_bl_expl(bl_diag, .true.)
 
@@ -1249,6 +1259,16 @@ contains
     if (.not. associated(chistop, empty_real_data) ) then
       do i = 1, seg_len
         chistop(map_2d(1,i)) = BL_diag%chistop(i,1)
+      end do
+    end if
+    if (.not. associated(wbratio, empty_real_data) ) then
+      do i = 1, seg_len
+        wbratio(map_2d(1,i)) = BL_diag%wbratio(i,1)
+      end do
+    end if
+    if (.not. associated(decthres, empty_real_data) ) then
+      do i = 1, seg_len
+        decthres(map_2d(1,i)) = BL_diag%decthres(i,1)
       end do
     end if
 

@@ -219,7 +219,8 @@ contains
                           fd_tau_w2, ngstress_bl, fd_taux, fd_tauy, fd_tauz,  &
                           zht, oblen
     type( field_type ) :: weparm, weparm_dsc, dbtop, dbtop_dsc,               &
-                          dftop, dftop_dsc, qclictop, chistop
+                          dftop, dftop_dsc, qclictop, chistop,        &
+                          wbratio, decthres
     type( field_type) :: rdz_wth, taux_land, tauy_land, taux_ssi, tauy_ssi
     type( field_type ) :: mr_ice
 
@@ -347,7 +348,7 @@ contains
     ! Initialise diagnostics
     call initialise_diags_for_bl_exp(zht, oblen, weparm, weparm_dsc,       &
                                      dbtop, dbtop_dsc, dftop, dftop_dsc,   &
-                                     qclictop, chistop)
+                                     qclictop, chistop, wbratio, decthres)
 
     ! Fields from microphysics
     call dtheta_mphys%copy_field_properties(dtl_mphys)
@@ -415,7 +416,8 @@ contains
                                     ent_zrzi, ent_we_lim_dsc, ent_t_frac_dsc,  &
                                     ent_zrzi_dsc, zht, oblen,                  &
                                     weparm, weparm_dsc, dbtop, dbtop_dsc,      &
-                                    dftop, dftop_dsc, qclictop, chistop ),     &
+                                    dftop, dftop_dsc, qclictop, chistop,       &
+                                    wbratio, decthres ),                       &
                 ! Initialise w2 fields
                 setval_c(rhokm_w2,       0.0_r_def),                           &
                 setval_c(surf_interp_w2, 0.0_r_def),                           &
@@ -486,7 +488,8 @@ contains
                                    ent_zrzi_dsc, zht, oblen,                 &
                                    bl_weight_1dbl, inv_depth,                &
                                    weparm, weparm_dsc, dbtop, dbtop_dsc,     &
-                                   dftop, dftop_dsc, qclictop, chistop)
+                                   dftop, dftop_dsc, qclictop, chistop,      &
+                                   wbratio, decthres)
 
     end if
 
