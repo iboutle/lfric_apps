@@ -223,20 +223,14 @@ contains
     call theta%copy_field_properties(dcfl_pc2_inc)
     call theta%copy_field_properties(dbcf_pc2_inc)
 
-    call invoke( setval_X(theta_adv, theta),                          &
-                 inc_X_plus_Y(theta_adv, dtheta_vertadv),             &
-                 setval_X(mv_adv, mr_n(imr_v)),                       &
-                 inc_X_plus_Y(mv_adv, dmv_vertadv),                   &
-                 setval_X(mcl_adv, mr_n(imr_cl)),                     &
-                 inc_X_plus_Y(mcl_adv, dmcl_vertadv),                 &
-                 setval_X(exner_departure, exner_in_wth),             &
-                 inc_X_plus_Y(exner_departure, dexner_vertadv),       &
-                 setval_X(cfl_adv, liquid_fraction),                  &
-                 inc_X_plus_Y(cfl_adv, dcfl_vertadv),                 &
-                 setval_X(cff_adv, frozen_fraction),                  &
-                 inc_X_plus_Y(cff_adv, dcff_vertadv),                 &
-                 setval_X(bcf_adv, bulk_fraction),                    &
-                 inc_X_plus_Y(bcf_adv, dbcf_vertadv),                 &
+    call invoke( X_plus_Y(theta_adv, theta, dtheta_vertadv),          &
+                 X_plus_Y(mv_adv, mr_n(imr_v), dmv_vertadv),          &
+                 X_plus_Y(mcl_adv, mr_n(imr_cl), dmcl_vertadv),       &
+                 X_plus_Y(exner_departure, exner_in_wth,              &
+                          dexner_vertadv),                            &
+                 X_plus_Y(cfl_adv, liquid_fraction, dcfl_vertadv),    &
+                 X_plus_Y(cff_adv, frozen_fraction, dcff_vertadv),    &
+                 X_plus_Y(bcf_adv, bulk_fraction, dbcf_vertadv),      &
                  setval_c(dtheta_zero, 0.0_r_def),                    &
                  setval_c(dmv_zero,    0.0_r_def),                    &
                  setval_c(dmcl_zero,   0.0_r_def),                    &
