@@ -162,6 +162,22 @@
 	  <field field_ref="radiation__sw_up_clear_surf_rts"/>
 	  <field field_ref="radiation__lw_down_clear_surf_rts"/>
 	  <field field_ref="radiation__lw_up_clear_toa" />
+	  <field field_ref="radiation__lw_up_rts" />
+	  <field field_ref="radiation__lw_down_rts" />
+	  <field field_ref="radiation__lw_up_clear_rts" />
+	  <field field_ref="radiation__lw_down_clear_rts" />
+	  <field field_ref="radiation__o3_mmr_radinput" />
+	  <field field_ref="radiation__h2o_mmr_radinput" />
+	  <field field_ref="radiation__radiative_cloud_fraction_radinput" />
+	  <field field_ref="radiation__liquid_fraction_radinput" />
+	  <field field_ref="radiation__liquid_mmr_radinput" />
+	  <field field_ref="radiation__radiative_conv_fraction_radinput" />
+	  <field field_ref="radiation__conv_liquid_fraction_radinput" />
+	  <field field_ref="radiation__conv_liquid_mmr_radinput" />
+	  <field field_ref="radiation__pressure_in_layers_radinput" />
+	  <field field_ref="radiation__temperature_in_layers_radinput" />
+	  <field field_ref="radiation__t_layer_boundaries_radinput" />
+	  <field field_ref="radiation__dry_mass_in_layers_radinput" />
 	</field_group>
       </file>
 
