@@ -13,8 +13,6 @@ module slow_physics_alg_mod
   use energy_correction_config_mod,                  &
                                  only: encorr_usage, &
                                        encorr_usage_apply
-  use external_forcing_config_mod, &
-                                 only: pc2_force_response
   use model_clock_mod,           only: model_clock_type
   use timestepping_config_mod,   only: outer_iterations
   use chemistry_config_mod,      only: chem_scheme, chem_scheme_flexchem, &
@@ -245,8 +243,8 @@ contains
 
     ! Local fields...
     ! ...for external forcing
-    type( field_type ) :: dtheta_forcing, du_forcing, dmv_forcing, &
-         dmcl_forcing, dcfl_forcing, dbcf_forcing
+    type( field_type ) :: dtheta_forcing, du_forcing, dmr_forcing(nummr), &
+         dcfl_forcing, dcff_forcing, dbcf_forcing
     ! ... for energy correction
     type( field_type ) :: dtheta_encorr
     ! ...for microphysics
@@ -422,8 +420,8 @@ contains
                                 derived_fields, u, theta, exner, exner_in_wth, &
                                 rho, mr_n, cloud_fields, twod_mesh, dt,        &
                                 time_now,                                      &
-                                dtheta_forcing, du_forcing, dmv_forcing,       &
-                                dmcl_forcing, dcfl_forcing, dbcf_forcing,      &
+                                dtheta_forcing, du_forcing, dmr_forcing,       &
+                                dcfl_forcing, dcff_forcing, dbcf_forcing,      &
                                 theta_forcing_done, vapour_forcing_done,       &
                                 wind_forcing_done)
     end if
@@ -999,14 +997,11 @@ contains
     end if
 
     if (vapour_forcing_done) then
-      if (cloud == cloud_um .and. scheme == scheme_pc2 &
-           .and. pc2_force_response) then
-        call invoke(inc_X_plus_Y(mr(imr_v),       dmv_forcing),    &
-                    inc_X_plus_Y(mr(imr_cl),      dmcl_forcing),   &
-                    inc_X_plus_Y(liquid_fraction, dcfl_forcing),   &
+      call add_bundle(dmr_forcing, mr, mr, nummr)
+      if (cloud == cloud_um .and. scheme == scheme_pc2) then
+        call invoke(inc_X_plus_Y(liquid_fraction, dcfl_forcing), &
+                    inc_X_plus_Y(frozen_fraction, dcff_forcing), &
                     inc_X_plus_Y(bulk_fraction,   dbcf_forcing) )
-      else
-        call invoke(inc_X_plus_Y(mr(imr_v), dmv_forcing) )
       end if
     end if
 

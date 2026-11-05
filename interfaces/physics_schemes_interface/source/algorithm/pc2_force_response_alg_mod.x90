@@ -124,9 +124,10 @@ contains
   !>@details Calculates the PC2 response of vapour, cloud condensate and
   !>         fraction to the change in pressure following an advected parcel,
   !>         from its departure point to its arrival point, with no other
-  !>         forcing. The parcel is the start of timestep state plus the
-  !>         vertical advection increments. This matches the treatment of
-  !>         vertical advection in the UM single column model.
+  !>         forcing. The parcel is the start of timestep state (including
+  !>         the cloud fractions) plus the vertical advection increments.
+  !>         This matches the treatment of vertical advection in the UM
+  !>         single column model.
   !>         See UMDP30 for full scheme details.
   !>@param[in]     mr_n            Start of timestep mixing ratios
   !>@param[in]     theta           Potential temperature in wth space
@@ -137,6 +138,12 @@ contains
   !>@param[in,out] dtheta_vertadv  Vertical advection increment to theta
   !>@param[in,out] dmv_vertadv     Vertical advection increment to vapour
   !>@param[in,out] dmcl_vertadv    Vertical advection increment to liquid
+  !>@param[in]     dcfl_vertadv    Vertical advection increment to liquid
+  !>                               cloud fraction
+  !>@param[in]     dcff_vertadv    Vertical advection increment to frozen
+  !>                               cloud fraction
+  !>@param[in]     dbcf_vertadv    Vertical advection increment to bulk
+  !>                               cloud fraction
   !>@param[in,out] dcfl_forcing    Cloud liquid fraction increment
   !>@param[in,out] dbcf_forcing    Cloud bulk fraction increment
   !>@param[in]     dt              The model timestep length
@@ -148,6 +155,9 @@ contains
                                         dtheta_vertadv, &
                                         dmv_vertadv,    &
                                         dmcl_vertadv,   &
+                                        dcfl_vertadv,   &
+                                        dcff_vertadv,   &
+                                        dbcf_vertadv,   &
                                         dcfl_forcing,   &
                                         dbcf_forcing,   &
                                         dt )
@@ -163,6 +173,9 @@ contains
     type( field_type ), intent( inout ) :: dtheta_vertadv
     type( field_type ), intent( inout ) :: dmv_vertadv
     type( field_type ), intent( inout ) :: dmcl_vertadv
+    type( field_type ), intent( in )    :: dcfl_vertadv
+    type( field_type ), intent( in )    :: dcff_vertadv
+    type( field_type ), intent( in )    :: dbcf_vertadv
     type( field_type ), intent( inout ) :: dcfl_forcing
     type( field_type ), intent( inout ) :: dbcf_forcing
 
@@ -171,6 +184,7 @@ contains
 
     ! Advected parcel
     type( field_type ) :: theta_adv, mv_adv, mcl_adv, exner_departure
+    type( field_type ) :: cfl_adv, cff_adv, bcf_adv
     ! Zero forcings, as the only forcing is the pressure change
     type( field_type ) :: dtheta_zero, dmv_zero, dmcl_zero
     ! Response increments
@@ -197,6 +211,9 @@ contains
     call theta%copy_field_properties(mv_adv)
     call theta%copy_field_properties(mcl_adv)
     call theta%copy_field_properties(exner_departure)
+    call theta%copy_field_properties(cfl_adv)
+    call theta%copy_field_properties(cff_adv)
+    call theta%copy_field_properties(bcf_adv)
     call theta%copy_field_properties(dtheta_zero)
     call theta%copy_field_properties(dmv_zero)
     call theta%copy_field_properties(dmcl_zero)
@@ -214,14 +231,20 @@ contains
                  inc_X_plus_Y(mcl_adv, dmcl_vertadv),                 &
                  setval_X(exner_departure, exner_in_wth),             &
                  inc_X_plus_Y(exner_departure, dexner_vertadv),       &
+                 setval_X(cfl_adv, liquid_fraction),                  &
+                 inc_X_plus_Y(cfl_adv, dcfl_vertadv),                 &
+                 setval_X(cff_adv, frozen_fraction),                  &
+                 inc_X_plus_Y(cff_adv, dcff_vertadv),                 &
+                 setval_X(bcf_adv, bulk_fraction),                    &
+                 inc_X_plus_Y(bcf_adv, dbcf_vertadv),                 &
                  setval_c(dtheta_zero, 0.0_r_def),                    &
                  setval_c(dmv_zero,    0.0_r_def),                    &
                  setval_c(dmcl_zero,   0.0_r_def),                    &
                  pc2_homogeneous_kernel_type( mv_adv,                 &
                                               mcl_adv,                &
-                                              liquid_fraction,        &
-                                              frozen_fraction,        &
-                                              bulk_fraction,          &
+                                              cfl_adv,                &
+                                              cff_adv,                &
+                                              bcf_adv,                &
                                               theta_adv,              &
                                               exner_in_wth,           &
                                               exner_departure,        &

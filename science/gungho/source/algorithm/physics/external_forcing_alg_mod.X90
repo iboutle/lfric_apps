@@ -63,7 +63,7 @@ module external_forcing_alg_mod
                                              get_face_selector_ew, &
                                              get_face_selector_ns
   use mesh_mod,                        only: mesh_type
-  use mr_indices_mod,                  only: nummr, imr_v
+  use mr_indices_mod,                  only: nummr, imr_v, imr_cl
   use planet_config_mod,               only: kappa
   use io_config_mod,                   only: write_diag, use_xios_io
   use section_choice_config_mod,       only: cloud, cloud_um, section_choice_is_loaded
@@ -115,9 +115,10 @@ contains
   !> @param[in]     time_now           Current model time (seconds)
   !> @param[out]    dtheta_forcing     Theta increment from external forcing
   !> @param[out]    du_forcing         Wind increment from external forcing
-  !> @param[out]    dmv_forcing        Vapour increment from external forcing
-  !> @param[out]    dmcl_forcing       Liquid increment from external forcing
+  !> @param[out]    dmr_forcing        Moist mixing ratio increments from
+  !>                                   external forcing
   !> @param[out]    dcfl_forcing       Cloud Liquid fraction increment
+  !> @param[out]    dcff_forcing       Cloud frozen fraction increment
   !> @param[out]    dbcf_forcing       Cloud bulk fraction increment
   !> @param[in,out] theta_forcing_done Flag to say if theta code run
   !> @param[in,out] vapour_forcing_done Flag to say if vapour code run
@@ -126,8 +127,8 @@ contains
                                   derived_fields, u, theta, exner,             &
                                   exner_in_wth, rho, mr_n, cloud_fields,       &
                                   twod_mesh, dt, time_now, dtheta_forcing,     &
-                                  du_forcing, dmv_forcing, dmcl_forcing,       &
-                                  dcfl_forcing, dbcf_forcing,                  &
+                                  du_forcing, dmr_forcing,                     &
+                                  dcfl_forcing, dcff_forcing, dbcf_forcing,    &
                                   theta_forcing_done, vapour_forcing_done,     &
                                   wind_forcing_done)
 
@@ -139,8 +140,9 @@ contains
     type(field_type),            intent(in)    :: u, theta, exner, exner_in_wth, rho
     type(field_type),            intent(in)    :: mr_n(nummr)
     type(field_type),            intent(out)   :: dtheta_forcing, du_forcing
-    type(field_type),            intent(out)   :: dmv_forcing, dmcl_forcing
-    type(field_type),            intent(out)   :: dcfl_forcing, dbcf_forcing
+    type(field_type),            intent(out)   :: dmr_forcing(nummr)
+    type(field_type),            intent(out)   :: dcfl_forcing, dcff_forcing
+    type(field_type),            intent(out)   :: dbcf_forcing
     type(mesh_type),    pointer, intent(in)    :: twod_mesh
     real(kind=r_def),            intent(in)    :: dt, time_now
     logical(kind=l_def),         intent(inout) :: theta_forcing_done
@@ -173,10 +175,11 @@ contains
     type(field_type)    :: du_in_w3, dv_in_w3, dw_in_wth
     ! Vertical advection increments, kept separate from the prescribed
     ! forcing so that PC2 can respond to them differently
-    type(field_type)    :: dtheta_vertadv, dmv_vertadv, dmcl_vertadv
+    type(field_type)    :: dtheta_vertadv, dmr_vertadv(nummr)
     type(field_type)    :: dexner_vertadv
-    logical(kind=l_def) :: prescribed_forcing, pc2_response
-    integer(kind=i_def) :: order, nlayers
+    type(field_type)    :: dcfl_vertadv, dcff_vertadv, dbcf_vertadv
+    logical(kind=l_def) :: prescribed_forcing, pc2_cloud, pc2_response
+    integer(kind=i_def) :: order, nlayers, i_mr
     real(kind=r_def)    :: nudging_time_weight
     real(kind=r_def)    :: diffusion_coefficient_scaled, dx_sum, dx_size
     integer(tik)        :: id
@@ -214,8 +217,8 @@ contains
     scheme = IMDI
     if (section_choice_is_loaded()) cloud = config%section_choice%cloud()
     if (cloud_is_loaded()) scheme = config%cloud%scheme()
-    pc2_response = cloud == cloud_um .and. scheme == scheme_pc2 .and. &
-                   pc2_force_response
+    pc2_cloud = cloud == cloud_um .and. scheme == scheme_pc2
+    pc2_response = pc2_cloud .and. pc2_force_response
 
     mesh => theta%get_mesh()
     height_wth => get_height_fv(config, mesh, Wtheta)
@@ -536,10 +539,7 @@ contains
 
     if ( vertadvect_forcing ) then
       if ( .not. vapour_forcing_done) then
-        call dmv_forcing%initialise( vector_space = theta%get_function_space() )
-        call invoke( setval_c(dmv_forcing, 0.0_r_def) )
-        call dmcl_forcing%initialise( vector_space = theta%get_function_space() )
-        call invoke( setval_c(dmcl_forcing, 0.0_r_def) )
+        call init_mr_increments( dmr_forcing, mr_n(imr_v) )
       end if
 
       if ( .not.wind_forcing_done) then
@@ -548,11 +548,8 @@ contains
       end if
 
       call dtheta_vertadv%initialise( vector_space = theta%get_function_space() )
-      call dmv_vertadv%initialise( vector_space = theta%get_function_space() )
-      call dmcl_vertadv%initialise( vector_space = theta%get_function_space() )
-      call invoke( setval_c(dtheta_vertadv, 0.0_r_def), &
-                   setval_c(dmv_vertadv,    0.0_r_def), &
-                   setval_c(dmcl_vertadv,   0.0_r_def) )
+      call invoke( setval_c(dtheta_vertadv, 0.0_r_def) )
+      call init_mr_increments( dmr_vertadv, mr_n(imr_v) )
 
       if ( pc2_response ) then
         ! Exner pressure is also advected, for the PC2 response to the
@@ -561,11 +558,24 @@ contains
         call invoke( setval_c(dexner_vertadv, 0.0_r_def) )
       end if
 
+      if ( pc2_cloud ) then
+        ! The PC2 cloud fractions are advected with the cloud condensate
+        call dcfl_vertadv%initialise( vector_space = theta%get_function_space() )
+        call dcff_vertadv%initialise( vector_space = theta%get_function_space() )
+        call dbcf_vertadv%initialise( vector_space = theta%get_function_space() )
+        call invoke( setval_c(dcfl_vertadv, 0.0_r_def), &
+                     setval_c(dcff_vertadv, 0.0_r_def), &
+                     setval_c(dbcf_vertadv, 0.0_r_def) )
+      end if
+
       call vertadvect_forcing_alg( config,                                     &
-                                   dtheta_vertadv, dmv_vertadv, dmcl_vertadv,  &
-                                   du_forcing, dexner_vertadv, pc2_response,   &
+                                   dtheta_vertadv, dmr_vertadv, du_forcing,    &
+                                   dexner_vertadv, pc2_response,               &
+                                   dcfl_vertadv, dcff_vertadv, dbcf_vertadv,   &
+                                   pc2_cloud,                                  &
                                    theta, mr_n, exner_in_wth, rho,             &
-                                   derived_fields, twod_mesh, dt, time_now )
+                                   derived_fields, cloud_fields,               &
+                                   twod_mesh, dt, time_now )
       theta_forcing_done  = .true.
       vapour_forcing_done = .true.
       wind_forcing_done   = .true.
@@ -573,18 +583,12 @@ contains
 
 #ifdef UM_PHYSICS
     if ( .not. vapour_forcing_done ) then
-      call dmv_forcing%initialise( vector_space = theta%get_function_space() )
-      call invoke( setval_c(dmv_forcing, 0.0_r_def) )
-      call dmcl_forcing%initialise( vector_space = theta%get_function_space() )
-      call invoke( setval_c(dmcl_forcing, 0.0_r_def) )
+      call init_mr_increments( dmr_forcing, mr_n(imr_v) )
     end if
 #else
     if ( ( vapour_relaxation .or. vapour_forcing /= vapour_forcing_none ) &
          .and. .not. vapour_forcing_done ) then
-      call dmv_forcing%initialise( vector_space = theta%get_function_space() )
-      call invoke( setval_c(dmv_forcing, 0.0_r_def) )
-      call dmcl_forcing%initialise( vector_space = theta%get_function_space() )
-      call invoke( setval_c(dmcl_forcing, 0.0_r_def) )
+      call init_mr_increments( dmr_forcing, mr_n(imr_v) )
     end if
 #endif
 
@@ -594,7 +598,7 @@ contains
 
         case(vapour_forcing_profile)
 
-          call vapour_forcing_profile_alg( config, dmv_forcing, &
+          call vapour_forcing_profile_alg( config, dmr_forcing(imr_v), &
                                            exner_in_wth, time_now )
 
         case default
@@ -609,8 +613,8 @@ contains
     end if
 
     if ( vapour_relaxation ) then
-      call vapour_relax_alg( config, dmv_forcing, mr_n(imr_v), &
-                             theta, exner_in_wth,              &
+      call vapour_relax_alg( config, dmr_forcing(imr_v), mr_n(imr_v), &
+                             theta, exner_in_wth,                     &
                              twod_mesh, time_now, nlayers )
       vapour_forcing_done = .true.
     end if
@@ -631,7 +635,8 @@ contains
           ! At this point the increments only hold the prescribed forcing
           call pc2_force_response_alg(mr_n, theta, derived_fields,            &
                                       cloud_fields, dtheta_forcing,            &
-                                      dmv_forcing, dmcl_forcing,               &
+                                      dmr_forcing(imr_v),                      &
+                                      dmr_forcing(imr_cl),                     &
                                       dcfl_forcing, dbcf_forcing, dt)
         else
           call dtheta_forcing%copy_field_properties(dcfl_forcing)
@@ -645,9 +650,10 @@ contains
           ! departure point to its arrival point
           call pc2_pressure_response_alg(mr_n, theta, derived_fields,         &
                                          cloud_fields, dexner_vertadv,        &
-                                         dtheta_vertadv, dmv_vertadv,         &
-                                         dmcl_vertadv, dcfl_forcing,          &
-                                         dbcf_forcing, dt)
+                                         dtheta_vertadv, dmr_vertadv(imr_v),  &
+                                         dmr_vertadv(imr_cl), dcfl_vertadv,   &
+                                         dcff_vertadv, dbcf_vertadv,          &
+                                         dcfl_forcing, dbcf_forcing, dt)
         end if
 
         vapour_forcing_done = .true.
@@ -658,9 +664,28 @@ contains
 
     ! Add the vertical advection to the other forcing increments
     if ( vertadvect_forcing ) then
-      call invoke( inc_X_plus_Y(dtheta_forcing, dtheta_vertadv), &
-                   inc_X_plus_Y(dmv_forcing,    dmv_vertadv),    &
-                   inc_X_plus_Y(dmcl_forcing,   dmcl_vertadv) )
+      call invoke( inc_X_plus_Y(dtheta_forcing, dtheta_vertadv) )
+      do i_mr = 1, nummr
+        call invoke( inc_X_plus_Y(dmr_forcing(i_mr), dmr_vertadv(i_mr)) )
+      end do
+    end if
+
+    ! PC2 cloud fraction increments, from the PC2 response (if any) and
+    ! the vertical advection (if any)
+    if ( pc2_cloud .and. vapour_forcing_done ) then
+      if ( .not. pc2_response ) then
+        call dcfl_forcing%initialise( vector_space = theta%get_function_space() )
+        call dbcf_forcing%initialise( vector_space = theta%get_function_space() )
+        call invoke( setval_c(dcfl_forcing, 0.0_r_def), &
+                     setval_c(dbcf_forcing, 0.0_r_def) )
+      end if
+      call dcff_forcing%initialise( vector_space = theta%get_function_space() )
+      call invoke( setval_c(dcff_forcing, 0.0_r_def) )
+      if ( vertadvect_forcing ) then
+        call invoke( inc_X_plus_Y(dcfl_forcing, dcfl_vertadv), &
+                     inc_X_plus_Y(dcff_forcing, dcff_vertadv), &
+                     inc_X_plus_Y(dbcf_forcing, dbcf_vertadv) )
+      end if
     end if
 
     if ( LPROF ) call stop_timing( id, 'external_forcing' )
@@ -677,12 +702,31 @@ contains
       end if
       if (vapour_forcing_done) then
         write_behaviour => write_field_generic
-        call dmv_forcing%set_write_behaviour(write_behaviour)
-        call dmv_forcing%write_field('forcing__dmv_force')
+        call dmr_forcing(imr_v)%set_write_behaviour(write_behaviour)
+        call dmr_forcing(imr_v)%write_field('forcing__dmv_force')
       end if
 
     end if
 
   end subroutine external_forcing_alg
+
+  !> @brief Initialise a set of moist mixing ratio increments to zero
+  !> @param[in,out] dmr    Moist mixing ratio increments
+  !> @param[in]     mr     Mixing ratio to take the function space from
+  subroutine init_mr_increments( dmr, mr )
+
+    implicit none
+
+    type(field_type), intent(inout) :: dmr(nummr)
+    type(field_type), intent(in)    :: mr
+
+    integer(kind=i_def) :: i_mr
+
+    do i_mr = 1, nummr
+      call dmr(i_mr)%initialise( vector_space = mr%get_function_space() )
+      call invoke( setval_c(dmr(i_mr), 0.0_r_def) )
+    end do
+
+  end subroutine init_mr_increments
 
 end module external_forcing_alg_mod
