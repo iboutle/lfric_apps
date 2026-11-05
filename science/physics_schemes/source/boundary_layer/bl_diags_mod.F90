@@ -76,6 +76,8 @@ type :: strnewbldiag
   logical :: l_dbtop_dsc =    .false. ! buoyancy jump at BL-top inversion
   logical :: l_dftop =        .false. ! rad flux jump at SML top
   logical :: l_dftop_dsc =    .false. ! rad flux jump at BL top
+  logical :: l_qclictop =     .false. ! in-cloud liquid at SML top
+  logical :: l_chistop =      .false. ! mixing fraction at SML top
   logical :: l_oblen =        .false. ! 464 obukhov length
   logical :: l_ustar =        .false. ! 465 friction velocity
   logical :: l_wstar =        .false. ! 466 conv vel scale
@@ -193,6 +195,10 @@ type :: strnewbldiag
   !                             Radiative flux jump across SML top / cp
   real(kind=r_bl), allocatable :: dftop_dsc(:, :)
   !                             Radiative flux jump across BL top / cp
+  real(kind=r_bl), allocatable :: qclictop(:, :)
+  !                             In-cloud liquid water at SML top
+  real(kind=r_bl), allocatable :: chistop(:, :)
+  !                             Mixing fraction for saturation at SML top
   real(kind=r_bl), allocatable :: oblen(:, :)
   !                    464      Surface Obukhov length
   real(kind=r_bl), allocatable :: ustar(:, :)
@@ -765,6 +771,18 @@ if (BL_diag%l_dftop_dsc) then
 else
   allocate(BL_diag%dftop_dsc(1,1))
 end if
+if (BL_diag%l_qclictop) then
+  allocate(BL_diag%qclictop(                                                   &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%qclictop(1,1))
+end if
+if (BL_diag%l_chistop) then
+  allocate(BL_diag%chistop(                                                    &
+       pdims%i_start:pdims%i_end,pdims%j_start:pdims%j_end))
+else
+  allocate(BL_diag%chistop(1,1))
+end if
 
 if (BL_diag%l_oblen) then
   allocate(BL_diag%oblen(                                                      &
@@ -1185,6 +1203,8 @@ deallocate(BL_diag%wbsurf)
 deallocate(BL_diag%wstar)
 deallocate(BL_diag%ustar)
 deallocate(BL_diag%oblen)
+deallocate(BL_diag%chistop)
+deallocate(BL_diag%qclictop)
 deallocate(BL_diag%dftop_dsc)
 deallocate(BL_diag%dftop)
 deallocate(BL_diag%dbtop_dsc)

@@ -4842,6 +4842,20 @@ if (BL_diag%l_dftop) then
   end do
   !$OMP end do NOWAIT
 end if
+if (BL_diag%l_qclictop) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    BL_diag%qclictop(i,j)= qcl_ic_top(i,j)
+  end do
+  !$OMP end do NOWAIT
+end if
+if (BL_diag%l_chistop) then
+  !$OMP do SCHEDULE(STATIC)
+  do i = pdims%i_start, pdims%i_end
+    BL_diag%chistop(i,j)= chi_s_top(i,j)
+  end do
+  !$OMP end do NOWAIT
+end if
 if (BL_diag%l_dftop_dsc) then
   !$OMP do SCHEDULE(STATIC)
   do i = pdims%i_start, pdims%i_end

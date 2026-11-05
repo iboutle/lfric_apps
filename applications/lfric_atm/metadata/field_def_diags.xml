@@ -696,6 +696,8 @@
   <field id="turbulence__dbtop_dsc" name="dbtop_dsc" long_name="buoyancy_jump_across_boundary_layer_top_inversion" unit="m s-2" domain_ref="face" />
   <field id="turbulence__dftop" name="dftop" long_name="radiative_flux_jump_across_surface_mixed_layer_top_over_cp" unit="K m s-1" domain_ref="face" />
   <field id="turbulence__dftop_dsc" name="dftop_dsc" long_name="radiative_flux_jump_across_boundary_layer_top_over_cp" unit="K m s-1" domain_ref="face" />
+  <field id="turbulence__qclictop" name="qclictop" long_name="in_cloud_liquid_water_at_surface_mixed_layer_top" unit="kg kg-1" domain_ref="face" />
+  <field id="turbulence__chistop" name="chistop" long_name="mixing_fraction_for_saturation_at_surface_mixed_layer_top" unit="1" domain_ref="face" />
   <field id="turbulence__bl_weight_1dbl" name="bl_weight_1dbl" long_name="Blending_weight_in_boundary_layer" unit="1" domain_ref="face" />
   <field id="turbulence__tke" name="tke_bl" long_name="turbulent_kinetic_energy" unit="m2 s-2" grid_ref="full_level_face_grid" />
   <field id="turbulence__wvar" name="wvar" long_name="vertical_velocity_variance" unit="m2 s-2" grid_ref="full_level_face_grid" />

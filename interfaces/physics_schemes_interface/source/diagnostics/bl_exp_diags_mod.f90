@@ -20,7 +20,8 @@ module bl_exp_diags_mod
   ! Logical indicating whether diagnostics are requested
   logical( l_def ) :: zht_flag, oblen_flag
   logical( l_def ) :: weparm_flag, weparm_dsc_flag, dbtop_flag,               &
-                      dbtop_dsc_flag, dftop_flag, dftop_dsc_flag
+                      dbtop_dsc_flag, dftop_flag, dftop_dsc_flag,             &
+                      qclictop_flag, chistop_flag
 
   public :: initialise_diags_for_bl_exp
   public :: output_diags_for_bl_exp
@@ -36,8 +37,11 @@ contains
   !> @param[inout] dbtop_dsc          Buoyancy jump across BL-top inversion
   !> @param[inout] dftop              Radiative flux jump across SML top / cp
   !> @param[inout] dftop_dsc          Radiative flux jump across BL top / cp
+  !> @param[inout] qclictop           In-cloud liquid water at SML top
+  !> @param[inout] chistop            Mixing fraction for saturation at SML top
   subroutine initialise_diags_for_bl_exp(zht, oblen, weparm, weparm_dsc,       &
-                                         dbtop, dbtop_dsc, dftop, dftop_dsc)
+                                         dbtop, dbtop_dsc, dftop, dftop_dsc,   &
+                                         qclictop, chistop)
 
     implicit none
 
@@ -46,6 +50,7 @@ contains
     type( field_type ), intent(inout) :: weparm, weparm_dsc
     type( field_type ), intent(inout) :: dbtop, dbtop_dsc
     type( field_type ), intent(inout) :: dftop, dftop_dsc
+    type( field_type ), intent(inout) :: qclictop, chistop
     integer( tik )                    :: id
 
     if ( LPROF ) call start_timing( id, 'diags.bl_exp' )
@@ -58,6 +63,8 @@ contains
     dbtop_dsc_flag = init_diag(dbtop_dsc, 'turbulence__dbtop_dsc')
     dftop_flag = init_diag(dftop, 'turbulence__dftop')
     dftop_dsc_flag = init_diag(dftop_dsc, 'turbulence__dftop_dsc')
+    qclictop_flag = init_diag(qclictop, 'turbulence__qclictop')
+    chistop_flag = init_diag(chistop, 'turbulence__chistop')
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 
@@ -94,6 +101,8 @@ contains
   !> @param[in] dbtop_dsc         Buoyancy jump across BL-top inversion
   !> @param[in] dftop             Radiative flux jump across SML top / cp
   !> @param[in] dftop_dsc         Radiative flux jump across BL top / cp
+  !> @param[in] qclictop          In-cloud liquid water at SML top
+  !> @param[in] chistop           Mixing fraction for saturation at SML top
   subroutine output_diags_for_bl_exp(ntml, cumulus, bl_type_ind,               &
                                      wvar, dsldzm, mix_len_bm,                 &
                                      gradrinr, rhokh_bl, tke_bl, dtrdz_tq_bl,  &
@@ -103,7 +112,7 @@ contains
                                      ent_zrzi_dsc, zht, oblen,                 &
                                      bl_weight_1dbl, inv_depth,                &
                                      weparm, weparm_dsc, dbtop, dbtop_dsc,     &
-                                     dftop, dftop_dsc)
+                                     dftop, dftop_dsc, qclictop, chistop)
 
     implicit none
 
@@ -116,7 +125,8 @@ contains
                                          ent_we_lim_dsc, ent_t_frac_dsc,       &
                                          ent_zrzi_dsc, oblen, bl_weight_1dbl,  &
                                          inv_depth, weparm, weparm_dsc,        &
-                                         dbtop, dbtop_dsc, dftop, dftop_dsc
+                                         dbtop, dbtop_dsc, dftop, dftop_dsc,   &
+                                         qclictop, chistop
     type(integer_field_type), intent(in) :: level_ent, level_ent_dsc, ntml,    &
                                             cumulus, bl_type_ind
     integer( tik )  :: id
@@ -156,6 +166,8 @@ contains
     if (dbtop_dsc_flag) call dbtop_dsc%write_field()
     if (dftop_flag) call dftop%write_field()
     if (dftop_dsc_flag) call dftop_dsc%write_field()
+    if (qclictop_flag) call qclictop%write_field()
+    if (chistop_flag) call chistop%write_field()
 
     if ( LPROF ) call stop_timing( id, 'diags.bl_exp' )
 
