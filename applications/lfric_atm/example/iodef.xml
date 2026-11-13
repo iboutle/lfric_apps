@@ -118,6 +118,7 @@
 	<field field_ref="turbulence__zh" />
 	<field field_ref="turbulence__zht" />
 	<field field_ref="turbulence__zhsc" />
+	<field field_ref="turbulence__inv_depth" />
 	<field field_ref="turbulence__bl_type_ind" />
 	<field field_ref="turbulence__cumulus" />
 	<field field_ref="turbulence__ntml" />
@@ -130,6 +131,8 @@
 	<field field_ref="turbulence__rhokh" />
 	<field field_ref="turbulence__heat_flux_bl" />
 	<field field_ref="turbulence__moist_flux_bl" />
+	<field field_ref="turbulence__taux" />
+	<field field_ref="turbulence__tauy" />
 	<field field_ref="turbulence__ent_we_lim" />
 	<field field_ref="turbulence__ent_t_frac" />
 	<field field_ref="turbulence__ent_zrzi" />
@@ -138,6 +141,16 @@
 	<field field_ref="turbulence__ent_t_frac_dsc" />
 	<field field_ref="turbulence__ent_zrzi_dsc" />
 	<field field_ref="turbulence__level_ent_dsc" />
+	<field field_ref="turbulence__weparm" />
+	<field field_ref="turbulence__weparm_dsc" />
+	<field field_ref="turbulence__dbtop" />
+	<field field_ref="turbulence__dbtop_dsc" />
+	<field field_ref="turbulence__dftop" />
+	<field field_ref="turbulence__dftop_dsc" />
+	<field field_ref="turbulence__qclictop" />
+	<field field_ref="turbulence__chistop" />
+	<field field_ref="turbulence__wbratio" />
+	<field field_ref="turbulence__decthres" />
 	<field field_ref="surface__tile_temperature" />
 	<field field_ref="surface__grid_surface_temperature" />
 	<field field_ref="surface__z0m" />
