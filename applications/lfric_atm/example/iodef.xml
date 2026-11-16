@@ -103,6 +103,8 @@
 	<field field_ref="cloud__dcfl_pc2_pressure_change" />
 	<field field_ref="convection__conv_rain" />
 	<field field_ref="convection__massflux_up" />
+	<field field_ref="convection__shallow_massflux" />
+	<field field_ref="convection__mid_massflux" />
 	<field field_ref="convection__shallow_in_col" />
 	<field field_ref="convection__deep_in_col" />
 	<field field_ref="convection__mid_in_col" />
@@ -111,10 +113,17 @@
 	<field field_ref="convection__mid_prec" />
 	<field field_ref="convection__cca" />
 	<field field_ref="convection__cca_2d" />
+	<field field_ref="convection__cv_base" />
 	<field field_ref="convection__cv_top" />
+	<field field_ref="convection__cape_diluted" />
+	<field field_ref="convection__freeze_level" />
 	<field field_ref="convection__dt_conv" />
 	<field field_ref="convection__dmv_conv" />
 	<field field_ref="convection__dmcl_conv" />
+	<field field_ref="convection__shallow_dt" />
+	<field field_ref="convection__shallow_dq" />
+	<field field_ref="convection__mid_dt" />
+	<field field_ref="convection__mid_dq" />
 	<field field_ref="turbulence__zh" />
 	<field field_ref="turbulence__zht" />
 	<field field_ref="turbulence__zhsc" />
