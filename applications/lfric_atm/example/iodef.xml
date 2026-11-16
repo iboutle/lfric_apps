@@ -160,11 +160,16 @@
 	<field field_ref="turbulence__chistop" />
 	<field field_ref="turbulence__wbratio" />
 	<field field_ref="turbulence__decthres" />
+	<field field_ref="turbulence__rib" />
+	<field field_ref="turbulence__oblen" />
 	<field field_ref="surface__tile_temperature" />
 	<field field_ref="surface__grid_surface_temperature" />
 	<field field_ref="surface__z0m" />
+	<field field_ref="surface__z0h_eff" />
 	<field field_ref="surface__grid_latent_heat" />
 	<field field_ref="surface__tile_heat_flux" />
+	<field field_ref="surface__ustar" />
+	<field field_ref="surface__ustar_implicit" />
 	<field field_ref="soil__soil_moisture" />
 	<field field_ref="soil__unfrozen_soil_moisture" />
 	<field field_ref="soil__soil_temperature" />
