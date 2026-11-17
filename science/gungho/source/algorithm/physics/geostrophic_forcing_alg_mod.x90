@@ -48,6 +48,12 @@ contains
 !>          \f]
 !>          with \f$\Omega\f$ being the planet's rotation frequency and
 !>          \f$\phi\f$ the latitude of the \emph{f}-plane.
+!>          Without the dynamical core (use_wavedynamics false, as in the
+!>          single-column model) the Coriolis terms on the model wind are
+!>          also included, and the ageostrophic wind
+!>          \f$(u-u_g,v-v_g)\f$ is rotated by \f$f_3\Delta t\f$ each
+!>          timestep using a time-centred (Crank-Nicolson) scheme,
+!>          which conserves its magnitude, as in the UM single column model.
 !>          The geostrophic wind profiles are specified in the
 !>          geostrophic_forcing namelist. The vertical coordinate of the
 !>          input profile may be either height, in metres, or pressure in
@@ -94,6 +100,8 @@ real( kind=r_def ), intent( in )            :: time_now
 ! Local variables
 real( kind=r_def )    :: dt_rdef
 real( kind=r_def )    :: dt_f3, minus_dt_f3
+real( kind=r_def )    :: half_dt_f3, centred_fac, minus_centred_fac
+real( kind=r_def )    :: centred_fac_a
 real( kind=r_def )    :: u_geostrophic_now(number_heights)
 real( kind=r_def )    :: v_geostrophic_now(number_heights)
 integer( kind=i_def ) :: mesh_id, k
@@ -102,6 +110,7 @@ logical( kind=l_def ) :: profile_extrap
 type( field_type )    :: du_in_w3
 type( field_type )    :: dv_in_w3
 type( field_type )    :: dw_in_wth
+type( field_type )    :: du_geo, dv_geo
 
 type( mesh_type ),  pointer :: mesh => null()
 type( field_type ), pointer :: height_w3 => null()
@@ -112,6 +121,10 @@ type( field_type ), pointer :: v_in_w3 => null()
 dt_rdef = real( dt, kind=r_def )
 dt_f3   = 2.0_r_def * dt_rdef* omega * sin( f_lat )
 minus_dt_f3 = - dt_f3
+half_dt_f3  = 0.5_r_def * dt_f3
+centred_fac = dt_f3 / ( 1.0_r_def + half_dt_f3 * half_dt_f3 )
+minus_centred_fac = - centred_fac
+centred_fac_a     = centred_fac * half_dt_f3
 
 mesh => du%get_mesh()
 
@@ -196,18 +209,36 @@ else
 
 end if
 
-! Include the Coriolis terms for the single-column model
-if ( .not. use_wavedynamics ) then
+if ( use_wavedynamics ) then
+
+  ! The dynamical core includes the Coriolis terms on the model wind, so
+  ! only the geostrophic pressure gradient terms are applied here
+  call invoke( inc_a_times_X( minus_dt_f3, du_in_w3 ), &
+               inc_a_times_X( dt_f3, dv_in_w3 ) )
+  call set_wind( config, du, du_in_w3, dv_in_w3, dw_in_wth )
+
+else
+
+  ! Single-column model: include the Coriolis terms on the model wind,
+  ! time-centred so that the ageostrophic wind (u-ug, v-vg) is rotated
+  ! without change of magnitude. With a = f*dt/2, u' = u-ug, v' = v-vg:
+  !   du =  f*dt * ( v' - a*u') / (1 + a**2)
+  !   dv = -f*dt * ( u' + a*v') / (1 + a**2)
+  ! At this point du_in_w3 holds vg and dv_in_w3 holds ug, so after
+  ! subtracting the model wind they hold -v' and -u' respectively.
   call derived_fields%get_field('u_in_w3', u_in_w3)
   call derived_fields%get_field('v_in_w3', v_in_w3)
-  call invoke( inc_X_minus_Y( du_in_w3, v_in_w3 ), &
-               inc_X_minus_Y( dv_in_w3, u_in_w3 ) )
+  call du_geo%initialise( vector_space = du_in_w3%get_function_space() )
+  call dv_geo%initialise( vector_space = dv_in_w3%get_function_space() )
+  call invoke( inc_X_minus_Y( du_in_w3, v_in_w3 ),                      &
+               inc_X_minus_Y( dv_in_w3, u_in_w3 ),                      &
+               aX_plus_bY( du_geo, minus_centred_fac, du_in_w3,         &
+                           centred_fac_a, dv_in_w3 ),                   &
+               aX_plus_bY( dv_geo, centred_fac, dv_in_w3,               &
+                           centred_fac_a, du_in_w3 ) )
+  call set_wind( config, du, du_geo, dv_geo, dw_in_wth )
+
 end if
-
-call invoke( inc_a_times_X( minus_dt_f3, du_in_w3 ), &
-             inc_a_times_X( dt_f3, dv_in_w3 ) )
-
-call set_wind( config, du, du_in_w3, dv_in_w3, dw_in_wth )
 
 end subroutine geostrophic_forcing_alg
 
