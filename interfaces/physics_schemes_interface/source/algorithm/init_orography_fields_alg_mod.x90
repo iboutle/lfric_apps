@@ -22,7 +22,10 @@ contains
   !> @brief Initialises orographic fields
   !> @details The orography fields need to be initialised so that they have a
   !>          value when passed on to the physics at the first time step,
-  !>          in case no restart file is used.
+  !>          in case no restart file is used. They are set to zero (no
+  !>          sub-grid orography), consistent with a flat surface and with
+  !>          the UM single column model's idealised cases; they are
+  !>          overwritten from ancillaries when these are read.
   !> @param[in,out] orography_fields Orography related fields
   subroutine init_orography_fields_alg(orography_fields)
 
@@ -54,12 +57,12 @@ contains
 
     ! Initialise the orography fields to fixed values for use in SCM
     ! testing or when no ancil file is read
-    call invoke( setval_c(sd_orog,              1000.0_r_def), &
-                 setval_c(grad_xx_orog,         1.0e-2_r_def), &
-                 setval_c(grad_xy_orog,         1.0e-3_r_def), &
-                 setval_c(grad_yy_orog,         1.0e-2_r_def), &
-                 setval_c(silhouette_area_orog, 1.0e-1_r_def), &
-                 setval_c(peak_to_trough_orog,  200.0_r_def) )
+    call invoke( setval_c(sd_orog,              0.0_r_def), &
+                 setval_c(grad_xx_orog,         0.0_r_def), &
+                 setval_c(grad_xy_orog,         0.0_r_def), &
+                 setval_c(grad_yy_orog,         0.0_r_def), &
+                 setval_c(silhouette_area_orog, 0.0_r_def), &
+                 setval_c(peak_to_trough_orog,  0.0_r_def) )
 
   end subroutine init_orography_fields_alg
 
